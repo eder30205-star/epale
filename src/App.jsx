@@ -294,14 +294,14 @@ function Feed(props) {
         <div style={{display:"flex",height:4}}>
           <div style={{flex:1,background:C.yellow}}/><div style={{flex:1,background:C.blue}}/><div style={{flex:1,background:C.red}}/>
         </div>
-        <div style={{padding:"11px 16px 10px",display:"flex",alignItems:"center",justifyContent:"space-between",position:"relative"}}>
+        <div style={{padding:"10px 16px 6px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
           <div style={{fontSize:24,fontFamily:"'Syne',sans-serif",letterSpacing:-1,fontWeight:800}}>
             <span style={{color:C.yellow}}>E</span><span style={{color:C.blue}}>pa</span><span style={{color:C.red}}>le</span>
           </div>
-          <div style={{position:"absolute",left:"50%",transform:"translateX(-50%)",display:"flex",gap:16}}>
-            {tabButtons}
-          </div>
           <button onClick={onProfile} style={{background:"none",border:"none",cursor:"pointer"}}><Av t="Tu" i={0} s={34}/></button>
+        </div>
+        <div style={{display:"flex",justifyContent:"center",gap:24,paddingBottom:8,borderBottom:"1px solid "+C.border}}>
+          {tabButtons}
         </div>
 
         <div style={{display:"flex",gap:6,padding:"4px 12px 8px",overflowX:"auto"}}>
@@ -334,35 +334,6 @@ function Feed(props) {
           ) : null}
         </div>
 
-        <div style={{margin:"10px 14px 0",borderRadius:14,overflow:"hidden",border:"1.5px solid "+C.wa}}>
-          <div style={{background:C.wa,padding:"10px 16px",display:"flex",alignItems:"center",gap:10}}>
-            <span style={{fontSize:20}}>📱</span>
-            <div style={{flex:1}}>
-              <div style={{fontSize:13,fontWeight:700,color:"#fff",fontFamily:"'Inter',sans-serif"}}>Invita 3 venezolanos a {cityObj.name}</div>
-              <div style={{fontSize:11,color:"rgba(255,255,255,0.8)",fontFamily:"'Inter',sans-serif"}}>Tu ciudad crece cuando traes a los tuyos</div>
-            </div>
-          </div>
-          <div style={{background:C.card,padding:"12px 16px"}}>
-            <div style={{display:"flex",gap:6,marginBottom:8}}>
-              {[0,1,2].map(function(i){ return <div key={i} style={{flex:1,height:5,borderRadius:3,background:i<inviteCount?C.wa:C.border}}/>; })}
-            </div>
-            <a href={waInvite(activeCity)} target="_blank" rel="noreferrer" style={{textDecoration:"none",display:"block",marginBottom:8}} onClick={function(){setInviteCount(function(c){return Math.min(c+1,3);});}}>
-              <div style={{display:"flex",alignItems:"center",gap:10,padding:"11px 14px",background:C.wa,borderRadius:12,cursor:"pointer"}}>
-                <span style={{fontSize:18}}>📱</span>
-                <span style={{flex:1,fontWeight:700,color:"#fff",fontFamily:"'Inter',sans-serif",fontSize:13}}>Invitar por WhatsApp</span>
-                <span style={{color:"rgba(255,255,255,0.7)"}}>→</span>
-              </div>
-            </a>
-            <div style={{background:C.bg,borderRadius:10,padding:"9px 12px",border:"1px solid "+C.border,display:"flex",alignItems:"center",gap:8}}>
-              <div style={{flex:1}}>
-                <div style={{fontSize:9,color:C.muted,fontFamily:"'Inter',sans-serif",marginBottom:2}}>TU LINK</div>
-                <div style={{fontSize:12,fontFamily:"'Inter',sans-serif",color:C.blue}}>{refLink}</div>
-              </div>
-              <button onClick={handleCopy} style={{background:copiedRef?"#e8f8ee":C.yellow,border:"none",borderRadius:8,padding:"6px 14px",cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:10,fontWeight:700,color:copiedRef?C.green:C.text}}>
-                {copiedRef?"✓ Copiado":"Copiar"}
-              </button>
-            </div>
-          </div>
         </div>
 
         <div style={{marginTop:10}}>
@@ -375,6 +346,22 @@ function Feed(props) {
             return <PostCard key={p.id} post={p} idx={i} cityObj={cityObj} saved={savedPosts.includes(p.id)} onSave={toggleSave} following={following} onFollow={toggleFollow}/>;
           })}
         </div>
+
+        <a href={waInvite(activeCity)} target="_blank" rel="noreferrer" style={{textDecoration:"none",display:"block",margin:"10px 14px 20px"}} onClick={function(){setInviteCount(function(c){return Math.min(c+1,3);});}}>
+          <div style={{background:C.wa,borderRadius:14,padding:"12px 16px",display:"flex",alignItems:"center",gap:12}}>
+            <span style={{fontSize:22}}>📱</span>
+            <div style={{flex:1}}>
+              <div style={{fontSize:13,fontWeight:700,color:"#fff",fontFamily:"'Inter',sans-serif"}}>Invita venezolanos a {cityObj.name}</div>
+              <div style={{fontSize:11,color:"rgba(255,255,255,0.8)",fontFamily:"'Inter',sans-serif"}}>
+                {inviteCount===0?"Aun no has invitado a nadie":inviteCount===1?"1 invitado -- falta 2 mas":inviteCount===2?"2 invitados -- falta 1 mas":"Meta cumplida! Gracias"}
+              </div>
+            </div>
+            <div style={{display:"flex",gap:4}}>
+              {[0,1,2].map(function(i){ return <div key={i} style={{width:6,height:6,borderRadius:"50%",background:i<inviteCount?"#fff":"rgba(255,255,255,0.35)"}}/>; })}
+            </div>
+            <span style={{color:"rgba(255,255,255,0.8)",fontSize:16}}>→</span>
+          </div>
+        </a>
       </div>
 
       <button onClick={function(){setShowComposer(true);}} style={{position:"fixed",bottom:24,right:"50%",transform:"translateX(50%) translateX(160px)",width:52,height:52,borderRadius:"50%",background:C.yellow,border:"none",cursor:"pointer",fontSize:22,boxShadow:"0 4px 18px rgba(255,204,0,0.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:50}}>
@@ -1031,7 +1018,7 @@ function AuthHero(props) {
       <div style={{display:"flex",height:4}}><div style={{flex:1,background:"#ffcc00"}}/><div style={{flex:1,background:"#0066ff"}}/><div style={{flex:1,background:"#ff2d2d"}}/></div>
       <div style={{position:"relative",padding:"36px 24px 28px",textAlign:"center"}}>
         <div style={{fontSize:54,fontFamily:"'Syne',sans-serif",letterSpacing:-2,fontWeight:800,marginBottom:6}}>
-          <span style={{color:"#ffcc00"}}>E</span><span style={{color:"#fff"}}>pa</span><span style={{color:"#ff2d2d"}}>le</span>
+          <span style={{color:"#ffcc00"}}>E</span><span style={{color:"#0066ff"}}>pa</span><span style={{color:"#ff2d2d"}}>le</span>
         </div>
         <div style={{fontSize:22}}>🇻🇪</div>
         <div style={{fontSize:12,color:"rgba(255,255,255,0.4)",fontFamily:"'Inter',sans-serif",marginTop:6}}>venezolanos del mundo</div>
