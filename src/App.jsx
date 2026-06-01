@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+mport { useState, useEffect } from "react";
 import React from "react";
 
 const SUPA_URL = "https://zkydbsymcnnbepvmbchr.supabase.co";
@@ -232,7 +232,7 @@ function PostCard(props) {
             <div style={{background:C.bg,borderRadius:12,border:"1px solid "+C.border,marginBottom:10,padding:"14px 16px"}}>
               {flagDone ? (
                 <div style={{textAlign:"center",padding:"10px 0"}}>
-                  <div style={{fontSize:32,marginBottom:8}}>[ok]</div>
+                  <div style={{fontSize:32,marginBottom:8}}>ok</div>
                   <div style={{fontSize:14,fontFamily:"'Syne',sans-serif",color:C.text,marginBottom:4}}>Reporte enviado</div>
                   <div style={{fontSize:12,color:C.muted,fontFamily:"'Inter',sans-serif",marginBottom:12}}>Revisaremos en menos de 24 horas</div>
                   <button onClick={function(){setShowFlag(false);setFlagDone(false);}} style={{padding:"8px 20px",background:C.blue,color:"#fff",border:"none",borderRadius:100,cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:13,fontWeight:700}}>Listo</button>
@@ -263,10 +263,10 @@ function PostCard(props) {
 
           <div style={{display:"flex",gap:6,marginBottom:10}}>
             <button onClick={function(){setLiked(function(l){return !l;}); setLikes(function(l){return liked?l-1:l+1;});}} style={{display:"flex",alignItems:"center",gap:5,padding:"6px 10px",background:liked?"#fff0f0":C.bg,border:"1px solid "+(liked?"#ffb3b3":C.border),borderRadius:100,cursor:"pointer",color:liked?C.red:C.muted,fontFamily:"'Inter',sans-serif",fontSize:12}}>
-              {liked?"hrt":""} {likes.toLocaleString()}
+              {liked?"v":"o"} {likes.toLocaleString()}
             </button>
             <button onClick={function(){setOpen(function(o){return !o;});}} style={{display:"flex",alignItems:"center",gap:5,padding:"6px 10px",background:open?"#e8f0fc":C.bg,border:"1px solid "+(open?"#b3c8ff":C.border),borderRadius:100,cursor:"pointer",color:open?C.blue:C.muted,fontFamily:"'Inter',sans-serif",fontSize:12}}>
-               {(post.comments+comments.length).toLocaleString()}
+               c {(post.comments+comments.length).toLocaleString()}
             </button>
             <button onClick={function(){if(onSave) onSave(post.id);}} style={{display:"flex",alignItems:"center",gap:5,padding:"6px 10px",background:saved?"#fffbea":C.bg,border:"1px solid "+(saved?"#ffe066":C.border),borderRadius:100,cursor:"pointer",color:saved?C.yellow:C.muted,fontFamily:"'Inter',sans-serif",fontSize:12,marginLeft:"auto"}}>
                {saved?"Guardado":"Guardar"}
@@ -275,7 +275,7 @@ function PostCard(props) {
 
           <a href={waShare(post, cityObj ? cityObj.id : "ve")} target="_blank" rel="noreferrer" style={{textDecoration:"none",display:"block",marginBottom:14}}>
             <div style={{display:"flex",alignItems:"center",gap:10,padding:"11px 14px",background:C.wa,borderRadius:12,cursor:"pointer"}}>
-              <span style={{fontSize:20}}>[m]</span>
+              <span style={{fontSize:20}}>m</span>
               <div style={{flex:1}}>
                 <div style={{fontSize:13,fontWeight:700,color:"#fff",fontFamily:"'Inter',sans-serif"}}>Compartir en WhatsApp</div>
                 <div style={{fontSize:11,color:"rgba(255,255,255,0.8)",fontFamily:"'Inter',sans-serif"}}>Envia este post a tus panas</div>
@@ -399,7 +399,7 @@ function Feed(props) {
   var dollarWidget = (
     <div style={{background:C.card,borderRadius:14,border:"1px solid "+C.border,overflow:"hidden",marginBottom:16}}>
       <div style={{background:"#0d0d0d",padding:"9px 14px",display:"flex",alignItems:"center",gap:10}}>
-        <span style={{fontSize:16}}>[d]</span>
+        <span style={{fontSize:16}}>$</span>
         <div style={{flex:1,display:"flex",gap:12,alignItems:"center",flexWrap:"wrap"}}>
           <span style={{fontFamily:"'Inter',sans-serif",fontSize:11,color:"rgba(255,255,255,0.5)"}}>BCV <strong style={{fontSize:14,color:"#ffcc00"}}>Bs 36.84</strong></span>
           <span style={{fontFamily:"'Inter',sans-serif",fontSize:11,color:"rgba(255,255,255,0.5)"}}>Paralelo <strong style={{fontSize:14,color:"#7defa0"}}>Bs 38.20</strong></span>
@@ -409,7 +409,7 @@ function Feed(props) {
       </div>
       {filtered[0] ? (
         <div style={{padding:"8px 14px",display:"flex",gap:8,alignItems:"center"}}>
-          <span style={{fontSize:14}}>[!]</span>
+          <span style={{fontSize:14}}>!</span>
           <span style={{fontSize:11,color:C.muted,fontFamily:"'Inter',sans-serif"}}>Trending:</span>
           <span style={{fontSize:12,color:C.text,fontFamily:"'Inter',sans-serif",fontWeight:600,flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{filtered[0].content.slice(0,80)}...</span>
         </div>
@@ -654,7 +654,7 @@ function MisPublicaciones(props) {
       <div style={{paddingBottom:40}}>
         {myPosts.length===0 ? (
           <div style={{textAlign:"center",padding:"60px 20px"}}>
-            <div style={{fontSize:48,marginBottom:12}}>[p]</div>
+            <div style={{fontSize:48,marginBottom:12}}>p</div>
             <div style={{fontSize:16,fontFamily:"'Syne',sans-serif",color:C.text,marginBottom:8}}>Aun no has publicado nada</div>
             <div style={{fontSize:13,color:C.muted,fontFamily:"'Inter',sans-serif"}}>Tus publicaciones apareceran aqui</div>
           </div>
@@ -688,7 +688,7 @@ function Guardados(props) {
       <div style={{paddingBottom:40}}>
         {savedPosts.length===0 ? (
           <div style={{textAlign:"center",padding:"60px 20px"}}>
-            <div style={{fontSize:48,marginBottom:12}}>[v]</div>
+            <div style={{fontSize:48,marginBottom:12}}>v</div>
             <div style={{fontSize:16,fontFamily:"'Syne',sans-serif",color:C.text,marginBottom:8}}>No tienes posts guardados</div>
             <div style={{fontSize:13,color:C.muted,fontFamily:"'Inter',sans-serif"}}>Toca el icono guardar en cualquier post</div>
           </div>
@@ -724,7 +724,7 @@ function FollowersList(props) {
       <div style={{paddingBottom:40}}>
         {users.length===0 ? (
           <div style={{textAlign:"center",padding:"60px 20px"}}>
-            <div style={{fontSize:48,marginBottom:12}}>[g]</div>
+            <div style={{fontSize:48,marginBottom:12}}>g</div>
             <div style={{fontSize:16,fontFamily:"'Syne',sans-serif",color:C.text}}>Nadie aqui aun</div>
           </div>
         ) : users.map(function(u,i){
@@ -853,7 +853,7 @@ function Profile(props) {
       <div style={{margin:"0 14px 10px"}}>
         <a href={waInvite(userCity)} target="_blank" rel="noreferrer" style={{textDecoration:"none"}}>
           <div style={{background:C.wa,borderRadius:14,padding:"14px 18px",display:"flex",alignItems:"center",gap:12}}>
-            <span style={{fontSize:22}}>[m]</span>
+            <span style={{fontSize:22}}>m</span>
             <div style={{flex:1}}>
               <div style={{fontWeight:700,color:"#fff",fontFamily:"'Inter',sans-serif",fontSize:13}}>Invitar venezolanos a Epale</div>
               <div style={{fontSize:11,color:"rgba(255,255,255,0.8)",fontFamily:"'Inter',sans-serif"}}>Comparte con tus panas en {cityObj.name}</div>
@@ -958,7 +958,7 @@ function Configuracion(props) {
         <div style={{fontSize:18,fontFamily:"'Syne',sans-serif",color:C.text}}>Cambiar contrasena</div>
       </div>
       <div style={{padding:"24px 20px",textAlign:"center"}}>
-        <div style={{fontSize:48,marginBottom:12}}>[k]</div>
+        <div style={{fontSize:48,marginBottom:12}}>k</div>
         <div style={{fontSize:15,color:C.muted,fontFamily:"'Inter',sans-serif"}}>Funcionalidad disponible cuando conectes Supabase</div>
       </div>
     </div>
@@ -1092,7 +1092,7 @@ function AuthLogin(props) {
         <div style={{fontSize:10,fontFamily:"'Inter',sans-serif",color:"#86868b",marginBottom:7,letterSpacing:1}}>CONTRASENA</div>
         <div style={{position:"relative"}}>
           <input value={password} onChange={function(e){setPassword(e.target.value);}} type={showPass?"text":"password"} placeholder="Tu contrasena" style={{width:"100%",padding:"13px 46px 13px 16px",background:"#fff",border:"1.5px solid "+(password?"#0066ff":"#e8e8ed"),borderRadius:12,color:"#1a1a1a",fontFamily:"'Inter',sans-serif",fontSize:15,outline:"none",boxSizing:"border-box"}}/>
-          <button onClick={function(){setShowPass(function(s){return !s;});}} style={{position:"absolute",right:14,top:10,background:"none",border:"none",cursor:"pointer",fontSize:18}}>[o]</button>
+          <button onClick={function(){setShowPass(function(s){return !s;});}} style={{position:"absolute",right:14,top:10,background:"none",border:"none",cursor:"pointer",fontSize:18}}>o</button>
         </div>
       </div>
       <div style={{textAlign:"right",marginBottom:20}}><button style={{background:"none",border:"none",cursor:"pointer",color:"#0066ff",fontFamily:"'Inter',sans-serif",fontSize:11}}>Olvidaste tu contrasena?</button></div>
@@ -1124,7 +1124,7 @@ function AuthStep1(props) {
         <div style={{fontSize:10,fontFamily:"'Inter',sans-serif",color:"#86868b",marginBottom:7,letterSpacing:1}}>CONTRASENA</div>
         <div style={{position:"relative"}}>
           <input value={password} onChange={function(e){setPassword(e.target.value);}} type={showPass?"text":"password"} placeholder="Minimo 6 caracteres" style={{width:"100%",padding:"13px 46px 13px 16px",background:"#fff",border:"1.5px solid "+(password?"#0066ff":"#e8e8ed"),borderRadius:12,color:"#1a1a1a",fontFamily:"'Inter',sans-serif",fontSize:15,outline:"none",boxSizing:"border-box"}}/>
-          <button onClick={function(){setShowPass(function(s){return !s;});}} style={{position:"absolute",right:14,top:10,background:"none",border:"none",cursor:"pointer",fontSize:18}}>[o]</button>
+          <button onClick={function(){setShowPass(function(s){return !s;});}} style={{position:"absolute",right:14,top:10,background:"none",border:"none",cursor:"pointer",fontSize:18}}>o</button>
         </div>
         {password ? (
           <div>
@@ -1241,7 +1241,7 @@ function AuthStep4(props) {
   };
   return (
     <div style={{flex:1,padding:"22px 20px 32px",textAlign:"center"}}>
-      <div style={{fontSize:52,marginBottom:10}}>[e]</div>
+      <div style={{fontSize:52,marginBottom:10}}>e</div>
       <div style={{fontSize:20,fontFamily:"'Syne',sans-serif",color:"#1a1a1a",marginBottom:6,fontWeight:700}}>Verifica tu correo</div>
       <div style={{fontSize:13,color:"#86868b",fontFamily:"'Inter',sans-serif",marginBottom:20}}>Codigo enviado a <strong>{email}</strong></div>
       <input value={verifyCode} onChange={function(e){setVerifyCode(e.target.value.replace(/\D/g,"").slice(0,4));}} placeholder="0000" maxLength={4} style={{width:"100%",padding:"18px",background:"#fff",border:"2px solid "+(verifyCode.length===4?(verifyCode===DEMO?"#1a7a3c":"#ff2d2d"):"#e8e8ed"),borderRadius:14,color:"#1a1a1a",fontFamily:"'Inter',sans-serif",fontSize:32,fontWeight:700,outline:"none",boxSizing:"border-box",textAlign:"center",marginBottom:10}}/>
