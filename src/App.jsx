@@ -1,75 +1,5 @@
-mport { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import React from "react";
-
-const SUPA_URL = "https://zkydbsymcnnbepvmbchr.supabase.co";
-const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpreWRic3ltY25uYmVwdm1iY2hyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyNjExNjksImV4cCI6MjA5NTgzNzE2OX0.bIiUt752AROIfQkQTHqN7r9OrjRTzxmwNQLDw0WVVS4";
-
-const SUPA_SERVICE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpreWRic3ltY25uYmVwdm1iY2hyIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MDI2MTE2OSwiZXhwIjoyMDk1ODM3MTY5fQ.XuQjjwjiXqPWalh12fVAAsAxsQhRD2OTrE-ZaunJBHc";
-
-const supa = {
-  auth: {
-    signUp: async function(email, password, meta) {
-      var r = await fetch(SUPA_URL+"/auth/v1/admin/users", {method:"POST", headers:{"Content-Type":"application/json","apikey":SUPA_SERVICE_KEY,"Authorization":"Bearer "+SUPA_SERVICE_KEY}, body:JSON.stringify({email:email,password:password,email_confirm:true,user_metadata:meta})});
-      var d = await r.json();
-      if(!r.ok) return {error: d};
-      var loginRes = await supa.auth.signIn(email, password);
-      return loginRes;
-    },
-    signIn: async function(email, password) {
-      var r = await fetch(SUPA_URL+"/auth/v1/token?grant_type=password", {method:"POST", headers:{"Content-Type":"application/json","apikey":SUPA_KEY}, body:JSON.stringify({email:email,password:password})});
-      return r.json();
-    },
-    signOut: async function(token) {
-      await fetch(SUPA_URL+"/auth/v1/logout", {method:"POST", headers:{"apikey":SUPA_KEY,"Authorization":"Bearer "+token}});
-    }
-  },
-  from: function(table) {
-    var _table = table;
-    var _filters = [];
-    var _order = null;
-    var _limit = null;
-    var buildUrl = function() {
-      var url = SUPA_URL+"/rest/v1/"+_table+"?";
-      _filters.forEach(function(f){ url += f+"&"; });
-      if(_order) url += "order="+_order+"&";
-      if(_limit) url += "limit="+_limit+"&";
-      return url;
-    };
-    var obj = {
-      select: function(cols) { _filters.push("select="+(cols||"*")); return obj; },
-      eq: function(col, val) { _filters.push(col+"=eq."+val); return obj; },
-      order: function(col, opts) { _order = col+(opts&&opts.ascending===false?".desc":""); return obj; },
-      limit: function(n) { _limit = n; return obj; },
-      insert: async function(data) {
-        var r = await fetch(SUPA_URL+"/rest/v1/"+_table, {method:"POST", headers:{"Content-Type":"application/json","apikey":SUPA_KEY,"Authorization":"Bearer "+(window._supaToken||SUPA_KEY),"Prefer":"return=representation"}, body:JSON.stringify(data)});
-        var d = await r.json();
-        return {data:d, error:r.ok?null:d};
-      },
-      update: async function(data) {
-        var r = await fetch(buildUrl(), {method:"PATCH", headers:{"Content-Type":"application/json","apikey":SUPA_KEY,"Authorization":"Bearer "+(window._supaToken||SUPA_KEY),"Prefer":"return=representation"}, body:JSON.stringify(data)});
-        var d = await r.json();
-        return {data:d, error:r.ok?null:d};
-      },
-      delete: async function() {
-        var r = await fetch(buildUrl(), {method:"DELETE", headers:{"apikey":SUPA_KEY,"Authorization":"Bearer "+(window._supaToken||SUPA_KEY)}});
-        return {error:r.ok?null:"error"};
-      },
-      get: async function() {
-        var r = await fetch(buildUrl(), {headers:{"apikey":SUPA_KEY,"Authorization":"Bearer "+(window._supaToken||SUPA_KEY)}});
-        var d = await r.json();
-        return {data:Array.isArray(d)?d:[], error:r.ok?null:d};
-      }
-    };
-    return obj;
-  },
-  storage: {
-    upload: async function(bucket, path, file) {
-      var r = await fetch(SUPA_URL+"/storage/v1/object/"+bucket+"/"+path, {method:"POST", headers:{"apikey":SUPA_KEY,"Authorization":"Bearer "+(window._supaToken||SUPA_KEY),"Content-Type":file.type}, body:file});
-      var d = await r.json();
-      return {data:d, error:r.ok?null:d, publicUrl: SUPA_URL+"/storage/v1/object/public/"+bucket+"/"+path};
-    }
-  }
-};
 
 const LIGHT = { bg:"#f5f5f7", card:"#ffffff", border:"#e8e8ed", yellow:"#ffcc00", blue:"#0066ff", red:"#ff2d2d", text:"#1a1a1a", muted:"#86868b", green:"#1a7a3c", wa:"#25D366" };
 const DARK  = { bg:"#0d0d0d", card:"#1c1c1e", border:"#2c2c2e", yellow:"#ffcc00", blue:"#0a84ff", red:"#ff453a", text:"#f2f2f7", muted:"#636366", green:"#32d74b", wa:"#25D366" };
@@ -345,7 +275,6 @@ function Feed(props) {
   var userId=props.userId||null;
   var [filter,setFilter]=useState("all");
   var [posts,setPosts]=useState(SEED);
-  var [loadingPosts,setLoadingPosts]=useState(false);
   var [showComposer,setShowComposer]=useState(false);
   var [inviteCount,setInviteCount]=useState(0);
   var [activeCity,setActiveCity]=useState(userCity);
@@ -357,20 +286,7 @@ function Feed(props) {
   var [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   useEffect(function(){
-    var load = async function(){
-      setLoadingPosts(true);
-      try {
-        var res = await supa.from("posts").select("*,profiles(name,photo_url,username)").order("created_at",{ascending:false}).limit(50).get();
-        if(res.data && res.data.length>0) {
-          var mapped = res.data.map(function(p){
-            return {id:p.id, city:p.city, type:p.type||"post", name:(p.profiles&&p.profiles.name)||"Anonimo", av:(p.profiles&&p.profiles.name)||"?", photo:(p.profiles&&p.profiles.photo_url)||null, content:p.content, likes:p.likes||0, comments:p.comments||0, time:"reciente"};
-          });
-          setPosts(mapped.concat(SEED));
-        }
-      } catch(e) {}
-      setLoadingPosts(false);
-    };
-    load();
+    setPosts(SEED);
   }, []);
 
   useEffect(function(){
@@ -415,14 +331,9 @@ function Feed(props) {
   var followFiltered = allFiltered.filter(function(p){ return following.includes(p.name); });
   var filtered = feedTab==="following" ? followFiltered : cityFiltered;
 
-  var addPost = async function(p){
+  var addPost = function(p){
     var newPost = {id:Date.now(),city:p.city,type:p.type,name:userName||"Tu",av:userName||"Tu",content:p.content,media:p.media,likes:0,comments:0,time:"ahora"};
     setPosts(function(pp){ return [newPost].concat(pp); });
-    if(userId) {
-      try {
-        // Backend not connected yet
-      } catch(e) {}
-    }
   };
 
   var handleCopy = function(){ if(navigator.clipboard) navigator.clipboard.writeText(refLink); setCopiedRef(true); setTimeout(function(){setCopiedRef(false);},2000); };
@@ -1094,22 +1005,10 @@ function AuthLogin(props) {
   var [showPass,setShowPass]=useState(false);
   var [loading,setLoading]=useState(false);
   var [error,setError]=useState("");
-  var go = async function() {
+  var go = function() {
     if(!email||!password){setError("Completa todos los campos");return;}
     setLoading(true); setError("");
-    try {
-      var res = await supa.auth.signIn(email, password);
-      console.log("LOGIN RESPONSE:", JSON.stringify(res));
-      if(res.error_description || res.error) { setError(res.error_description || res.error || "Error"); setLoading(false); return; }
-      var token = res.access_token || (res.session && res.session.access_token) || "";
-      var uid = (res.user && res.user.id) || (res.session && res.session.user && res.session.user.id) || "";
-      if(!token && !uid) { setError("Correo o contrasena incorrectos"); setLoading(false); return; }
-      window._supaToken = token;
-      var pRes = await supa.from("profiles").select("*").eq("id", uid).get();
-      var profile = pRes.data && pRes.data[0];
-      setLoading(false);
-      onDone(profile?profile.city:"madrid", profile?profile.name:"", profile?profile.photo_url:null, token, uid);
-    } catch(e) { setError("Error de conexion: "+e.message); setLoading(false); }
+    setTimeout(function(){ setLoading(false); onDone("madrid","",null,"",""); }, 800);
   };
   return (
     <div style={{flex:1,padding:"22px 20px 32px"}}>
@@ -1356,14 +1255,11 @@ export default function App() {
       if(name) setUserName(name);
       if(photo) setUserPhoto(photo);
       if(uid) setUserId(uid);
-      if(token) window._supaToken = token;
       setScreen("feed");
     } catch(e) { setCrashMsg("handleDone error: "+e.message); }
   };
 
   var handleLogout = function() {
-    try { localStorage.clear(); } catch(e){}
-    window._supaToken = null;
     setShowProfile(false);
     setScreen("auth");
   };
