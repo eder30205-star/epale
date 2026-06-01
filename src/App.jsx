@@ -20,7 +20,13 @@ const CITIES = [
   { id:"panama",    name:"Panama",     flag:"PA", pop:"55K venezolanos"  },
   { id:"caracas",   name:"Caracas",    flag:"VE", pop:"Capital"          },
 ];
-const CITY_FLAGS = { madrid:"🇪🇸", miami:"🇺🇸", orlando:"🇺🇸", houston:"🇺🇸", bogota:"🇨🇴", medellin:"🇨🇴", santiago:"🇨🇱", lima:"🇵🇪", buenos:"🇦🇷", quito:"🇪🇨", panama:"🇵🇦", caracas:"🇻🇪" };
+const CITY_FLAGS = { madrid:"ES", miami:"US", orlando:"US", houston:"US", bogota:"CO", medellin:"CO", santiago:"CL", lima:"PE", buenos:"AR", quito:"EC", panama:"PA", caracas:"VE" };
+const toFlag = function(code) {
+  if(!code) return "";
+  var a = code.toUpperCase().charCodeAt(0) - 65 + 127462;
+  var b = code.toUpperCase().charCodeAt(1) - 65 + 127462;
+  return String.fromCodePoint(a) + String.fromCodePoint(b);
+};
 const getCity = function(id){ return CITIES.find(function(c){ return c.id===id; }) || CITIES[0]; };
 
 const TYPES = {
@@ -252,7 +258,7 @@ function Feed(props) {
   var cityButtons = CITIES.map(function(c){
     return (
       <button key={c.id} onClick={function(){setActiveCity(c.id);}} style={{padding:"5px 12px",borderRadius:100,border:"1.5px solid "+(activeCity===c.id?C.blue:C.border),background:activeCity===c.id?C.blue:C.card,color:activeCity===c.id?"#fff":C.muted,fontFamily:"'Inter',sans-serif",fontSize:10,fontWeight:700,cursor:"pointer",whiteSpace:"nowrap",flexShrink:0}}>
-        {CITY_FLAGS[c.id]} {c.name}
+        {toFlag(CITY_FLAGS[c.id])} {c.name}
       </button>
     );
   });
@@ -287,54 +293,81 @@ function Feed(props) {
   var handleCopy = function(){ if(navigator.clipboard) navigator.clipboard.writeText(refLink); setCopiedRef(true); setTimeout(function(){setCopiedRef(false);},2000); };
 
   return (
-    <div style={{maxWidth:480,margin:"0 auto",minHeight:"100vh",background:C.bg}}>
+    <div style={{minHeight:"100vh",background:C.bg}}>
       {showComposer ? <Composer cityObj={cityObj} onPost={addPost} onClose={function(){setShowComposer(false);}}/> : null}
 
       <div style={{position:"sticky",top:0,zIndex:100,background:"rgba(255,255,255,0.92)",backdropFilter:"blur(20px)",boxShadow:"0 1px 0 rgba(0,0,0,0.06)"}}>
         <div style={{display:"flex",height:4}}>
           <div style={{flex:1,background:C.yellow}}/><div style={{flex:1,background:C.blue}}/><div style={{flex:1,background:C.red}}/>
         </div>
-        <div style={{padding:"10px 16px 6px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-          <div style={{fontSize:24,fontFamily:"'Syne',sans-serif",letterSpacing:-1,fontWeight:800}}>
+        <div style={{maxWidth:1200,margin:"0 auto",padding:"8px 20px 0",display:"flex",alignItems:"center",gap:20}}>
+          <div style={{fontSize:26,fontFamily:"'Syne',sans-serif",letterSpacing:-1,fontWeight:800,minWidth:120}}>
             <span style={{color:C.yellow}}>E</span><span style={{color:C.blue}}>pa</span><span style={{color:C.red}}>le</span>
           </div>
-          <button onClick={onProfile} style={{background:"none",border:"none",cursor:"pointer"}}><Av t="Tu" i={0} s={34}/></button>
+          <div style={{flex:1,display:"flex",justifyContent:"center",gap:28}}>
+            {tabButtons}
+          </div>
+          <div style={{minWidth:120,display:"flex",justifyContent:"flex-end"}}>
+            <button onClick={onProfile} style={{background:"none",border:"none",cursor:"pointer",display:"flex",alignItems:"center",gap:8}}>
+              <Av t="Tu" i={0} s={34}/>
+            </button>
+          </div>
         </div>
-        <div style={{display:"flex",justifyContent:"center",gap:24,paddingBottom:8,borderBottom:"1px solid "+C.border}}>
-          {tabButtons}
-        </div>
-
-        <div style={{display:"flex",gap:6,padding:"4px 12px 8px",overflowX:"auto"}}>
+        <div style={{maxWidth:1200,margin:"0 auto",padding:"6px 20px 8px",display:"flex",gap:6,overflowX:"auto"}}>
           {cityButtons}
         </div>
-
-        <div style={{display:"flex",gap:6,padding:"0 12px 8px",overflowX:"auto"}}>
+        <div style={{maxWidth:1200,margin:"0 auto",padding:"0 20px 8px",display:"flex",gap:6,overflowX:"auto",borderTop:"1px solid "+C.border}}>
           <button onClick={function(){setFilter("all");}} style={{padding:"5px 14px",borderRadius:100,border:"1.5px solid "+(filter==="all"?C.blue:C.border),background:filter==="all"?C.blue:C.card,color:filter==="all"?"#fff":C.muted,fontFamily:"'Inter',sans-serif",fontSize:10,fontWeight:700,cursor:"pointer",whiteSpace:"nowrap",flexShrink:0}}>Todos</button>
           {typeButtons}
         </div>
       </div>
 
-      <div style={{paddingBottom:90}}>
-        <div style={{margin:"10px 14px 0",background:C.card,borderRadius:14,overflow:"hidden",border:"1px solid "+C.border}}>
-          <div style={{background:"#0d0d0d",padding:"9px 14px",display:"flex",alignItems:"center",gap:10}}>
-            <span style={{fontSize:16}}>💵</span>
-            <div style={{flex:1,display:"flex",gap:12,alignItems:"center",flexWrap:"wrap"}}>
-              <span style={{fontFamily:"'Inter',sans-serif",fontSize:11,color:"rgba(255,255,255,0.5)"}}>BCV <strong style={{fontSize:14,color:"#ffcc00"}}>Bs 36.84</strong></span>
-              <span style={{fontFamily:"'Inter',sans-serif",fontSize:11,color:"rgba(255,255,255,0.5)"}}>Paralelo <strong style={{fontSize:14,color:"#7defa0"}}>Bs 38.20</strong></span>
-              <span style={{fontSize:11,color:"#7defa0",fontFamily:"'Inter',sans-serif",fontWeight:700}}>{"+0.35"}</span>
+      <div style={{maxWidth:1200,margin:"0 auto",padding:"20px",display:"flex",gap:24,alignItems:"flex-start"}}>
+
+        <div style={{width:240,flexShrink:0,position:"sticky",top:130}}>
+          <div style={{background:C.card,borderRadius:16,border:"1px solid "+C.border,overflow:"hidden",marginBottom:16}}>
+            <div style={{background:"linear-gradient(135deg,#ffcc00,#0066ff)",height:60}}/>
+            <div style={{padding:"0 16px 16px",marginTop:-28}}>
+              <Av t="Tu" i={0} s={52}/>
+              <div style={{marginTop:8,fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:16,color:C.text}}>Tu perfil</div>
+              <div style={{fontSize:12,color:C.muted,fontFamily:"'Inter',sans-serif",marginBottom:12}}>{"@tuepale"}</div>
+              <button onClick={onProfile} style={{width:"100%",padding:"8px",background:C.yellow,border:"none",borderRadius:10,cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:12,fontWeight:700,color:C.text}}>Ver perfil</button>
             </div>
-            <span style={{fontSize:10,color:"rgba(255,255,255,0.3)",fontFamily:"'Inter',sans-serif"}}>hoy</span>
           </div>
-          {filtered[0] ? (
-            <div style={{padding:"8px 14px",display:"flex",gap:8,alignItems:"center",borderTop:"1px solid "+C.border}}>
-              <span style={{fontSize:14}}>🔥</span>
-              <span style={{fontSize:11,color:C.muted,fontFamily:"'Inter',sans-serif"}}>Trending:</span>
-              <span style={{fontSize:12,color:C.text,fontFamily:"'Inter',sans-serif",fontWeight:600,flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{filtered[0].content.slice(0,55)}...</span>
-            </div>
-          ) : null}
+          <div style={{background:C.card,borderRadius:16,border:"1px solid "+C.border,padding:"14px 16px",marginBottom:16}}>
+            <div style={{fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:13,color:C.text,marginBottom:12}}>Ciudades</div>
+            {CITIES.slice(0,6).map(function(c){
+              return (
+                <div key={c.id} onClick={function(){setActiveCity(c.id);}} style={{display:"flex",alignItems:"center",gap:10,padding:"7px 10px",borderRadius:10,cursor:"pointer",background:activeCity===c.id?C.bg:"transparent",marginBottom:2}}>
+                  <span style={{fontSize:16}}>{toFlag(CITY_FLAGS[c.id])}</span>
+                  <span style={{fontFamily:"'Inter',sans-serif",fontSize:13,color:activeCity===c.id?C.blue:C.text,fontWeight:activeCity===c.id?700:400}}>{c.name}</span>
+                </div>
+              );
+            })}
+          </div>
+          <button onClick={function(){setShowComposer(true);}} style={{width:"100%",padding:"12px",background:C.yellow,border:"none",borderRadius:12,cursor:"pointer",fontFamily:"'Syne',sans-serif",fontSize:14,fontWeight:700,color:C.text}}>+ Publicar</button>
         </div>
 
-        <div style={{marginTop:10}}>
+        <div style={{flex:1,minWidth:0}}>
+          <div style={{background:C.card,borderRadius:14,border:"1px solid "+C.border,overflow:"hidden",marginBottom:16}}>
+            <div style={{background:"#0d0d0d",padding:"9px 14px",display:"flex",alignItems:"center",gap:10}}>
+              <span style={{fontSize:16}}>💵</span>
+              <div style={{flex:1,display:"flex",gap:12,alignItems:"center",flexWrap:"wrap"}}>
+                <span style={{fontFamily:"'Inter',sans-serif",fontSize:11,color:"rgba(255,255,255,0.5)"}}>BCV <strong style={{fontSize:14,color:"#ffcc00"}}>Bs 36.84</strong></span>
+                <span style={{fontFamily:"'Inter',sans-serif",fontSize:11,color:"rgba(255,255,255,0.5)"}}>Paralelo <strong style={{fontSize:14,color:"#7defa0"}}>Bs 38.20</strong></span>
+                <span style={{fontSize:11,color:"#7defa0",fontFamily:"'Inter',sans-serif",fontWeight:700}}>{"+0.35"}</span>
+              </div>
+              <span style={{fontSize:10,color:"rgba(255,255,255,0.3)",fontFamily:"'Inter',sans-serif"}}>hoy</span>
+            </div>
+            {filtered[0] ? (
+              <div style={{padding:"8px 14px",display:"flex",gap:8,alignItems:"center"}}>
+                <span style={{fontSize:14}}>🔥</span>
+                <span style={{fontSize:11,color:C.muted,fontFamily:"'Inter',sans-serif"}}>Trending:</span>
+                <span style={{fontSize:12,color:C.text,fontFamily:"'Inter',sans-serif",fontWeight:600,flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{filtered[0].content.slice(0,80)}...</span>
+              </div>
+            ) : null}
+          </div>
+
           {filtered.length===0 ? (
             <div style={{textAlign:"center",padding:"60px 20px",color:C.muted}}>
               <div style={{fontSize:40,marginBottom:12}}>{feedTab==="following"?"(siguiendo)":"(feed)"}</div>
@@ -345,24 +378,43 @@ function Feed(props) {
           })}
         </div>
 
-        <a href={waInvite(activeCity)} target="_blank" rel="noreferrer" style={{textDecoration:"none",display:"block",margin:"10px 14px 20px"}} onClick={function(){setInviteCount(function(c){return Math.min(c+1,3);});}}>
-          <div style={{background:C.wa,borderRadius:14,padding:"12px 16px",display:"flex",alignItems:"center",gap:12}}>
-            <span style={{fontSize:22}}>📱</span>
-            <div style={{flex:1}}>
-              <div style={{fontSize:13,fontWeight:700,color:"#fff",fontFamily:"'Inter',sans-serif"}}>Invita venezolanos a {cityObj.name}</div>
-              <div style={{fontSize:11,color:"rgba(255,255,255,0.8)",fontFamily:"'Inter',sans-serif"}}>
-                {inviteCount>=3?"Meta cumplida!":inviteCount===0?"Invita a tus panas":inviteCount+" de 3 invitados"}
+        <div style={{width:280,flexShrink:0,position:"sticky",top:130}}>
+          <a href={waInvite(activeCity)} target="_blank" rel="noreferrer" style={{textDecoration:"none",display:"block",marginBottom:16}} onClick={function(){setInviteCount(function(c){return Math.min(c+1,3);});}}>
+            <div style={{background:C.wa,borderRadius:16,padding:"16px"}}>
+              <div style={{fontSize:13,fontWeight:700,color:"#fff",fontFamily:"'Inter',sans-serif",marginBottom:4}}>Invita venezolanos a {cityObj.name}</div>
+              <div style={{fontSize:11,color:"rgba(255,255,255,0.8)",fontFamily:"'Inter',sans-serif",marginBottom:10}}>{inviteCount>=3?"Meta cumplida!":inviteCount===0?"Invita a tus panas":inviteCount+" de 3 invitados"}</div>
+              <div style={{display:"flex",gap:6,marginBottom:10}}>
+                {[0,1,2].map(function(i){ return <div key={i} style={{flex:1,height:4,borderRadius:2,background:i<inviteCount?"#fff":"rgba(255,255,255,0.3)"}}/>; })}
               </div>
+              <div style={{background:"rgba(255,255,255,0.2)",borderRadius:10,padding:"8px 12px",textAlign:"center",color:"#fff",fontFamily:"'Inter',sans-serif",fontSize:12,fontWeight:700}}>Invitar por WhatsApp</div>
             </div>
-            <div style={{display:"flex",gap:4}}>
-              {[0,1,2].map(function(i){ return <div key={i} style={{width:6,height:6,borderRadius:9999,background:i<inviteCount?"#fff":"rgba(255,255,255,0.35)"}}/>; })}
-            </div>
-            <span style={{color:"rgba(255,255,255,0.8)",fontSize:16}}>{"->"}</span>
+          </a>
+          <div style={{background:C.card,borderRadius:16,border:"1px solid "+C.border,padding:"14px 16px",marginBottom:16}}>
+            <div style={{fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:13,color:C.text,marginBottom:12}}>Venezolanos en {cityObj.name}</div>
+            {SEED.filter(function(p){return p.city===activeCity;}).slice(0,4).map(function(p,i){
+              return (
+                <div key={p.id} style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
+                  <Av t={p.av} i={i} s={36}/>
+                  <div style={{flex:1}}>
+                    <div style={{fontSize:13,fontWeight:600,color:C.text,fontFamily:"'Inter',sans-serif"}}>{p.name}</div>
+                    <div style={{fontSize:11,color:C.muted,fontFamily:"'Inter',sans-serif"}}>{p.type}</div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
-        </a>
-      </div>
+          <div style={{background:C.card,borderRadius:16,border:"1px solid "+C.border,padding:"14px 16px"}}>
+            <div style={{fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:13,color:C.text,marginBottom:10}}>Epale</div>
+            <div style={{fontSize:11,color:C.muted,fontFamily:"'Inter',sans-serif",lineHeight:1.6}}>La red social de los venezolanos en el mundo. Conecta, comparte y crece con tu gente.</div>
+            <div style={{marginTop:10,display:"flex",gap:8,flexWrap:"wrap"}}>
+              {["Terminos","Privacidad","Contacto"].map(function(t){
+                return <span key={t} style={{fontSize:10,color:C.muted,fontFamily:"'Inter',sans-serif",cursor:"pointer",textDecoration:"underline"}}>{t}</span>;
+              })}
+            </div>
+          </div>
+        </div>
 
-      <button onClick={function(){setShowComposer(true);}} style={{position:"fixed",bottom:24,right:16,width:52,height:52,borderRadius:26,background:C.yellow,border:"none",cursor:"pointer",fontSize:30,fontWeight:300,boxShadow:"0 4px 18px rgba(255,204,0,0.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:50,lineHeight:1}}>+</button>
+      </div>
     </div>
   );
 }
@@ -400,7 +452,7 @@ function Composer(props) {
         <div style={{padding:"4px 20px 0"}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
             <span style={{fontSize:15,fontFamily:"'Syne',sans-serif",color:C.text,fontWeight:700}}>Nueva publicacion</span>
-            <span style={{fontSize:12,color:C.blue,fontFamily:"'Inter',sans-serif",fontWeight:700}}>{CITY_FLAGS[cityObj.id]} {cityObj.name}</span>
+            <span style={{fontSize:12,color:C.blue,fontFamily:"'Inter',sans-serif",fontWeight:700}}>{toFlag(CITY_FLAGS[cityObj.id])} {cityObj.name}</span>
           </div>
           <div style={{display:"flex",gap:6,marginBottom:14,overflowX:"auto"}}>
             {Object.entries(TYPES).map(function(entry){
@@ -496,7 +548,7 @@ function Guardados(props) {
                 <Av t={p.av} i={i} s={36}/>
                 <div>
                   <div style={{fontWeight:700,fontSize:13,fontFamily:"'Syne',sans-serif",color:C.text}}>{p.name}</div>
-                  <div style={{fontSize:10,color:C.blue,fontFamily:"'Inter',sans-serif"}}>{CITY_FLAGS[p.city]} {getCity(p.city).name}</div>
+                  <div style={{fontSize:10,color:C.blue,fontFamily:"'Inter',sans-serif"}}>{toFlag(CITY_FLAGS[p.city])} {getCity(p.city).name}</div>
                 </div>
               </div>
               <p style={{fontSize:14,lineHeight:1.6,color:C.text,fontFamily:"'Inter',sans-serif"}}>{p.content}</p>
@@ -530,7 +582,7 @@ function FollowersList(props) {
               <Av t={u.av} i={i} s={48}/>
               <div style={{flex:1}}>
                 <div style={{fontWeight:700,fontSize:15,fontFamily:"'Syne',sans-serif",color:C.text}}>{u.name}</div>
-                <div style={{fontSize:11,color:C.blue,fontFamily:"'Inter',sans-serif",marginTop:1}}>{CITY_FLAGS[u.city]} {getCity(u.city).name}</div>
+                <div style={{fontSize:11,color:C.blue,fontFamily:"'Inter',sans-serif",marginTop:1}}>{toFlag(CITY_FLAGS[u.city])} {getCity(u.city).name}</div>
                 <div style={{fontSize:12,color:C.muted,fontFamily:"'Inter',sans-serif",marginTop:2}}>{u.bio}</div>
               </div>
               <button onClick={function(){onFollow(u.name);}} style={{padding:"7px 16px",borderRadius:100,border:"1.5px solid "+(following.includes(u.name)?C.border:C.blue),background:"transparent",color:following.includes(u.name)?C.muted:C.blue,fontFamily:"'Inter',sans-serif",fontSize:12,fontWeight:700,cursor:"pointer",flexShrink:0}}>
@@ -605,7 +657,7 @@ function Profile(props) {
     <div style={{position:"fixed",inset:0,zIndex:200,background:C.bg,maxWidth:480,margin:"0 auto",overflowY:"auto"}}>
       <div style={{display:"flex",height:4}}><div style={{flex:1,background:C.yellow}}/><div style={{flex:1,background:C.blue}}/><div style={{flex:1,background:C.red}}/></div>
       <div style={{background:C.card,borderBottom:"1px solid "+C.border,marginBottom:10}}>
-        <div style={{height:100,background:"linear-gradient(135deg,#ffcc00 0%,#0066ff 50%,#ff2d2d 100%)",position:"relative"}}>
+        <div style={{height:100,background:"linear-gradient(135deg,#ffcc00,#0066ff,#ff2d2d)",position:"relative"}}>
           <button onClick={onClose} style={{position:"absolute",top:12,right:12,background:"rgba(0,0,0,0.3)",border:"none",borderRadius:9999,width:32,height:32,cursor:"pointer",color:"#fff",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center"}}>X</button>
         </div>
         <div style={{padding:"0 20px 20px",position:"relative"}}>
@@ -615,7 +667,7 @@ function Profile(props) {
           <div style={{paddingTop:46,display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
             <div>
               <div style={{fontSize:22,fontFamily:"'Syne',sans-serif",color:C.text,fontWeight:700}}>Tu Perfil</div>
-              <div style={{fontSize:12,color:C.blue,fontFamily:"'Inter',sans-serif",fontWeight:700,marginTop:2}}>{CITY_FLAGS[userCity]} {cityObj.name}</div>
+              <div style={{fontSize:12,color:C.blue,fontFamily:"'Inter',sans-serif",fontWeight:700,marginTop:2}}>{toFlag(CITY_FLAGS[userCity])} {cityObj.name}</div>
             </div>
             <button onClick={function(){setSubScreen("edit");}} style={{padding:"7px 16px",background:C.blue,border:"none",borderRadius:100,color:"#fff",cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:11,fontWeight:700}}>Editar perfil</button>
           </div>
@@ -696,7 +748,7 @@ function EditProfile(props) {
             <div key={i} style={{marginBottom:18}}>
               <div style={{fontSize:10,fontFamily:"'Inter',sans-serif",color:C.muted,marginBottom:7,letterSpacing:1}}>{label}</div>
               <div style={{position:"relative"}}>
-                {isUser ? <span style={{position:"absolute",left:14,top:"50%",transform:"translateY(-50%)",color:C.muted,fontFamily:"'Inter',sans-serif",fontSize:15}}>@</span> : null}
+                {isUser ? <span style={{position:"absolute",left:14,top:10,color:C.muted,fontFamily:"'Inter',sans-serif",fontSize:15}}>@</span> : null}
                 <input value={val} onChange={function(e){set(e.target.value);}} placeholder={ph} style={{width:"100%",padding:"13px 16px 13px "+(isUser?"30px":"16px"),background:C.card,border:"1.5px solid "+(val?C.blue:C.border),borderRadius:14,color:C.text,fontFamily:"'Inter',sans-serif",fontSize:15,outline:"none",boxSizing:"border-box"}}/>
               </div>
             </div>
@@ -803,7 +855,7 @@ function Configuracion(props) {
         <div style={{fontSize:18,fontFamily:"'Syne',sans-serif",color:C.text}}>Configuracion</div>
       </div>
       <div style={{paddingBottom:40}}>
-        {[{title:"CUENTA",items:[{label:"Correo",value:"tu@correo.com",type:"info"},{label:"Ciudad",value:CITY_FLAGS[userCity]+" "+cityObj.name,type:"info"},{label:"Cambiar contrasena",type:"action",onPress:function(){setSubPage("password");}}]},{title:"PREFERENCIAS",items:[{label:"Notificaciones",type:"toggle",val:notifOn,onToggle:function(){setNotifOn(function(v){return !v;});}},{label:"Modo oscuro",type:"toggle",val:darkMode,onToggle:function(){var v=!darkMode;setDarkMode(v);if(onSetDark)onSetDark(v);}},{label:"Idioma",value:currentLang==="en"?"English":"Espanol",type:"action",onPress:function(){setSubPage("lang");}}]},{title:"LEGAL",items:[{label:"Terminos de servicio",type:"action",onPress:function(){setSubPage("terminos");}},{label:"Politica de privacidad",type:"action",onPress:function(){setSubPage("privacidad");}},{label:"Version",value:"v1.0.0",type:"info"}]}].map(function(sec,si){
+        {[{title:"CUENTA",items:[{label:"Correo",value:"tu@correo.com",type:"info"},{label:"Ciudad",value:toFlag(CITY_FLAGS[userCity])+" "+cityObj.name,type:"info"},{label:"Cambiar contrasena",type:"action",onPress:function(){setSubPage("password");}}]},{title:"PREFERENCIAS",items:[{label:"Notificaciones",type:"toggle",val:notifOn,onToggle:function(){setNotifOn(function(v){return !v;});}},{label:"Modo oscuro",type:"toggle",val:darkMode,onToggle:function(){var v=!darkMode;setDarkMode(v);if(onSetDark)onSetDark(v);}},{label:"Idioma",value:currentLang==="en"?"English":"Espanol",type:"action",onPress:function(){setSubPage("lang");}}]},{title:"LEGAL",items:[{label:"Terminos de servicio",type:"action",onPress:function(){setSubPage("terminos");}},{label:"Politica de privacidad",type:"action",onPress:function(){setSubPage("privacidad");}},{label:"Version",value:"v1.0.0",type:"info"}]}].map(function(sec,si){
           return (
             <div key={si} style={{marginTop:20}}>
               <div style={{fontSize:10,fontFamily:"'Inter',sans-serif",color:C.muted,letterSpacing:1,padding:"0 16px",marginBottom:6}}>{sec.title}</div>
@@ -860,7 +912,7 @@ function AuthLogin(props) {
         <div style={{fontSize:10,fontFamily:"'Inter',sans-serif",color:"#86868b",marginBottom:7,letterSpacing:1}}>CONTRASENA</div>
         <div style={{position:"relative"}}>
           <input value={password} onChange={function(e){setPassword(e.target.value);}} type={showPass?"text":"password"} placeholder="Tu contrasena" style={{width:"100%",padding:"13px 46px 13px 16px",background:"#fff",border:"1.5px solid "+(password?"#0066ff":"#e8e8ed"),borderRadius:12,color:"#1a1a1a",fontFamily:"'Inter',sans-serif",fontSize:15,outline:"none",boxSizing:"border-box"}}/>
-          <button onClick={function(){setShowPass(function(s){return !s;});}} style={{position:"absolute",right:14,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",cursor:"pointer",fontSize:18}}>👁️</button>
+          <button onClick={function(){setShowPass(function(s){return !s;});}} style={{position:"absolute",right:14,top:10,background:"none",border:"none",cursor:"pointer",fontSize:18}}>👁️</button>
         </div>
       </div>
       <div style={{textAlign:"right",marginBottom:20}}><button style={{background:"none",border:"none",cursor:"pointer",color:"#0066ff",fontFamily:"'Inter',sans-serif",fontSize:11}}>Olvidaste tu contrasena?</button></div>
@@ -892,7 +944,7 @@ function AuthStep1(props) {
         <div style={{fontSize:10,fontFamily:"'Inter',sans-serif",color:"#86868b",marginBottom:7,letterSpacing:1}}>CONTRASENA</div>
         <div style={{position:"relative"}}>
           <input value={password} onChange={function(e){setPassword(e.target.value);}} type={showPass?"text":"password"} placeholder="Minimo 6 caracteres" style={{width:"100%",padding:"13px 46px 13px 16px",background:"#fff",border:"1.5px solid "+(password?"#0066ff":"#e8e8ed"),borderRadius:12,color:"#1a1a1a",fontFamily:"'Inter',sans-serif",fontSize:15,outline:"none",boxSizing:"border-box"}}/>
-          <button onClick={function(){setShowPass(function(s){return !s;});}} style={{position:"absolute",right:14,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",cursor:"pointer",fontSize:18}}>👁️</button>
+          <button onClick={function(){setShowPass(function(s){return !s;});}} style={{position:"absolute",right:14,top:10,background:"none",border:"none",cursor:"pointer",fontSize:18}}>👁️</button>
         </div>
         {password ? (
           <div>
@@ -954,7 +1006,7 @@ function AuthStep3(props) {
         {CITIES.map(function(c){
           return (
             <button key={c.id} onClick={function(){setChosenCity(c.id);}} style={{display:"flex",alignItems:"center",gap:14,padding:"12px 16px",background:chosenCity===c.id?"#fffbea":"#fff",border:"2px solid "+(chosenCity===c.id?"#ffcc00":"#e8e8ed"),borderRadius:12,cursor:"pointer",textAlign:"left"}}>
-              <span style={{fontSize:24}}>{CITY_FLAGS[c.id]}</span>
+              <span style={{fontSize:24}}>{toFlag(CITY_FLAGS[c.id])}</span>
               <div style={{flex:1}}>
                 <div style={{fontSize:15,fontFamily:"'Syne',sans-serif",color:"#1a1a1a"}}>{c.name}</div>
                 <div style={{fontSize:10,color:"#86868b",fontFamily:"'Inter',sans-serif"}}>{c.pop}</div>
