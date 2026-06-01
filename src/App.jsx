@@ -1315,7 +1315,7 @@ function Auth(props) {
 export default function App() {
   var [dark,setDark]=useState(false);
   var [lang,setLang]=useState("es");
-  var [screen,setScreen]=useState("loading");
+  var [screen,setScreen]=useState("auth");
   var [userCity,setUserCity]=useState("madrid");
   var [userName,setUserName]=useState("");
   var [userPhoto,setUserPhoto]=useState(null);
@@ -1323,55 +1323,26 @@ export default function App() {
   var [showProfile,setShowProfile]=useState(false);
   var [following,setFollowing]=useState([]);
 
-  useEffect(function(){
-    var token = localStorage.getItem("epale_token");
-    var profile = localStorage.getItem("epale_profile");
-    if(token && profile) {
-      try {
-        var p = JSON.parse(profile);
-        window._supaToken = token;
-        setUserId(p.id);
-        setUserName(p.name||"");
-        setUserPhoto(p.photo_url||null);
-        setUserCity(p.city||"madrid");
-        setScreen("feed");
-      } catch(e) { setScreen("auth"); }
-    } else {
-      setScreen("auth");
-    }
-  }, []);
+  var toggleFollow = function(name){ setFollowing(function(f){ return f.includes(name)?f.filter(function(x){return x!==name;}):[].concat(f,[name]); }); };
 
   var handleDone = function(city, name, photo, token, uid) {
-    setUserCity(city||"madrid");
-    if(name) setUserName(name);
-    if(photo) setUserPhoto(photo);
-    if(token) { window._supaToken = token; try { localStorage.setItem("epale_token", token); } catch(e){} }
-    if(uid) setUserId(uid);
-    try { localStorage.setItem("epale_profile", JSON.stringify({id:uid, name:name, city:city})); } catch(e){}
+    try { setUserCity(city||"madrid"); } catch(e){}
+    try { if(name) setUserName(name); } catch(e){}
+    try { if(photo) setUserPhoto(photo); } catch(e){}
+    try { if(uid) setUserId(uid); } catch(e){}
+    try { if(token) { window._supaToken = token; localStorage.setItem("epale_token", token); localStorage.setItem("epale_uid", uid||""); localStorage.setItem("epale_name", name||""); localStorage.setItem("epale_city", city||"madrid"); } } catch(e){}
     setScreen("feed");
   };
 
   var handleLogout = function() {
-    localStorage.removeItem("epale_token");
-    localStorage.removeItem("epale_profile");
+    try { localStorage.clear(); } catch(e){}
     window._supaToken = null;
     setShowProfile(false);
     setScreen("auth");
   };
 
-  var toggleFollow = function(name){ setFollowing(function(f){ return f.includes(name)?f.filter(function(x){return x!==name;}):[].concat(f,[name]); }); };
-
-  if(screen==="loading") return (
-    <div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",background:"#f5f5f7"}}>
-      <div style={{fontSize:32,fontFamily:"'Syne',sans-serif",fontWeight:800}}>
-        <span style={{color:"#ffcc00"}}>E</span><span style={{color:"#0066ff"}}>pa</span><span style={{color:"#ff2d2d"}}>le</span>
-      </div>
-    </div>
-  );
-
   return (
     <div>
-      <style>{"@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Syne:wght@700;800&display=swap'); *{margin:0;padding:0;box-sizing:border-box;} body{font-family:sans-serif;background:#f5f5f7;}"}</style>
       {screen==="auth" ? <Auth onDone={handleDone}/> : null}
       {screen==="feed" ? (
         <div>
