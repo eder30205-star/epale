@@ -1338,20 +1338,27 @@ function Auth(props) {
 }
 
 export default function App() {
-  var saved = (function(){ try { var s=localStorage.getItem("epale_session"); return s?JSON.parse(s):null; } catch(e){ return null; } })();
   var [dark,setDark]=useState(false);
   var [lang,setLang]=useState("es");
-  var [screen,setScreen]=useState(saved&&saved.token?"feed":"auth");
-  var [userCity,setUserCity]=useState(saved&&saved.city?saved.city:"madrid");
-  var [userName,setUserName]=useState(saved&&saved.name?saved.name:"");
-  var [userPhoto,setUserPhoto]=useState(saved&&saved.photo?saved.photo:null);
-  var [userId,setUserId]=useState(saved&&saved.uid?saved.uid:"");
+  var [screen,setScreen]=useState(function(){
+    try { var s=localStorage.getItem("epale_session"); var d=s?JSON.parse(s):null; return d&&d.token?"feed":"auth"; } catch(e){ return "auth"; }
+  });
+  var [userCity,setUserCity]=useState(function(){
+    try { var s=localStorage.getItem("epale_session"); var d=s?JSON.parse(s):null; return d&&d.city?d.city:"madrid"; } catch(e){ return "madrid"; }
+  });
+  var [userName,setUserName]=useState(function(){
+    try { var s=localStorage.getItem("epale_session"); var d=s?JSON.parse(s):null; return d&&d.name?d.name:""; } catch(e){ return ""; }
+  });
+  var [userPhoto,setUserPhoto]=useState(function(){
+    try { var s=localStorage.getItem("epale_session"); var d=s?JSON.parse(s):null; return d&&d.photo?d.photo:null; } catch(e){ return null; }
+  });
+  var [userId,setUserId]=useState(function(){
+    try { var s=localStorage.getItem("epale_session"); var d=s?JSON.parse(s):null; if(d&&d.token) window._supaToken=d.token; return d&&d.uid?d.uid:""; } catch(e){ return ""; }
+  });
   var [showProfile,setShowProfile]=useState(false);
   var [following,setFollowing]=useState([]);
   var [crashMsg,setCrashMsg]=useState("");
   var [activeTab,setActiveTab]=useState("feed");
-
-  if(saved&&saved.token) { window._supaToken = saved.token; }
 
   var toggleFollow = function(name){ setFollowing(function(f){ return f.includes(name)?f.filter(function(x){return x!==name;}):[].concat(f,[name]); }); };
 
