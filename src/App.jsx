@@ -903,7 +903,34 @@ function EditProfile(props) {
 
   var save = function() {
     setLoading(true);
-    setTimeout(function(){ setLoading(false); setSaved(true); onPhotoChange(photo); setTimeout(onClose,1200); },900);
+    var uid = (function(){ try { var s=localStorage.getItem("epale_session"); var d=s?JSON.parse(s):null; return d&&d.uid?d.uid:""; } catch(e){ return ""; } })();
+    if(uid) {
+      api.upsertProfile(uid, name, userCity, username).then(function(){
+        try {
+          var s=localStorage.getItem("epale_session"); var d=s?JSON.parse(s):{};
+          d.name=name; d.photo=photo||d.photo;
+          localStorage.setItem("epale_session", JSON.stringify(d));
+        } catch(e){}
+        setLoading(false); setSaved(true);
+        onPhotoChange(photo);
+        setTimeout(onClose, 1200);
+      }).catch(function(){
+        setLoading(false); setSaved(true);
+        onPhotoChange(photo);
+        setTimeout(onClose, 1200);
+      });
+    } else {
+      setTimeout(function(){
+        try {
+          var s=localStorage.getItem("epale_session"); var d=s?JSON.parse(s):{};
+          d.name=name; d.photo=photo||d.photo;
+          localStorage.setItem("epale_session", JSON.stringify(d));
+        } catch(e){}
+        setLoading(false); setSaved(true);
+        onPhotoChange(photo);
+        setTimeout(onClose, 1200);
+      }, 600);
+    }
   };
 
   return (
