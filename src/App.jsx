@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import React from "react";
 
 const LIGHT = { bg:"#f5f5f7", card:"#ffffff", border:"#e8e8ed", yellow:"#ffcc00", blue:"#0066ff", red:"#ff2d2d", text:"#1a1a1a", muted:"#86868b", green:"#1a7a3c", wa:"#25D366" };
@@ -240,7 +240,7 @@ function PostCard(props) {
 }
 
 function Feed(props) {
-  var userCity=props.userCity, onProfile=props.onProfile;
+  var userCity=props.userCity, onProfile=props.onProfile, userPhoto=props.userPhoto, userName=props.userName||"Tu";
   var [filter,setFilter]=useState("all");
   var [posts,setPosts]=useState(SEED);
   var [showComposer,setShowComposer]=useState(false);
@@ -292,45 +292,136 @@ function Feed(props) {
 
   var handleCopy = function(){ if(navigator.clipboard) navigator.clipboard.writeText(refLink); setCopiedRef(true); setTimeout(function(){setCopiedRef(false);},2000); };
 
+  var [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  useEffect(function(){
+    var handler = function(){ setIsMobile(window.innerWidth < 768); };
+    window.addEventListener("resize", handler);
+    return function(){ window.removeEventListener("resize", handler); };
+  }, []);
+
+  var dollarWidget = (
+    <div style={{background:C.card,borderRadius:14,border:"1px solid "+C.border,overflow:"hidden",marginBottom:16}}>
+      <div style={{background:"#0d0d0d",padding:"9px 14px",display:"flex",alignItems:"center",gap:10}}>
+        <span style={{fontSize:16}}>💵</span>
+        <div style={{flex:1,display:"flex",gap:12,alignItems:"center",flexWrap:"wrap"}}>
+          <span style={{fontFamily:"'Inter',sans-serif",fontSize:11,color:"rgba(255,255,255,0.5)"}}>BCV <strong style={{fontSize:14,color:"#ffcc00"}}>Bs 36.84</strong></span>
+          <span style={{fontFamily:"'Inter',sans-serif",fontSize:11,color:"rgba(255,255,255,0.5)"}}>Paralelo <strong style={{fontSize:14,color:"#7defa0"}}>Bs 38.20</strong></span>
+          <span style={{fontSize:11,color:"#7defa0",fontFamily:"'Inter',sans-serif",fontWeight:700}}>{"+0.35"}</span>
+        </div>
+        <span style={{fontSize:10,color:"rgba(255,255,255,0.3)",fontFamily:"'Inter',sans-serif"}}>hoy</span>
+      </div>
+      {filtered[0] ? (
+        <div style={{padding:"8px 14px",display:"flex",gap:8,alignItems:"center"}}>
+          <span style={{fontSize:14}}>🔥</span>
+          <span style={{fontSize:11,color:C.muted,fontFamily:"'Inter',sans-serif"}}>Trending:</span>
+          <span style={{fontSize:12,color:C.text,fontFamily:"'Inter',sans-serif",fontWeight:600,flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{filtered[0].content.slice(0,80)}...</span>
+        </div>
+      ) : null}
+    </div>
+  );
+
+  var postsList = filtered.length===0 ? (
+    <div style={{textAlign:"center",padding:"60px 20px",color:C.muted}}>
+      <div style={{fontSize:40,marginBottom:12}}>{feedTab==="following"?"(siguiendo)":"(feed)"}</div>
+      <div style={{fontSize:15,fontFamily:"'Inter',sans-serif"}}>{feedTab==="following"?"Sigue a alguien para ver sus posts":"Se el primero en publicar"}</div>
+    </div>
+  ) : filtered.map(function(p,i){
+    return <PostCard key={p.id} post={p} idx={i} cityObj={cityObj} saved={savedPosts.includes(p.id)} onSave={toggleSave} following={following} onFollow={toggleFollow}/>;
+  });
+
+  var inviteBanner = (
+    <a href={waInvite(activeCity)} target="_blank" rel="noreferrer" style={{textDecoration:"none",display:"block",marginBottom:16}} onClick={function(){setInviteCount(function(c){return Math.min(c+1,3);});}}>
+      <div style={{background:C.wa,borderRadius:16,padding:"16px"}}>
+        <div style={{fontSize:13,fontWeight:700,color:"#fff",fontFamily:"'Inter',sans-serif",marginBottom:4}}>Invita venezolanos a {cityObj.name}</div>
+        <div style={{fontSize:11,color:"rgba(255,255,255,0.8)",fontFamily:"'Inter',sans-serif",marginBottom:10}}>{inviteCount>=3?"Meta cumplida!":inviteCount===0?"Invita a tus panas":inviteCount+" de 3 invitados"}</div>
+        <div style={{display:"flex",gap:6,marginBottom:10}}>
+          {[0,1,2].map(function(j){ return <div key={j} style={{flex:1,height:4,borderRadius:2,background:j<inviteCount?"#fff":"rgba(255,255,255,0.3)"}}/>; })}
+        </div>
+        <div style={{background:"rgba(255,255,255,0.2)",borderRadius:10,padding:"8px 12px",textAlign:"center",color:"#fff",fontFamily:"'Inter',sans-serif",fontSize:12,fontWeight:700}}>Invitar por WhatsApp</div>
+      </div>
+    </a>
+  );
+
+  var header = (
+    <div style={{position:"sticky",top:0,zIndex:100,background:"rgba(255,255,255,0.95)",backdropFilter:"blur(20px)",boxShadow:"0 1px 0 rgba(0,0,0,0.06)"}}>
+      <div style={{display:"flex",height:4}}>
+        <div style={{flex:1,background:C.yellow}}/><div style={{flex:1,background:C.blue}}/><div style={{flex:1,background:C.red}}/>
+      </div>
+      {isMobile ? (
+        <div>
+          <div style={{padding:"10px 16px 6px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+            <div style={{fontSize:24,fontFamily:"'Syne',sans-serif",letterSpacing:-1,fontWeight:800}}>
+              <span style={{color:C.yellow}}>E</span><span style={{color:C.blue}}>pa</span><span style={{color:C.red}}>le</span>
+            </div>
+            <div style={{display:"flex",gap:20}}>
+              {tabButtons}
+            </div>
+            <button onClick={onProfile} style={{background:"none",border:"none",cursor:"pointer"}}>
+              <Av t={userName} i={0} s={34} photo={userPhoto}/>
+            </button>
+          </div>
+          <div style={{display:"flex",gap:6,padding:"0 12px 8px",overflowX:"auto"}}>
+            {cityButtons}
+          </div>
+          <div style={{display:"flex",gap:6,padding:"0 12px 8px",overflowX:"auto",borderTop:"1px solid "+C.border}}>
+            <button onClick={function(){setFilter("all");}} style={{padding:"5px 14px",borderRadius:100,border:"1.5px solid "+(filter==="all"?C.blue:C.border),background:filter==="all"?C.blue:C.card,color:filter==="all"?"#fff":C.muted,fontFamily:"'Inter',sans-serif",fontSize:10,fontWeight:700,cursor:"pointer",whiteSpace:"nowrap",flexShrink:0}}>Todos</button>
+            {typeButtons}
+          </div>
+        </div>
+      ) : (
+        <div>
+          <div style={{maxWidth:1200,margin:"0 auto",padding:"8px 20px 0",display:"flex",alignItems:"center",gap:20}}>
+            <div style={{fontSize:26,fontFamily:"'Syne',sans-serif",letterSpacing:-1,fontWeight:800,minWidth:120}}>
+              <span style={{color:C.yellow}}>E</span><span style={{color:C.blue}}>pa</span><span style={{color:C.red}}>le</span>
+            </div>
+            <div style={{flex:1,display:"flex",justifyContent:"center",gap:28}}>
+              {tabButtons}
+            </div>
+            <div style={{minWidth:120,display:"flex",justifyContent:"flex-end"}}>
+              <button onClick={onProfile} style={{background:"none",border:"none",cursor:"pointer"}}>
+                <Av t={userName} i={0} s={34} photo={userPhoto}/>
+              </button>
+            </div>
+          </div>
+          <div style={{maxWidth:1200,margin:"0 auto",padding:"6px 20px 8px",display:"flex",gap:6,overflowX:"auto"}}>
+            {cityButtons}
+          </div>
+          <div style={{maxWidth:1200,margin:"0 auto",padding:"0 20px 8px",display:"flex",gap:6,overflowX:"auto",borderTop:"1px solid "+C.border}}>
+            <button onClick={function(){setFilter("all");}} style={{padding:"5px 14px",borderRadius:100,border:"1.5px solid "+(filter==="all"?C.blue:C.border),background:filter==="all"?C.blue:C.card,color:filter==="all"?"#fff":C.muted,fontFamily:"'Inter',sans-serif",fontSize:10,fontWeight:700,cursor:"pointer",whiteSpace:"nowrap",flexShrink:0}}>Todos</button>
+            {typeButtons}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
+  if(isMobile) {
+    return (
+      <div style={{minHeight:"100vh",background:C.bg}}>
+        {showComposer ? <Composer cityObj={cityObj} onPost={addPost} onClose={function(){setShowComposer(false);}}/> : null}
+        {header}
+        <div style={{paddingBottom:80}}>
+          <div style={{margin:"10px 14px 0"}}>{dollarWidget}</div>
+          <div style={{marginTop:4}}>{postsList}</div>
+          <div style={{margin:"10px 14px 20px"}}>{inviteBanner}</div>
+        </div>
+        <button onClick={function(){setShowComposer(true);}} style={{position:"fixed",bottom:24,right:20,width:52,height:52,borderRadius:26,background:C.yellow,border:"none",cursor:"pointer",fontSize:30,fontWeight:300,boxShadow:"0 4px 18px rgba(255,204,0,0.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:50,lineHeight:1}}>+</button>
+      </div>
+    );
+  }
+
   return (
     <div style={{minHeight:"100vh",background:C.bg}}>
       {showComposer ? <Composer cityObj={cityObj} onPost={addPost} onClose={function(){setShowComposer(false);}}/> : null}
-
-      <div style={{position:"sticky",top:0,zIndex:100,background:"rgba(255,255,255,0.92)",backdropFilter:"blur(20px)",boxShadow:"0 1px 0 rgba(0,0,0,0.06)"}}>
-        <div style={{display:"flex",height:4}}>
-          <div style={{flex:1,background:C.yellow}}/><div style={{flex:1,background:C.blue}}/><div style={{flex:1,background:C.red}}/>
-        </div>
-        <div style={{maxWidth:1200,margin:"0 auto",padding:"8px 20px 0",display:"flex",alignItems:"center",gap:20}}>
-          <div style={{fontSize:26,fontFamily:"'Syne',sans-serif",letterSpacing:-1,fontWeight:800,minWidth:120}}>
-            <span style={{color:C.yellow}}>E</span><span style={{color:C.blue}}>pa</span><span style={{color:C.red}}>le</span>
-          </div>
-          <div style={{flex:1,display:"flex",justifyContent:"center",gap:28}}>
-            {tabButtons}
-          </div>
-          <div style={{minWidth:120,display:"flex",justifyContent:"flex-end"}}>
-            <button onClick={onProfile} style={{background:"none",border:"none",cursor:"pointer",display:"flex",alignItems:"center",gap:8}}>
-              <Av t="Tu" i={0} s={34}/>
-            </button>
-          </div>
-        </div>
-        <div style={{maxWidth:1200,margin:"0 auto",padding:"6px 20px 8px",display:"flex",gap:6,overflowX:"auto"}}>
-          {cityButtons}
-        </div>
-        <div style={{maxWidth:1200,margin:"0 auto",padding:"0 20px 8px",display:"flex",gap:6,overflowX:"auto",borderTop:"1px solid "+C.border}}>
-          <button onClick={function(){setFilter("all");}} style={{padding:"5px 14px",borderRadius:100,border:"1.5px solid "+(filter==="all"?C.blue:C.border),background:filter==="all"?C.blue:C.card,color:filter==="all"?"#fff":C.muted,fontFamily:"'Inter',sans-serif",fontSize:10,fontWeight:700,cursor:"pointer",whiteSpace:"nowrap",flexShrink:0}}>Todos</button>
-          {typeButtons}
-        </div>
-      </div>
-
+      {header}
       <div style={{maxWidth:1200,margin:"0 auto",padding:"20px",display:"flex",gap:24,alignItems:"flex-start"}}>
-
-        <div style={{width:240,flexShrink:0,position:"sticky",top:130}}>
+        <div style={{width:240,flexShrink:0,position:"sticky",top:170}}>
           <div style={{background:C.card,borderRadius:16,border:"1px solid "+C.border,overflow:"hidden",marginBottom:16}}>
             <div style={{background:"linear-gradient(135deg,#ffcc00,#0066ff)",height:60}}/>
             <div style={{padding:"0 16px 16px",marginTop:-28}}>
-              <Av t="Tu" i={0} s={52}/>
-              <div style={{marginTop:8,fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:16,color:C.text}}>Tu perfil</div>
-              <div style={{fontSize:12,color:C.muted,fontFamily:"'Inter',sans-serif",marginBottom:12}}>{"@tuepale"}</div>
+              <Av t={userName} i={0} s={52} photo={userPhoto}/>
+              <div style={{marginTop:8,fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:16,color:C.text}}>{userName}</div>
+              <div style={{fontSize:12,color:C.muted,fontFamily:"'Inter',sans-serif",marginBottom:12}}>{"@"+userName.toLowerCase().replace(" ","")}</div>
               <button onClick={onProfile} style={{width:"100%",padding:"8px",background:C.yellow,border:"none",borderRadius:10,cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:12,fontWeight:700,color:C.text}}>Ver perfil</button>
             </div>
           </div>
@@ -347,48 +438,12 @@ function Feed(props) {
           </div>
           <button onClick={function(){setShowComposer(true);}} style={{width:"100%",padding:"12px",background:C.yellow,border:"none",borderRadius:12,cursor:"pointer",fontFamily:"'Syne',sans-serif",fontSize:14,fontWeight:700,color:C.text}}>+ Publicar</button>
         </div>
-
         <div style={{flex:1,minWidth:0}}>
-          <div style={{background:C.card,borderRadius:14,border:"1px solid "+C.border,overflow:"hidden",marginBottom:16}}>
-            <div style={{background:"#0d0d0d",padding:"9px 14px",display:"flex",alignItems:"center",gap:10}}>
-              <span style={{fontSize:16}}>💵</span>
-              <div style={{flex:1,display:"flex",gap:12,alignItems:"center",flexWrap:"wrap"}}>
-                <span style={{fontFamily:"'Inter',sans-serif",fontSize:11,color:"rgba(255,255,255,0.5)"}}>BCV <strong style={{fontSize:14,color:"#ffcc00"}}>Bs 36.84</strong></span>
-                <span style={{fontFamily:"'Inter',sans-serif",fontSize:11,color:"rgba(255,255,255,0.5)"}}>Paralelo <strong style={{fontSize:14,color:"#7defa0"}}>Bs 38.20</strong></span>
-                <span style={{fontSize:11,color:"#7defa0",fontFamily:"'Inter',sans-serif",fontWeight:700}}>{"+0.35"}</span>
-              </div>
-              <span style={{fontSize:10,color:"rgba(255,255,255,0.3)",fontFamily:"'Inter',sans-serif"}}>hoy</span>
-            </div>
-            {filtered[0] ? (
-              <div style={{padding:"8px 14px",display:"flex",gap:8,alignItems:"center"}}>
-                <span style={{fontSize:14}}>🔥</span>
-                <span style={{fontSize:11,color:C.muted,fontFamily:"'Inter',sans-serif"}}>Trending:</span>
-                <span style={{fontSize:12,color:C.text,fontFamily:"'Inter',sans-serif",fontWeight:600,flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{filtered[0].content.slice(0,80)}...</span>
-              </div>
-            ) : null}
-          </div>
-
-          {filtered.length===0 ? (
-            <div style={{textAlign:"center",padding:"60px 20px",color:C.muted}}>
-              <div style={{fontSize:40,marginBottom:12}}>{feedTab==="following"?"(siguiendo)":"(feed)"}</div>
-              <div style={{fontSize:15,fontFamily:"'Inter',sans-serif"}}>{feedTab==="following"?"Sigue a alguien para ver sus posts":"Se el primero en publicar"}</div>
-            </div>
-          ) : filtered.map(function(p,i){
-            return <PostCard key={p.id} post={p} idx={i} cityObj={cityObj} saved={savedPosts.includes(p.id)} onSave={toggleSave} following={following} onFollow={toggleFollow}/>;
-          })}
+          {dollarWidget}
+          {postsList}
         </div>
-
-        <div style={{width:280,flexShrink:0,position:"sticky",top:130}}>
-          <a href={waInvite(activeCity)} target="_blank" rel="noreferrer" style={{textDecoration:"none",display:"block",marginBottom:16}} onClick={function(){setInviteCount(function(c){return Math.min(c+1,3);});}}>
-            <div style={{background:C.wa,borderRadius:16,padding:"16px"}}>
-              <div style={{fontSize:13,fontWeight:700,color:"#fff",fontFamily:"'Inter',sans-serif",marginBottom:4}}>Invita venezolanos a {cityObj.name}</div>
-              <div style={{fontSize:11,color:"rgba(255,255,255,0.8)",fontFamily:"'Inter',sans-serif",marginBottom:10}}>{inviteCount>=3?"Meta cumplida!":inviteCount===0?"Invita a tus panas":inviteCount+" de 3 invitados"}</div>
-              <div style={{display:"flex",gap:6,marginBottom:10}}>
-                {[0,1,2].map(function(i){ return <div key={i} style={{flex:1,height:4,borderRadius:2,background:i<inviteCount?"#fff":"rgba(255,255,255,0.3)"}}/>; })}
-              </div>
-              <div style={{background:"rgba(255,255,255,0.2)",borderRadius:10,padding:"8px 12px",textAlign:"center",color:"#fff",fontFamily:"'Inter',sans-serif",fontSize:12,fontWeight:700}}>Invitar por WhatsApp</div>
-            </div>
-          </a>
+        <div style={{width:280,flexShrink:0,position:"sticky",top:170}}>
+          {inviteBanner}
           <div style={{background:C.card,borderRadius:16,border:"1px solid "+C.border,padding:"14px 16px",marginBottom:16}}>
             <div style={{fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:13,color:C.text,marginBottom:12}}>Venezolanos en {cityObj.name}</div>
             {SEED.filter(function(p){return p.city===activeCity;}).slice(0,4).map(function(p,i){
@@ -413,7 +468,6 @@ function Feed(props) {
             </div>
           </div>
         </div>
-
       </div>
     </div>
   );
@@ -641,7 +695,7 @@ function Notificaciones(props) {
 }
 
 function Profile(props) {
-  var userCity=props.userCity, onLogout=props.onLogout, onClose=props.onClose, onSetDark=props.onSetDark, onSetLang=props.onSetLang, isDark=props.isDark, currentLang=props.currentLang, following=props.following||[], onFollow=props.onFollow;
+  var userCity=props.userCity, onLogout=props.onLogout, onClose=props.onClose, onSetDark=props.onSetDark, onSetLang=props.onSetLang, isDark=props.isDark, currentLang=props.currentLang, following=props.following||[], onFollow=props.onFollow, userPhoto=props.userPhoto||null, userName=props.userName||"Tu", onPhotoChange=props.onPhotoChange||function(){};
   var [subScreen,setSubScreen]=useState(null);
   var cityObj = getCity(userCity);
 
@@ -651,7 +705,7 @@ function Profile(props) {
   if(subScreen==="siguiendo") return <FollowersList title="Siguiendo" users={SAMPLE_USERS.filter(function(u){return following.includes(u.name);})} following={following} onFollow={onFollow||function(){}} onClose={function(){setSubScreen(null);}}/>;
   if(subScreen==="notifs") return <Notificaciones onClose={function(){setSubScreen(null);}}/>;
   if(subScreen==="config") return <Configuracion userCity={userCity} onClose={function(){setSubScreen(null);}} onLogout={onLogout} onSetDark={onSetDark} onSetLang={onSetLang} isDark={isDark} currentLang={currentLang}/>;
-  if(subScreen==="edit") return <EditProfile userCity={userCity} onClose={function(){setSubScreen(null);}}/>;
+  if(subScreen==="edit") return <EditProfile userCity={userCity} userPhoto={userPhoto} userName={userName} onPhotoChange={onPhotoChange} onClose={function(){setSubScreen(null);}}/>;
 
   return (
     <div style={{position:"fixed",inset:0,zIndex:200,background:C.bg,maxWidth:480,margin:"0 auto",overflowY:"auto"}}>
@@ -718,16 +772,25 @@ function Profile(props) {
 }
 
 function EditProfile(props) {
-  var userCity=props.userCity, onClose=props.onClose;
-  var [name,setName]=useState("Maria Fernanda");
+  var userCity=props.userCity, onClose=props.onClose, onPhotoChange=props.onPhotoChange||function(){};
+  var [name,setName]=useState(props.userName||"Maria Fernanda");
   var [username,setUsername]=useState("mariafernanda");
-  var [bio,setBio]=useState("Venezolana en "+getCity(userCity).name+" 🇻🇪");
+  var [bio,setBio]=useState("Venezolano en "+getCity(userCity).name);
+  var [photo,setPhoto]=useState(props.userPhoto||null);
   var [saved,setSaved]=useState(false);
   var [loading,setLoading]=useState(false);
 
+  var handlePhoto = function(e){
+    var file = e.target.files && e.target.files[0];
+    if(!file) return;
+    var reader = new FileReader();
+    reader.onload = function(ev){ setPhoto(ev.target.result); };
+    reader.readAsDataURL(file);
+  };
+
   var save = function() {
     setLoading(true);
-    setTimeout(function(){ setLoading(false); setSaved(true); setTimeout(onClose,1200); },900);
+    setTimeout(function(){ setLoading(false); setSaved(true); onPhotoChange(photo); setTimeout(onClose,1200); },900);
   };
 
   return (
@@ -736,11 +799,19 @@ function EditProfile(props) {
       <div style={{position:"sticky",top:0,background:C.card,borderBottom:"1px solid "+C.border,padding:"14px 20px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
         <button onClick={onClose} style={{background:"none",border:"none",cursor:"pointer",color:C.muted,fontFamily:"'Inter',sans-serif",fontSize:14,fontWeight:600}}>Cancelar</button>
         <div style={{fontSize:16,fontFamily:"'Syne',sans-serif",color:C.text,fontWeight:700}}>Editar perfil</div>
-        <button onClick={save} style={{background:"none",border:"none",cursor:"pointer",color:C.blue,fontFamily:"'Inter',sans-serif",fontSize:14,fontWeight:700}}>{loading?"...":saved?"✓":"Guardar"}</button>
+        <button onClick={save} style={{background:"none",border:"none",cursor:"pointer",color:C.blue,fontFamily:"'Inter',sans-serif",fontSize:14,fontWeight:700}}>{loading?"...":saved?"ok":"Guardar"}</button>
       </div>
       <div style={{padding:"24px 20px 60px"}}>
         <div style={{display:"flex",flexDirection:"column",alignItems:"center",marginBottom:28}}>
-          <div style={{width:90,height:90,borderRadius:9999,background:"linear-gradient(135deg,#ffcc00,#0066ff)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:32,color:"#fff",fontFamily:"'Syne',sans-serif",fontWeight:800,border:"3px solid #ffcc00"}}>{name?name[0].toUpperCase():"?"}</div>
+          <div style={{position:"relative",marginBottom:8}}>
+            <div style={{width:90,height:90,borderRadius:9999,overflow:"hidden",background:"linear-gradient(135deg,#ffcc00,#0066ff)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:32,color:"#fff",fontFamily:"'Syne',sans-serif",fontWeight:800,border:"3px solid "+C.yellow}}>
+              {photo ? <img src={photo} alt="foto" style={{width:"100%",height:"100%",objectFit:"cover"}}/> : (name?name[0].toUpperCase():"?")}
+            </div>
+            <label style={{position:"absolute",bottom:0,right:0,width:28,height:28,borderRadius:9999,background:C.yellow,border:"2px solid #fff",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",fontSize:16,fontWeight:700}}>
+              +<input type="file" accept="image/*" onChange={handlePhoto} style={{display:"none"}}/>
+            </label>
+          </div>
+          <div style={{fontSize:12,color:C.muted,fontFamily:"'Inter',sans-serif"}}>Toca para cambiar foto</div>
         </div>
         {[["NOMBRE","Tu nombre",name,setName,false],["USUARIO","tu_usuario",username,function(v){setUsername(v.toLowerCase());},true]].map(function(item,i){
           var label=item[0],ph=item[1],val=item[2],set=item[3],isUser=item[4];
@@ -1108,7 +1179,7 @@ function Auth(props) {
       {mode==="register"&&step===1 ? <AuthStep1 onNext={function(){setStep(2);}} email={email} setEmail={setEmail} password={password} setPassword={setPassword} password2={password2} setPassword2={setPassword2}/> : null}
       {mode==="register"&&step===2 ? <AuthStep2 onNext={function(){setStep(3);}} onBack={function(){setStep(1);}} name={name} setName={setName} username={username} setUsername={setUsername}/> : null}
       {mode==="register"&&step===3 ? <AuthStep3 onNext={function(){setStep(4);}} onBack={function(){setStep(2);}} chosenCity={chosenCity} setChosenCity={setChosenCity} agreed={agreed} setAgreed={setAgreed}/> : null}
-      {mode==="register"&&step===4 ? <AuthStep4 onDone={onDone} onBack={function(){setStep(3);}} email={email} chosenCity={chosenCity}/> : null}
+      {mode==="register"&&step===4 ? <AuthStep4 onDone={onDone} onBack={function(){setStep(3);}} email={email} chosenCity={chosenCity} userName={name} userPhoto={userPhoto} setUserPhoto={setUserPhoto}/> : null}
     </div>
   );
 }
@@ -1118,17 +1189,19 @@ export default function App() {
   var [lang,setLang]=useState("es");
   var [screen,setScreen]=useState("auth");
   var [userCity,setUserCity]=useState("madrid");
+  var [userName,setUserName]=useState("");
+  var [userPhoto,setUserPhoto]=useState(null);
   var [showProfile,setShowProfile]=useState(false);
   var [following,setFollowing]=useState([]);
   var toggleFollow = function(name){ setFollowing(function(f){ return f.includes(name)?f.filter(function(x){return x!==name;}):[].concat(f,[name]); }); };
   return (
     <div>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Syne:wght@700;800&display=swap'); *{margin:0;padding:0;box-sizing:border-box;} body{font-family:'Inter',sans-serif;background:#f5f5f7;}`}</style>
-      {screen==="auth" ? <Auth onDone={function(c){setUserCity(c);setScreen("feed");}}/> : null}
+      {screen==="auth" ? <Auth onDone={function(c,n,p){setUserCity(c);if(n)setUserName(n);if(p)setUserPhoto(p);setScreen("feed");}}/> : null}
       {screen==="feed" ? (
         <div>
-          {showProfile ? <Profile userCity={userCity} onLogout={function(){setShowProfile(false);setScreen("auth");}} onClose={function(){setShowProfile(false);}} onSetDark={setDark} onSetLang={setLang} isDark={dark} currentLang={lang} following={following} onFollow={toggleFollow}/> : null}
-          <Feed userCity={userCity} onProfile={function(){setShowProfile(true);}} following={following} onFollow={toggleFollow}/>
+          {showProfile ? <Profile userCity={userCity} onLogout={function(){setShowProfile(false);setScreen("auth");}} onClose={function(){setShowProfile(false);}} onSetDark={setDark} onSetLang={setLang} isDark={dark} currentLang={lang} following={following} onFollow={toggleFollow} userPhoto={userPhoto} userName={userName} onPhotoChange={setUserPhoto}/> : null}
+          <Feed userCity={userCity} onProfile={function(){setShowProfile(true);}} following={following} onFollow={toggleFollow} userPhoto={userPhoto} userName={userName}/>
         </div>
       ) : null}
     </div>
