@@ -162,6 +162,21 @@ const waInvite = function(cityId) {
   return "https://wa.me/?text=" + encodeURIComponent(txt);
 };
 
+
+var formatTime = function(ts) {
+  if(!ts) return "";
+  if(typeof ts === "string" && !ts.includes("T")) return ts;
+  var d = new Date(ts);
+  if(isNaN(d.getTime())) return ts;
+  var now = new Date();
+  var diff = Math.floor((now - d) / 1000);
+  if(diff < 60) return "ahora";
+  if(diff < 3600) return Math.floor(diff/60)+"m";
+  if(diff < 86400) return Math.floor(diff/3600)+"h";
+  if(diff < 604800) return Math.floor(diff/86400)+"d";
+  return d.getDate()+"/"+(d.getMonth()+1)+"/"+d.getFullYear();
+};
+
 function Av(props) {
   var t=props.t||"?", i=props.i||0, s=props.s||40;
   return <div style={{width:s,height:s,borderRadius:9999,background:GR[i%GR.length],display:"flex",alignItems:"center",justifyContent:"center",fontSize:s*0.3,fontWeight:700,color:"#fff",flexShrink:0,fontFamily:"'Syne',sans-serif"}}>{t}</div>;
@@ -212,7 +227,7 @@ function PostCard(props) {
                   <button onClick={function(){setShowMenu(function(m){return !m;});}} style={{background:"none",border:"none",cursor:"pointer",color:C.muted,fontSize:18,padding:"0 4px"}}>...</button>
                 </div>
               </div>
-              <div style={{fontSize:11,color:C.blue,fontFamily:"'Inter',sans-serif",fontWeight:600,marginTop:1}}>{cityObj ? cityObj.flag : ""} {cityObj ? cityObj.name : ""}</div>
+              <div style={{fontSize:11,color:C.blue,fontFamily:"'Inter',sans-serif",fontWeight:600,marginTop:1}}>{cityObj ? cityObj.flag : ""} {cityObj ? cityObj.name : ""} <span style={{color:C.muted,fontWeight:400}}>- {formatTime(post.time||post.created_at)}</span></div>
             </div>
           </div>
 
@@ -388,7 +403,7 @@ function Feed(props) {
   var filtered = feedTab==="following" ? followFiltered : cityFiltered;
 
   var addPost = function(p){
-    var newPost = {id:Date.now(),city:p.city,type:p.type,name:userName||"Tu",av:userName||"Tu",content:p.content,media:p.media,likes:0,comments:0,time:"ahora"};
+    var newPost = {id:Date.now(),city:p.city,type:p.type,name:userName||"Tu",av:userName||"Tu",content:p.content,media:p.media,likes:0,comments:0,time:new Date().toISOString()};
     setPosts(function(pp){ return [newPost].concat(pp); });
     if(userId && window._supaToken) {
       api.createPost(userId, p.city, p.type, p.content).catch(function(){});
@@ -1323,30 +1338,35 @@ function Auth(props) {
 }
 
 export default function App() {
+  var saved = (function(){ try { var s=localStorage.getItem("epale_session"); return s?JSON.parse(s):null; } catch(e){ return null; } })();
   var [dark,setDark]=useState(false);
   var [lang,setLang]=useState("es");
-  var [screen,setScreen]=useState("auth");
-  var [userCity,setUserCity]=useState("madrid");
-  var [userName,setUserName]=useState("");
-  var [userPhoto,setUserPhoto]=useState(null);
-  var [userId,setUserId]=useState(null);
+  var [screen,setScreen]=useState(saved&&saved.token?"feed":"auth");
+  var [userCity,setUserCity]=useState(saved&&saved.city?saved.city:"madrid");
+  var [userName,setUserName]=useState(saved&&saved.name?saved.name:"");
+  var [userPhoto,setUserPhoto]=useState(saved&&saved.photo?saved.photo:null);
+  var [userId,setUserId]=useState(saved&&saved.uid?saved.uid:"");
   var [showProfile,setShowProfile]=useState(false);
   var [following,setFollowing]=useState([]);
   var [crashMsg,setCrashMsg]=useState("");
+
+  if(saved&&saved.token) { window._supaToken = saved.token; }
 
   var toggleFollow = function(name){ setFollowing(function(f){ return f.includes(name)?f.filter(function(x){return x!==name;}):[].concat(f,[name]); }); };
 
   var handleDone = function(city, name, photo, token, uid) {
     try {
-      setUserCity(city||"madrid");
-      if(name) setUserName(name);
-      if(photo) setUserPhoto(photo);
-      if(uid) setUserId(uid);
+      var c=city||"madrid", n=name||"", p=photo||null, t=token||"", u=uid||"";
+      setUserCity(c); setUserName(n); setUserPhoto(p); setUserId(u);
+      if(t) { window._supaToken = t; }
+      try { localStorage.setItem("epale_session", JSON.stringify({city:c,name:n,photo:p,token:t,uid:u})); } catch(e){}
       setScreen("feed");
     } catch(e) { setCrashMsg("handleDone error: "+e.message); }
   };
 
   var handleLogout = function() {
+    try { localStorage.removeItem("epale_session"); } catch(e){}
+    window._supaToken = null;
     setShowProfile(false);
     setScreen("auth");
   };
@@ -1361,10 +1381,32 @@ export default function App() {
 
   if(screen==="auth") return <Auth onDone={handleDone}/>;
 
+  var [activeTab,setActiveTab]=useState("feed");
+
   if(screen==="feed") return (
     <div>
       {showProfile ? <Profile userCity={userCity} onLogout={handleLogout} onClose={function(){setShowProfile(false);}} onSetDark={setDark} onSetLang={setLang} isDark={dark} currentLang={lang} following={following} onFollow={toggleFollow} userPhoto={userPhoto} userName={userName} onPhotoChange={setUserPhoto} userId={userId}/> : null}
       <Feed userCity={userCity} onProfile={function(){setShowProfile(true);}} following={following} onFollow={toggleFollow} userPhoto={userPhoto} userName={userName} userId={userId}/>
+      <div style={{position:"fixed",bottom:0,left:0,right:0,height:60,background:C.card,borderTop:"1px solid "+C.border,display:"flex",alignItems:"center",justifyContent:"space-around",zIndex:90,maxWidth:768,margin:"0 auto"}}>
+        {[
+          {id:"feed",  icon:ICONS.fire,    label:"Inicio"},
+          {id:"search",icon:ICONS.comment, label:"Buscar"},
+          {id:"post",  icon:ICONS.pencil,  label:"Publicar", action:true},
+          {id:"notifs",icon:ICONS.bell,    label:"Avisos"},
+          {id:"me",    icon:ICONS.group,   label:"Yo"}
+        ].map(function(tab){
+          var isActive = activeTab===tab.id;
+          return (
+            <button key={tab.id} onClick={function(){
+              if(tab.id==="me"){ setShowProfile(true); return; }
+              setActiveTab(tab.id);
+            }} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:2,background:tab.action?C.yellow:"none",border:"none",cursor:"pointer",padding:tab.action?"8px 16px":"6px 10px",borderRadius:tab.action?12:8,minWidth:48}}>
+              <span style={{fontSize:tab.action?20:18,color:tab.action?C.text:isActive?C.blue:C.muted}}>{tab.icon}</span>
+              <span style={{fontSize:9,fontFamily:"'Inter',sans-serif",color:tab.action?C.text:isActive?C.blue:C.muted,fontWeight:isActive?700:400}}>{tab.label}</span>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 
