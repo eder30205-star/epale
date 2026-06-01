@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+mport { useState, useEffect } from "react";
 import React from "react";
 
 const SUPA_URL = "https://zkydbsymcnnbepvmbchr.supabase.co";
@@ -420,7 +420,7 @@ function Feed(props) {
     setPosts(function(pp){ return [newPost].concat(pp); });
     if(userId) {
       try {
-        await supa.from("posts").insert({user_id:userId, city:p.city, type:p.type, content:p.content});
+        // Backend not connected yet
       } catch(e) {}
     }
   };
@@ -1254,21 +1254,13 @@ function AuthStep4(props) {
     reader.onload = function(ev){ setUserPhoto(ev.target.result); };
     reader.readAsDataURL(file);
   };
-  var finish = async function() {
+  var finish = function() {
     if(verifyCode!==DEMO){setError("Codigo incorrecto");return;}
     setLoading(true); setError("");
-    try {
-      var res = await supa.auth.signUp(email, password, {name:userName, city:chosenCity, username:userName.toLowerCase().replace(/\s/g,"")});
-      if(res.error) { setError(res.error.message||"Error al crear cuenta"); setLoading(false); return; }
-      var token = res.access_token || (res.session && res.session.access_token) || "";
-      var uid = res.user && res.user.id || (res.session && res.session.user && res.session.user.id) || "";
-      if(token) window._supaToken = token;
-      if(uid && userName) {
-        await supa.from("profiles").update({name:userName, city:chosenCity, username:userName.toLowerCase().replace(/\s/g,"")}).eq("id",uid);
-      }
+    setTimeout(function(){
       setLoading(false);
-      onDone(chosenCity, userName, userPhoto, token, uid);
-    } catch(e) { setError("Error de conexion"); setLoading(false); }
+      onDone(chosenCity, userName, userPhoto, "", "");
+    }, 800);
   };
   return (
     <div style={{flex:1,padding:"22px 20px 32px",textAlign:"center"}}>
@@ -1324,6 +1316,7 @@ function Auth(props) {
   var [username,setUsername]=useState("");
   var [chosenCity,setChosenCity]=useState("");
   var [agreed,setAgreed]=useState(false);
+  var [userPhoto,setUserPhoto]=useState(null);
   return (
     <div style={{minHeight:"100vh",background:"#f5f5f7",display:"flex",flexDirection:"column",maxWidth:480,margin:"0 auto"}}>
       <AuthHero mode={mode} step={step}/>
