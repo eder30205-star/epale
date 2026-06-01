@@ -1,6 +1,71 @@
 import { useState, useEffect } from "react";
 import React from "react";
 
+const SUPA_URL = "https://zkydbsymcnnbepvmbchr.supabase.co";
+const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpreWRic3ltY25uYmVwdm1iY2hyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyNjExNjksImV4cCI6MjA5NTgzNzE2OX0.bIiUt752AROIfQkQTHqN7r9OrjRTzxmwNQLDw0WVVS4";
+
+const supa = {
+  auth: {
+    signUp: async function(email, password, meta) {
+      var r = await fetch(SUPA_URL+"/auth/v1/signup", {method:"POST", headers:{"Content-Type":"application/json","apikey":SUPA_KEY}, body:JSON.stringify({email:email,password:password,data:meta})});
+      return r.json();
+    },
+    signIn: async function(email, password) {
+      var r = await fetch(SUPA_URL+"/auth/v1/token?grant_type=password", {method:"POST", headers:{"Content-Type":"application/json","apikey":SUPA_KEY}, body:JSON.stringify({email:email,password:password})});
+      return r.json();
+    },
+    signOut: async function(token) {
+      await fetch(SUPA_URL+"/auth/v1/logout", {method:"POST", headers:{"apikey":SUPA_KEY,"Authorization":"Bearer "+token}});
+    }
+  },
+  from: function(table) {
+    var _table = table;
+    var _filters = [];
+    var _order = null;
+    var _limit = null;
+    var buildUrl = function() {
+      var url = SUPA_URL+"/rest/v1/"+_table+"?";
+      _filters.forEach(function(f){ url += f+"&"; });
+      if(_order) url += "order="+_order+"&";
+      if(_limit) url += "limit="+_limit+"&";
+      return url;
+    };
+    var obj = {
+      select: function(cols) { _filters.push("select="+(cols||"*")); return obj; },
+      eq: function(col, val) { _filters.push(col+"=eq."+val); return obj; },
+      order: function(col, opts) { _order = col+(opts&&opts.ascending===false?".desc":""); return obj; },
+      limit: function(n) { _limit = n; return obj; },
+      insert: async function(data) {
+        var r = await fetch(SUPA_URL+"/rest/v1/"+_table, {method:"POST", headers:{"Content-Type":"application/json","apikey":SUPA_KEY,"Authorization":"Bearer "+(window._supaToken||SUPA_KEY),"Prefer":"return=representation"}, body:JSON.stringify(data)});
+        var d = await r.json();
+        return {data:d, error:r.ok?null:d};
+      },
+      update: async function(data) {
+        var r = await fetch(buildUrl(), {method:"PATCH", headers:{"Content-Type":"application/json","apikey":SUPA_KEY,"Authorization":"Bearer "+(window._supaToken||SUPA_KEY),"Prefer":"return=representation"}, body:JSON.stringify(data)});
+        var d = await r.json();
+        return {data:d, error:r.ok?null:d};
+      },
+      delete: async function() {
+        var r = await fetch(buildUrl(), {method:"DELETE", headers:{"apikey":SUPA_KEY,"Authorization":"Bearer "+(window._supaToken||SUPA_KEY)}});
+        return {error:r.ok?null:"error"};
+      },
+      get: async function() {
+        var r = await fetch(buildUrl(), {headers:{"apikey":SUPA_KEY,"Authorization":"Bearer "+(window._supaToken||SUPA_KEY)}});
+        var d = await r.json();
+        return {data:Array.isArray(d)?d:[], error:r.ok?null:d};
+      }
+    };
+    return obj;
+  },
+  storage: {
+    upload: async function(bucket, path, file) {
+      var r = await fetch(SUPA_URL+"/storage/v1/object/"+bucket+"/"+path, {method:"POST", headers:{"apikey":SUPA_KEY,"Authorization":"Bearer "+(window._supaToken||SUPA_KEY),"Content-Type":file.type}, body:file});
+      var d = await r.json();
+      return {data:d, error:r.ok?null:d, publicUrl: SUPA_URL+"/storage/v1/object/public/"+bucket+"/"+path};
+    }
+  }
+};
+
 const LIGHT = { bg:"#f5f5f7", card:"#ffffff", border:"#e8e8ed", yellow:"#ffcc00", blue:"#0066ff", red:"#ff2d2d", text:"#1a1a1a", muted:"#86868b", green:"#1a7a3c", wa:"#25D366" };
 const DARK  = { bg:"#0d0d0d", card:"#1c1c1e", border:"#2c2c2e", yellow:"#ffcc00", blue:"#0a84ff", red:"#ff453a", text:"#f2f2f7", muted:"#636366", green:"#32d74b", wa:"#25D366" };
 var _theme = LIGHT;
@@ -241,8 +306,27 @@ function PostCard(props) {
 
 function Feed(props) {
   var userCity=props.userCity, onProfile=props.onProfile, userPhoto=props.userPhoto, userName=props.userName||"Tu";
+  var userId=props.userId||null;
   var [filter,setFilter]=useState("all");
   var [posts,setPosts]=useState(SEED);
+  var [loadingPosts,setLoadingPosts]=useState(false);
+
+  useEffect(function(){
+    var load = async function(){
+      setLoadingPosts(true);
+      try {
+        var res = await supa.from("posts").select("*,profiles(name,photo_url,username)").order("created_at",{ascending:false}).limit(50).get();
+        if(res.data && res.data.length>0) {
+          var mapped = res.data.map(function(p){
+            return {id:p.id, city:p.city, type:p.type||"post", name:(p.profiles&&p.profiles.name)||"Anonimo", av:(p.profiles&&p.profiles.name)||"?", photo:(p.profiles&&p.profiles.photo_url)||null, content:p.content, likes:p.likes||0, comments:p.comments||0, time:"reciente"};
+          });
+          setPosts(mapped.concat(SEED));
+        }
+      } catch(e) {}
+      setLoadingPosts(false);
+    };
+    load();
+  }, []);
   var [showComposer,setShowComposer]=useState(false);
   var [inviteCount,setInviteCount]=useState(0);
   var [activeCity,setActiveCity]=useState(userCity);
@@ -288,7 +372,15 @@ function Feed(props) {
   var followFiltered = allFiltered.filter(function(p){ return following.includes(p.name); });
   var filtered = feedTab==="following" ? followFiltered : cityFiltered;
 
-  var addPost = function(p){ setPosts(function(pp){ return [{id:Date.now(),city:p.city,type:p.type,name:"Tu",av:"Tu",content:p.content,media:p.media,likes:0,comments:0,time:"ahora"}].concat(pp); }); };
+  var addPost = async function(p){
+    var newPost = {id:Date.now(),city:p.city,type:p.type,name:userName||"Tu",av:userName||"Tu",content:p.content,media:p.media,likes:0,comments:0,time:"ahora"};
+    setPosts(function(pp){ return [newPost].concat(pp); });
+    if(userId) {
+      try {
+        await supa.from("posts").insert({user_id:userId, city:p.city, type:p.type, content:p.content});
+      } catch(e) {}
+    }
+  };
 
   var handleCopy = function(){ if(navigator.clipboard) navigator.clipboard.writeText(refLink); setCopiedRef(true); setTimeout(function(){setCopiedRef(false);},2000); };
 
@@ -966,10 +1058,19 @@ function AuthLogin(props) {
   var [showPass,setShowPass]=useState(false);
   var [loading,setLoading]=useState(false);
   var [error,setError]=useState("");
-  var go = function() {
+  var go = async function() {
     if(!email||!password){setError("Completa todos los campos");return;}
-    setLoading(true);
-    setTimeout(function(){setLoading(false);onDone("madrid");},800);
+    setLoading(true); setError("");
+    try {
+      var res = await supa.auth.signIn(email, password);
+      if(res.error || !res.access_token) { setError("Correo o contrasena incorrectos"); setLoading(false); return; }
+      window._supaToken = res.access_token;
+      var uid = res.user && res.user.id;
+      var pRes = await supa.from("profiles").select("*").eq("id", uid).get();
+      var profile = pRes.data && pRes.data[0];
+      setLoading(false);
+      onDone(profile?profile.city:"madrid", profile?profile.name:"", profile?profile.photo_url:null, res.access_token, uid);
+    } catch(e) { setError("Error de conexion"); setLoading(false); }
   };
   return (
     <div style={{flex:1,padding:"22px 20px 32px"}}>
@@ -1102,14 +1203,33 @@ function AuthStep3(props) {
 
 function AuthStep4(props) {
   var onDone=props.onDone, onBack=props.onBack, email=props.email, chosenCity=props.chosenCity;
+  var userName=props.userName||"", userPhoto=props.userPhoto, setUserPhoto=props.setUserPhoto||function(){}, password=props.password||"";
   var [verifyCode,setVerifyCode]=useState("");
   var [loading,setLoading]=useState(false);
   var [error,setError]=useState("");
   var DEMO="4782";
-  var finish = function() {
+  var handlePhoto = function(e){
+    var file = e.target.files && e.target.files[0];
+    if(!file) return;
+    var reader = new FileReader();
+    reader.onload = function(ev){ setUserPhoto(ev.target.result); };
+    reader.readAsDataURL(file);
+  };
+  var finish = async function() {
     if(verifyCode!==DEMO){setError("Codigo incorrecto");return;}
-    setLoading(true);
-    setTimeout(function(){setLoading(false);onDone(chosenCity);},800);
+    setLoading(true); setError("");
+    try {
+      var res = await supa.auth.signUp(email, password, {name:userName, city:chosenCity, username:userName.toLowerCase().replace(/\s/g,"")});
+      if(res.error) { setError(res.error.message||"Error al crear cuenta"); setLoading(false); return; }
+      var token = res.access_token || (res.session && res.session.access_token) || "";
+      var uid = res.user && res.user.id || (res.session && res.session.user && res.session.user.id) || "";
+      if(token) window._supaToken = token;
+      if(uid && userName) {
+        await supa.from("profiles").update({name:userName, city:chosenCity, username:userName.toLowerCase().replace(/\s/g,"")}).eq("id",uid);
+      }
+      setLoading(false);
+      onDone(chosenCity, userName, userPhoto, token, uid);
+    } catch(e) { setError("Error de conexion"); setLoading(false); }
   };
   return (
     <div style={{flex:1,padding:"22px 20px 32px",textAlign:"center"}}>
@@ -1179,7 +1299,7 @@ function Auth(props) {
       {mode==="register"&&step===1 ? <AuthStep1 onNext={function(){setStep(2);}} email={email} setEmail={setEmail} password={password} setPassword={setPassword} password2={password2} setPassword2={setPassword2}/> : null}
       {mode==="register"&&step===2 ? <AuthStep2 onNext={function(){setStep(3);}} onBack={function(){setStep(1);}} name={name} setName={setName} username={username} setUsername={setUsername}/> : null}
       {mode==="register"&&step===3 ? <AuthStep3 onNext={function(){setStep(4);}} onBack={function(){setStep(2);}} chosenCity={chosenCity} setChosenCity={setChosenCity} agreed={agreed} setAgreed={setAgreed}/> : null}
-      {mode==="register"&&step===4 ? <AuthStep4 onDone={onDone} onBack={function(){setStep(3);}} email={email} chosenCity={chosenCity} userName={name} userPhoto={userPhoto} setUserPhoto={setUserPhoto}/> : null}
+      {mode==="register"&&step===4 ? <AuthStep4 onDone={onDone} onBack={function(){setStep(3);}} email={email} chosenCity={chosenCity} userName={name} userPhoto={userPhoto} setUserPhoto={setUserPhoto} password={password}/> : null}
     </div>
   );
 }
@@ -1187,21 +1307,68 @@ function Auth(props) {
 export default function App() {
   var [dark,setDark]=useState(false);
   var [lang,setLang]=useState("es");
-  var [screen,setScreen]=useState("auth");
+  var [screen,setScreen]=useState("loading");
   var [userCity,setUserCity]=useState("madrid");
   var [userName,setUserName]=useState("");
   var [userPhoto,setUserPhoto]=useState(null);
+  var [userId,setUserId]=useState(null);
   var [showProfile,setShowProfile]=useState(false);
   var [following,setFollowing]=useState([]);
+
+  useEffect(function(){
+    var token = localStorage.getItem("epale_token");
+    var profile = localStorage.getItem("epale_profile");
+    if(token && profile) {
+      try {
+        var p = JSON.parse(profile);
+        window._supaToken = token;
+        setUserId(p.id);
+        setUserName(p.name||"");
+        setUserPhoto(p.photo_url||null);
+        setUserCity(p.city||"madrid");
+        setScreen("feed");
+      } catch(e) { setScreen("auth"); }
+    } else {
+      setScreen("auth");
+    }
+  }, []);
+
+  var handleDone = function(city, name, photo, token, uid) {
+    setUserCity(city);
+    if(name) setUserName(name);
+    if(photo) setUserPhoto(photo);
+    if(token) { window._supaToken = token; localStorage.setItem("epale_token", token); }
+    if(uid) setUserId(uid);
+    localStorage.setItem("epale_profile", JSON.stringify({id:uid, name:name, photo_url:photo, city:city}));
+    setScreen("feed");
+  };
+
+  var handleLogout = function() {
+    localStorage.removeItem("epale_token");
+    localStorage.removeItem("epale_profile");
+    window._supaToken = null;
+    setShowProfile(false);
+    setScreen("auth");
+  };
+
   var toggleFollow = function(name){ setFollowing(function(f){ return f.includes(name)?f.filter(function(x){return x!==name;}):[].concat(f,[name]); }); };
+
+  if(screen==="loading") return (
+    <div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",background:"#f5f5f7"}}>
+      <div style={{fontSize:32,fontFamily:"'Syne',sans-serif",fontWeight:800}}>
+        <span style={{color:"#ffcc00"}}>E</span><span style={{color:"#0066ff"}}>pa</span><span style={{color:"#ff2d2d"}}>le</span>
+      </div>
+    </div>
+  );
+
   return (
     <div>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Syne:wght@700;800&display=swap'); *{margin:0;padding:0;box-sizing:border-box;} body{font-family:'Inter',sans-serif;background:#f5f5f7;}`}</style>
-      {screen==="auth" ? <Auth onDone={function(c,n,p){setUserCity(c);if(n)setUserName(n);if(p)setUserPhoto(p);setScreen("feed");}}/> : null}
+      <style>{"@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Syne:wght@700;800&display=swap'); *{margin:0;padding:0;box-sizing:border-box;} body{font-family:\'Inter\',sans-serif;background:#f5f5f7;}"}</style>
+      {screen==="auth" ? <Auth onDone={handleDone}/> : null}
       {screen==="feed" ? (
         <div>
-          {showProfile ? <Profile userCity={userCity} onLogout={function(){setShowProfile(false);setScreen("auth");}} onClose={function(){setShowProfile(false);}} onSetDark={setDark} onSetLang={setLang} isDark={dark} currentLang={lang} following={following} onFollow={toggleFollow} userPhoto={userPhoto} userName={userName} onPhotoChange={setUserPhoto}/> : null}
-          <Feed userCity={userCity} onProfile={function(){setShowProfile(true);}} following={following} onFollow={toggleFollow} userPhoto={userPhoto} userName={userName}/>
+          {showProfile ? <Profile userCity={userCity} onLogout={handleLogout} onClose={function(){setShowProfile(false);}} onSetDark={setDark} onSetLang={setLang} isDark={dark} currentLang={lang} following={following} onFollow={toggleFollow} userPhoto={userPhoto} userName={userName} onPhotoChange={setUserPhoto} userId={userId}/> : null}
+          <Feed userCity={userCity} onProfile={function(){setShowProfile(true);}} following={following} onFollow={toggleFollow} userPhoto={userPhoto} userName={userName} userId={userId}/>
         </div>
       ) : null}
     </div>
