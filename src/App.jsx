@@ -403,7 +403,7 @@ function Feed(props) {
   var filtered = feedTab==="following" ? followFiltered : cityFiltered;
 
   var addPost = function(p){
-    var newPost = {id:Date.now(),city:p.city,type:p.type,name:userName||"Tu",av:userName||"Tu",content:p.content,media:p.media,likes:0,comments:0,time:new Date().toISOString()};
+    var displayName = userName || (function(){ try { var s=localStorage.getItem("epale_session"); var d=s?JSON.parse(s):null; return d&&d.name?d.name:"Tu"; } catch(e){ return "Tu"; } })(); var newPost = {id:Date.now(),city:p.city,type:p.type,name:displayName,av:displayName,content:p.content,media:p.media,likes:0,comments:0,time:new Date().toISOString()};
     setPosts(function(pp){ return [newPost].concat(pp); });
     if(userId && window._supaToken) {
       api.createPost(userId, p.city, p.type, p.content).catch(function(){});
@@ -1393,7 +1393,7 @@ export default function App() {
     <div>
       {showProfile ? <Profile userCity={userCity} onLogout={handleLogout} onClose={function(){setShowProfile(false);}} onSetDark={setDark} onSetLang={setLang} isDark={dark} currentLang={lang} following={following} onFollow={toggleFollow} userPhoto={userPhoto} userName={userName} onPhotoChange={setUserPhoto} userId={userId}/> : null}
       <Feed userCity={userCity} onProfile={function(){setShowProfile(true);}} following={following} onFollow={toggleFollow} userPhoto={userPhoto} userName={userName} userId={userId}/>
-      <div style={{position:"fixed",bottom:0,left:0,right:0,height:60,background:C.card,borderTop:"1px solid "+C.border,display:"flex",alignItems:"center",justifyContent:"space-around",zIndex:90,maxWidth:768,margin:"0 auto"}}>
+      <div style={{position:"fixed",bottom:0,left:0,right:0,height:60,background:C.card,borderTop:"1px solid "+C.border,display:window.innerWidth>=768?"none":"flex",alignItems:"center",justifyContent:"space-around",zIndex:90,maxWidth:768,margin:"0 auto"}}>
         {[
           {id:"feed",  icon:ICONS.fire,    label:"Inicio"},
           {id:"search",icon:ICONS.comment, label:"Buscar"},
