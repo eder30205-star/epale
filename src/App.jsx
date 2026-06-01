@@ -1365,9 +1365,19 @@ export default function App() {
   var handleDone = function(city, name, photo, token, uid) {
     try {
       var c=city||"madrid", n=name||"", p=photo||null, t=token||"", u=uid||"";
-      setUserCity(c); setUserName(n); setUserPhoto(p); setUserId(u);
+      setUserCity(c); if(n) setUserName(n); if(p) setUserPhoto(p); setUserId(u);
       if(t) { window._supaToken = t; }
       try { localStorage.setItem("epale_session", JSON.stringify({city:c,name:n,photo:p,token:t,uid:u})); } catch(e){}
+      if(u && t && !n) {
+        api.getProfile(u).then(function(profiles){
+          var prof = Array.isArray(profiles) && profiles[0];
+          if(prof && prof.name) {
+            setUserName(prof.name);
+            if(prof.city) setUserCity(prof.city);
+            try { localStorage.setItem("epale_session", JSON.stringify({city:prof.city||c,name:prof.name,photo:prof.photo_url||p,token:t,uid:u})); } catch(e){}
+          }
+        }).catch(function(){});
+      }
       setScreen("feed");
     } catch(e) { setCrashMsg("handleDone error: "+e.message); }
   };
@@ -1393,7 +1403,7 @@ export default function App() {
     <div>
       {showProfile ? <Profile userCity={userCity} onLogout={handleLogout} onClose={function(){setShowProfile(false);}} onSetDark={setDark} onSetLang={setLang} isDark={dark} currentLang={lang} following={following} onFollow={toggleFollow} userPhoto={userPhoto} userName={userName} onPhotoChange={setUserPhoto} userId={userId}/> : null}
       <Feed userCity={userCity} onProfile={function(){setShowProfile(true);}} following={following} onFollow={toggleFollow} userPhoto={userPhoto} userName={userName} userId={userId}/>
-      <div style={{position:"fixed",bottom:0,left:0,right:0,height:60,background:C.card,borderTop:"1px solid "+C.border,display:window.innerWidth>=768?"none":"flex",alignItems:"center",justifyContent:"space-around",zIndex:90,maxWidth:768,margin:"0 auto"}}>
+      <div style={{position:"fixed",bottom:0,left:0,right:0,height:60,background:C.card,borderTop:"1px solid "+C.border,display:"flex",alignItems:"center",justifyContent:"space-around",zIndex:90,maxWidth:768,margin:"0 auto",visibility:window.innerWidth>=768?"hidden":"visible"}}>
         {[
           {id:"feed",  icon:ICONS.fire,    label:"Inicio"},
           {id:"search",icon:ICONS.comment, label:"Buscar"},
