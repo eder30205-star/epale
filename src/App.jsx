@@ -1063,14 +1063,16 @@ function AuthLogin(props) {
     setLoading(true); setError("");
     try {
       var res = await supa.auth.signIn(email, password);
-      if(res.error || !res.access_token) { setError("Correo o contrasena incorrectos"); setLoading(false); return; }
-      window._supaToken = res.access_token;
-      var uid = res.user && res.user.id;
+      console.log("LOGIN RESPONSE:", JSON.stringify(res));
+      var token = res.access_token || (res.session && res.session.access_token) || "";
+      var uid = (res.user && res.user.id) || (res.session && res.session.user && res.session.user.id) || "";
+      if(!token && !uid) { setError("Correo o contrasena incorrectos"); setLoading(false); return; }
+      window._supaToken = token;
       var pRes = await supa.from("profiles").select("*").eq("id", uid).get();
       var profile = pRes.data && pRes.data[0];
       setLoading(false);
-      onDone(profile?profile.city:"madrid", profile?profile.name:"", profile?profile.photo_url:null, res.access_token, uid);
-    } catch(e) { setError("Error de conexion"); setLoading(false); }
+      onDone(profile?profile.city:"madrid", profile?profile.name:"", profile?profile.photo_url:null, token, uid);
+    } catch(e) { setError("Error de conexion: "+e.message); setLoading(false); }
   };
   return (
     <div style={{flex:1,padding:"22px 20px 32px"}}>
