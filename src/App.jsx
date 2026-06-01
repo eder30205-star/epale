@@ -81,7 +81,7 @@ const waInvite = function(cityId) {
 
 function Av(props) {
   var t=props.t||"?", i=props.i||0, s=props.s||40;
-  return <div style={{width:s,height:s,borderRadius:"50%",background:GR[i%GR.length],display:"flex",alignItems:"center",justifyContent:"center",fontSize:s*0.3,fontWeight:700,color:"#fff",flexShrink:0,fontFamily:"'Syne',sans-serif"}}>{t}</div>;
+  return <div style={{width:s,height:s,borderRadius:9999,background:GR[i%GR.length],display:"flex",alignItems:"center",justifyContent:"center",fontSize:s*0.3,fontWeight:700,color:"#fff",flexShrink:0,fontFamily:"'Syne',sans-serif"}}>{t}</div>;
 }
 
 function Stripe() {
@@ -204,7 +204,7 @@ function PostCard(props) {
                 <div style={{fontSize:13,fontWeight:700,color:"#fff",fontFamily:"'Inter',sans-serif"}}>Compartir en WhatsApp</div>
                 <div style={{fontSize:11,color:"rgba(255,255,255,0.8)",fontFamily:"'Inter',sans-serif"}}>Envia este post a tus panas</div>
               </div>
-              <span style={{color:"rgba(255,255,255,0.7)",fontSize:16}}>→</span>
+              <span style={{color:"rgba(255,255,255,0.7)",fontSize:16}}>{"->"}</span>
             </div>
           </a>
         </div>
@@ -225,7 +225,7 @@ function PostCard(props) {
           })}
           <div style={{display:"flex",gap:8}}>
             <input value={comment} onChange={function(e){setComment(e.target.value);}} onKeyDown={function(e){if(e.key==="Enter") sendComment();}} placeholder="Comenta..." style={{flex:1,padding:"8px 12px",background:C.bg,border:"1px solid "+C.border,borderRadius:20,fontFamily:"'Inter',sans-serif",fontSize:13,color:C.text,outline:"none"}}/>
-            <button onClick={sendComment} style={{background:C.blue,border:"none",borderRadius:"50%",width:34,height:34,cursor:"pointer",color:"#fff",fontSize:14,display:"flex",alignItems:"center",justifyContent:"center"}}>↑</button>
+            <button onClick={sendComment} style={{background:C.blue,border:"none",borderRadius:9999,width:34,height:34,cursor:"pointer",color:"#fff",fontSize:14,display:"flex",alignItems:"center",justifyContent:"center"}}>^</button>
           </div>
         </div>
       ) : null}
@@ -321,7 +321,7 @@ function Feed(props) {
             <div style={{flex:1,display:"flex",gap:12,alignItems:"center",flexWrap:"wrap"}}>
               <span style={{fontFamily:"'Inter',sans-serif",fontSize:11,color:"rgba(255,255,255,0.5)"}}>BCV <strong style={{fontSize:14,color:"#ffcc00"}}>Bs 36.84</strong></span>
               <span style={{fontFamily:"'Inter',sans-serif",fontSize:11,color:"rgba(255,255,255,0.5)"}}>Paralelo <strong style={{fontSize:14,color:"#7defa0"}}>Bs 38.20</strong></span>
-              <span style={{fontSize:11,color:"#7defa0",fontFamily:"'Inter',sans-serif",fontWeight:700}}>+0.35</span>
+              <span style={{fontSize:11,color:"#7defa0",fontFamily:"'Inter',sans-serif",fontWeight:700}}>{"+0.35"}</span>
             </div>
             <span style={{fontSize:10,color:"rgba(255,255,255,0.3)",fontFamily:"'Inter',sans-serif"}}>hoy</span>
           </div>
@@ -334,12 +334,10 @@ function Feed(props) {
           ) : null}
         </div>
 
-        </div>
-
         <div style={{marginTop:10}}>
           {filtered.length===0 ? (
             <div style={{textAlign:"center",padding:"60px 20px",color:C.muted}}>
-              <div style={{fontSize:40,marginBottom:12}}>{feedTab==="following"?"👥":"🌎"}</div>
+              <div style={{fontSize:40,marginBottom:12}}>{feedTab==="following"?"(siguiendo)":"(feed)"}</div>
               <div style={{fontSize:15,fontFamily:"'Inter',sans-serif"}}>{feedTab==="following"?"Sigue a alguien para ver sus posts":"Se el primero en publicar"}</div>
             </div>
           ) : filtered.map(function(p,i){
@@ -353,20 +351,18 @@ function Feed(props) {
             <div style={{flex:1}}>
               <div style={{fontSize:13,fontWeight:700,color:"#fff",fontFamily:"'Inter',sans-serif"}}>Invita venezolanos a {cityObj.name}</div>
               <div style={{fontSize:11,color:"rgba(255,255,255,0.8)",fontFamily:"'Inter',sans-serif"}}>
-                {inviteCount===0?"Aun no has invitado a nadie":inviteCount===1?"1 invitado -- falta 2 mas":inviteCount===2?"2 invitados -- falta 1 mas":"Meta cumplida! Gracias"}
+                {inviteCount>=3?"Meta cumplida!":inviteCount===0?"Invita a tus panas":inviteCount+" de 3 invitados"}
               </div>
             </div>
             <div style={{display:"flex",gap:4}}>
-              {[0,1,2].map(function(i){ return <div key={i} style={{width:6,height:6,borderRadius:"50%",background:i<inviteCount?"#fff":"rgba(255,255,255,0.35)"}}/>; })}
+              {[0,1,2].map(function(i){ return <div key={i} style={{width:6,height:6,borderRadius:9999,background:i<inviteCount?"#fff":"rgba(255,255,255,0.35)"}}/>; })}
             </div>
-            <span style={{color:"rgba(255,255,255,0.8)",fontSize:16}}>→</span>
+            <span style={{color:"rgba(255,255,255,0.8)",fontSize:16}}>{"->"}</span>
           </div>
         </a>
       </div>
 
-      <button onClick={function(){setShowComposer(true);}} style={{position:"fixed",bottom:24,right:"50%",transform:"translateX(50%) translateX(160px)",width:52,height:52,borderRadius:"50%",background:C.yellow,border:"none",cursor:"pointer",fontSize:22,boxShadow:"0 4px 18px rgba(255,204,0,0.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:50}}>
-        ✏️
-      </button>
+      <button onClick={function(){setShowComposer(true);}} style={{position:"fixed",bottom:24,right:16,width:52,height:52,borderRadius:26,background:C.yellow,border:"none",cursor:"pointer",fontSize:30,fontWeight:300,boxShadow:"0 4px 18px rgba(255,204,0,0.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:50,lineHeight:1}}>+</button>
     </div>
   );
 }
@@ -416,7 +412,7 @@ function Composer(props) {
           {media ? (
             <div style={{position:"relative",marginBottom:12,borderRadius:12,overflow:"hidden",border:"1.5px solid "+C.border}}>
               {media.kind==="image" ? <img src={media.src} alt="preview" style={{width:"100%",maxHeight:220,objectFit:"cover",display:"block"}}/> : <video src={media.src} controls style={{width:"100%",maxHeight:220,display:"block"}}/>}
-              <button onClick={function(){setMedia(null);}} style={{position:"absolute",top:8,right:8,background:"rgba(0,0,0,0.6)",border:"none",borderRadius:"50%",width:28,height:28,cursor:"pointer",color:"#fff",fontSize:14}}>X</button>
+              <button onClick={function(){setMedia(null);}} style={{position:"absolute",top:8,right:8,background:"rgba(0,0,0,0.6)",border:"none",borderRadius:9999,width:28,height:28,cursor:"pointer",color:"#fff",fontSize:14}}>X</button>
             </div>
           ) : (
             <div style={{display:"flex",gap:8,marginBottom:14}}>
@@ -449,7 +445,7 @@ function MisPublicaciones(props) {
     <div style={{position:"fixed",inset:0,zIndex:300,background:C.bg,maxWidth:480,margin:"0 auto",overflowY:"auto"}}>
       <Stripe/>
       <div style={{position:"sticky",top:0,zIndex:10,background:C.card,borderBottom:"1px solid "+C.border,padding:"14px 20px",display:"flex",alignItems:"center",gap:14}}>
-        <button onClick={onClose} style={{background:C.bg,border:"none",borderRadius:"50%",width:34,height:34,cursor:"pointer",color:C.blue,fontSize:18,display:"flex",alignItems:"center",justifyContent:"center"}}>←</button>
+        <button onClick={onClose} style={{background:C.bg,border:"none",borderRadius:9999,width:34,height:34,cursor:"pointer",color:C.blue,fontSize:18,display:"flex",alignItems:"center",justifyContent:"center"}}>{"<-"}</button>
         <div style={{fontSize:18,fontFamily:"'Syne',sans-serif",color:C.text,fontWeight:700}}>Mis publicaciones</div>
       </div>
       <div style={{paddingBottom:40}}>
@@ -483,7 +479,7 @@ function Guardados(props) {
     <div style={{position:"fixed",inset:0,zIndex:300,background:C.bg,maxWidth:480,margin:"0 auto",overflowY:"auto"}}>
       <Stripe/>
       <div style={{position:"sticky",top:0,zIndex:10,background:C.card,borderBottom:"1px solid "+C.border,padding:"14px 20px",display:"flex",alignItems:"center",gap:14}}>
-        <button onClick={onClose} style={{background:C.bg,border:"none",borderRadius:"50%",width:34,height:34,cursor:"pointer",color:C.blue,fontSize:18,display:"flex",alignItems:"center",justifyContent:"center"}}>←</button>
+        <button onClick={onClose} style={{background:C.bg,border:"none",borderRadius:9999,width:34,height:34,cursor:"pointer",color:C.blue,fontSize:18,display:"flex",alignItems:"center",justifyContent:"center"}}>{"<-"}</button>
         <div style={{fontSize:18,fontFamily:"'Syne',sans-serif",color:C.text,fontWeight:700}}>Guardados</div>
       </div>
       <div style={{paddingBottom:40}}>
@@ -518,7 +514,7 @@ function FollowersList(props) {
     <div style={{position:"fixed",inset:0,zIndex:300,background:C.bg,maxWidth:480,margin:"0 auto",overflowY:"auto"}}>
       <div style={{display:"flex",height:4}}><div style={{flex:1,background:C.yellow}}/><div style={{flex:1,background:C.blue}}/><div style={{flex:1,background:C.red}}/></div>
       <div style={{position:"sticky",top:0,zIndex:10,background:C.card,borderBottom:"1px solid "+C.border,padding:"14px 20px",display:"flex",alignItems:"center",gap:14}}>
-        <button onClick={onClose} style={{background:C.bg,border:"none",borderRadius:"50%",width:34,height:34,cursor:"pointer",color:C.blue,fontSize:18,display:"flex",alignItems:"center",justifyContent:"center"}}>←</button>
+        <button onClick={onClose} style={{background:C.bg,border:"none",borderRadius:9999,width:34,height:34,cursor:"pointer",color:C.blue,fontSize:18,display:"flex",alignItems:"center",justifyContent:"center"}}>{"<-"}</button>
         <div style={{fontSize:18,fontFamily:"'Syne',sans-serif",color:C.text,fontWeight:700,flex:1}}>{title}</div>
         <span style={{fontSize:13,color:C.muted,fontFamily:"'Inter',sans-serif"}}>{users.length}</span>
       </div>
@@ -569,7 +565,7 @@ function Notificaciones(props) {
     <div style={{position:"fixed",inset:0,zIndex:300,background:C.bg,maxWidth:480,margin:"0 auto",overflowY:"auto"}}>
       <div style={{display:"flex",height:4}}><div style={{flex:1,background:C.yellow}}/><div style={{flex:1,background:C.blue}}/><div style={{flex:1,background:C.red}}/></div>
       <div style={{position:"sticky",top:0,zIndex:10,background:C.card,borderBottom:"1px solid "+C.border,padding:"14px 20px",display:"flex",alignItems:"center",gap:14}}>
-        <button onClick={onClose} style={{background:C.bg,border:"none",borderRadius:"50%",width:34,height:34,cursor:"pointer",color:C.blue,fontSize:18,display:"flex",alignItems:"center",justifyContent:"center"}}>←</button>
+        <button onClick={onClose} style={{background:C.bg,border:"none",borderRadius:9999,width:34,height:34,cursor:"pointer",color:C.blue,fontSize:18,display:"flex",alignItems:"center",justifyContent:"center"}}>{"<-"}</button>
         <div style={{fontSize:18,fontFamily:"'Syne',sans-serif",color:C.text,fontWeight:700,flex:1}}>Notificaciones</div>
         {unread > 0 ? <button onClick={markAll} style={{background:"none",border:"none",cursor:"pointer",color:C.blue,fontFamily:"'Inter',sans-serif",fontSize:11,fontWeight:600}}>Marcar todas</button> : null}
       </div>
@@ -583,7 +579,7 @@ function Notificaciones(props) {
                 <div style={{fontSize:13,color:C.text,fontFamily:"'Inter',sans-serif",lineHeight:1.4,marginBottom:4}}>{n.text}</div>
                 <div style={{fontSize:11,color:C.muted,fontFamily:"'Inter',sans-serif"}}>{n.time}</div>
               </div>
-              {!n.read ? <div style={{width:8,height:8,borderRadius:"50%",background:C.blue,flexShrink:0,marginTop:6}}/> : null}
+              {!n.read ? <div style={{width:8,height:8,borderRadius:9999,background:C.blue,flexShrink:0,marginTop:6}}/> : null}
             </div>
           );
         })}
@@ -610,10 +606,10 @@ function Profile(props) {
       <div style={{display:"flex",height:4}}><div style={{flex:1,background:C.yellow}}/><div style={{flex:1,background:C.blue}}/><div style={{flex:1,background:C.red}}/></div>
       <div style={{background:C.card,borderBottom:"1px solid "+C.border,marginBottom:10}}>
         <div style={{height:100,background:"linear-gradient(135deg,#ffcc00 0%,#0066ff 50%,#ff2d2d 100%)",position:"relative"}}>
-          <button onClick={onClose} style={{position:"absolute",top:12,right:12,background:"rgba(0,0,0,0.3)",border:"none",borderRadius:"50%",width:32,height:32,cursor:"pointer",color:"#fff",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center"}}>X</button>
+          <button onClick={onClose} style={{position:"absolute",top:12,right:12,background:"rgba(0,0,0,0.3)",border:"none",borderRadius:9999,width:32,height:32,cursor:"pointer",color:"#fff",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center"}}>X</button>
         </div>
         <div style={{padding:"0 20px 20px",position:"relative"}}>
-          <div style={{position:"absolute",top:-36,left:20,padding:3,borderRadius:"50%",background:C.card}}>
+          <div style={{position:"absolute",top:-36,left:20,padding:3,borderRadius:9999,background:C.card}}>
             <Av t="Tu" i={0} s={72}/>
           </div>
           <div style={{paddingTop:46,display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
@@ -645,7 +641,7 @@ function Profile(props) {
                 <div style={{fontSize:14,color:C.text,fontFamily:"'Inter',sans-serif",fontWeight:600}}>{item.label}</div>
                 <div style={{fontSize:11,color:C.muted,fontFamily:"'Inter',sans-serif",marginTop:1}}>{item.sub}</div>
               </div>
-              <span style={{color:C.muted,fontSize:18}}>›</span>
+              <span style={{color:C.muted,fontSize:18}}>{">"}</span>
             </div>
           );
         })}
@@ -692,7 +688,7 @@ function EditProfile(props) {
       </div>
       <div style={{padding:"24px 20px 60px"}}>
         <div style={{display:"flex",flexDirection:"column",alignItems:"center",marginBottom:28}}>
-          <div style={{width:90,height:90,borderRadius:"50%",background:"linear-gradient(135deg,#ffcc00,#0066ff)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:32,color:"#fff",fontFamily:"'Syne',sans-serif",fontWeight:800,border:"3px solid #ffcc00"}}>{name?name[0].toUpperCase():"?"}</div>
+          <div style={{width:90,height:90,borderRadius:9999,background:"linear-gradient(135deg,#ffcc00,#0066ff)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:32,color:"#fff",fontFamily:"'Syne',sans-serif",fontWeight:800,border:"3px solid #ffcc00"}}>{name?name[0].toUpperCase():"?"}</div>
         </div>
         {[["NOMBRE","Tu nombre",name,setName,false],["USUARIO","tu_usuario",username,function(v){setUsername(v.toLowerCase());},true]].map(function(item,i){
           var label=item[0],ph=item[1],val=item[2],set=item[3],isUser=item[4];
@@ -729,7 +725,7 @@ function Configuracion(props) {
   var Toggle = function(tProps) {
     return (
       <div onClick={tProps.onToggle} style={{width:44,height:26,borderRadius:13,background:tProps.on?C.blue:C.border,cursor:"pointer",position:"relative",flexShrink:0}}>
-        <div style={{position:"absolute",top:3,left:tProps.on?20:3,width:20,height:20,borderRadius:"50%",background:"#fff",boxShadow:"0 1px 4px rgba(0,0,0,0.2)"}}/>
+        <div style={{position:"absolute",top:3,left:tProps.on?20:3,width:20,height:20,borderRadius:9999,background:"#fff",boxShadow:"0 1px 4px rgba(0,0,0,0.2)"}}/>
       </div>
     );
   };
@@ -738,7 +734,7 @@ function Configuracion(props) {
     <div style={{position:"fixed",inset:0,zIndex:400,background:C.bg,maxWidth:480,margin:"0 auto",overflowY:"auto"}}>
       <div style={{display:"flex",height:4}}><div style={{flex:1,background:C.yellow}}/><div style={{flex:1,background:C.blue}}/><div style={{flex:1,background:C.red}}/></div>
       <div style={{position:"sticky",top:0,background:C.card,borderBottom:"1px solid "+C.border,padding:"14px 20px",display:"flex",alignItems:"center",gap:14}}>
-        <button onClick={function(){setSubPage(null);}} style={{background:C.bg,border:"none",borderRadius:"50%",width:34,height:34,cursor:"pointer",color:C.blue,fontSize:18}}>←</button>
+        <button onClick={function(){setSubPage(null);}} style={{background:C.bg,border:"none",borderRadius:9999,width:34,height:34,cursor:"pointer",color:C.blue,fontSize:18}}>{"<-"}</button>
         <div style={{fontSize:18,fontFamily:"'Syne',sans-serif",color:C.text}}>Cambiar contrasena</div>
       </div>
       <div style={{padding:"24px 20px",textAlign:"center"}}>
@@ -752,7 +748,7 @@ function Configuracion(props) {
     <div style={{position:"fixed",inset:0,zIndex:400,background:C.bg,maxWidth:480,margin:"0 auto",overflowY:"auto"}}>
       <div style={{display:"flex",height:4}}><div style={{flex:1,background:C.yellow}}/><div style={{flex:1,background:C.blue}}/><div style={{flex:1,background:C.red}}/></div>
       <div style={{position:"sticky",top:0,background:C.card,borderBottom:"1px solid "+C.border,padding:"14px 20px",display:"flex",alignItems:"center",gap:14}}>
-        <button onClick={function(){setSubPage(null);}} style={{background:C.bg,border:"none",borderRadius:"50%",width:34,height:34,cursor:"pointer",color:C.blue,fontSize:18}}>←</button>
+        <button onClick={function(){setSubPage(null);}} style={{background:C.bg,border:"none",borderRadius:9999,width:34,height:34,cursor:"pointer",color:C.blue,fontSize:18}}>{"<-"}</button>
         <div style={{fontSize:18,fontFamily:"'Syne',sans-serif",color:C.text}}>Terminos de Servicio</div>
       </div>
       <div style={{padding:"24px 20px 40px"}}>
@@ -767,7 +763,7 @@ function Configuracion(props) {
     <div style={{position:"fixed",inset:0,zIndex:400,background:C.bg,maxWidth:480,margin:"0 auto",overflowY:"auto"}}>
       <div style={{display:"flex",height:4}}><div style={{flex:1,background:C.yellow}}/><div style={{flex:1,background:C.blue}}/><div style={{flex:1,background:C.red}}/></div>
       <div style={{position:"sticky",top:0,background:C.card,borderBottom:"1px solid "+C.border,padding:"14px 20px",display:"flex",alignItems:"center",gap:14}}>
-        <button onClick={function(){setSubPage(null);}} style={{background:C.bg,border:"none",borderRadius:"50%",width:34,height:34,cursor:"pointer",color:C.blue,fontSize:18}}>←</button>
+        <button onClick={function(){setSubPage(null);}} style={{background:C.bg,border:"none",borderRadius:9999,width:34,height:34,cursor:"pointer",color:C.blue,fontSize:18}}>{"<-"}</button>
         <div style={{fontSize:18,fontFamily:"'Syne',sans-serif",color:C.text}}>Politica de Privacidad</div>
       </div>
       <div style={{padding:"24px 20px 40px"}}>
@@ -782,7 +778,7 @@ function Configuracion(props) {
     <div style={{position:"fixed",inset:0,zIndex:400,background:C.bg,maxWidth:480,margin:"0 auto",overflowY:"auto"}}>
       <div style={{display:"flex",height:4}}><div style={{flex:1,background:C.yellow}}/><div style={{flex:1,background:C.blue}}/><div style={{flex:1,background:C.red}}/></div>
       <div style={{position:"sticky",top:0,background:C.card,borderBottom:"1px solid "+C.border,padding:"14px 20px",display:"flex",alignItems:"center",gap:14}}>
-        <button onClick={function(){setSubPage(null);}} style={{background:C.bg,border:"none",borderRadius:"50%",width:34,height:34,cursor:"pointer",color:C.blue,fontSize:18}}>←</button>
+        <button onClick={function(){setSubPage(null);}} style={{background:C.bg,border:"none",borderRadius:9999,width:34,height:34,cursor:"pointer",color:C.blue,fontSize:18}}>{"<-"}</button>
         <div style={{fontSize:18,fontFamily:"'Syne',sans-serif",color:C.text}}>Idioma</div>
       </div>
       <div style={{padding:"20px 16px"}}>
@@ -791,7 +787,7 @@ function Configuracion(props) {
             <button key={l.id} onClick={function(){if(onSetLang) onSetLang(l.id); setSubPage(null);}} style={{width:"100%",display:"flex",alignItems:"center",gap:14,padding:"16px",background:currentLang===l.id?"#fffbea":C.card,border:"2px solid "+(currentLang===l.id?C.yellow:C.border),borderRadius:14,cursor:"pointer",textAlign:"left",marginBottom:10}}>
               <span style={{fontSize:28}}>{l.flag}</span>
               <span style={{fontSize:16,fontFamily:"'Syne',sans-serif",color:C.text,fontWeight:700,flex:1}}>{l.name}</span>
-              {currentLang===l.id ? <div style={{width:22,height:22,borderRadius:"50%",background:C.yellow,display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontWeight:700}}>✓</div> : null}
+              {currentLang===l.id ? <div style={{width:22,height:22,borderRadius:9999,background:C.yellow,display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontWeight:700}}>ok</div> : null}
             </button>
           );
         })}
@@ -803,7 +799,7 @@ function Configuracion(props) {
     <div style={{position:"fixed",inset:0,zIndex:300,background:C.bg,maxWidth:480,margin:"0 auto",overflowY:"auto"}}>
       <div style={{display:"flex",height:4}}><div style={{flex:1,background:C.yellow}}/><div style={{flex:1,background:C.blue}}/><div style={{flex:1,background:C.red}}/></div>
       <div style={{position:"sticky",top:0,background:C.card,borderBottom:"1px solid "+C.border,padding:"14px 20px",display:"flex",alignItems:"center",gap:14}}>
-        <button onClick={onClose} style={{background:C.bg,border:"none",borderRadius:"50%",width:34,height:34,cursor:"pointer",color:C.blue,fontSize:18}}>←</button>
+        <button onClick={onClose} style={{background:C.bg,border:"none",borderRadius:9999,width:34,height:34,cursor:"pointer",color:C.blue,fontSize:18}}>{"<-"}</button>
         <div style={{fontSize:18,fontFamily:"'Syne',sans-serif",color:C.text}}>Configuracion</div>
       </div>
       <div style={{paddingBottom:40}}>
@@ -818,7 +814,7 @@ function Configuracion(props) {
                       <span style={{fontSize:14,color:C.text,fontFamily:"'Inter',sans-serif",flex:1,fontWeight:500}}>{item.label}</span>
                       {item.type==="toggle" ? <Toggle on={item.val} onToggle={item.onToggle}/> : null}
                       {item.type==="info" ? <span style={{fontSize:13,color:C.muted,fontFamily:"'Inter',sans-serif"}}>{item.value}</span> : null}
-                      {item.type==="action" ? <span style={{color:C.muted,fontSize:18}}>›</span> : null}
+                      {item.type==="action" ? <span style={{color:C.muted,fontSize:18}}>{">"}</span> : null}
                     </div>
                   );
                 })}
@@ -963,13 +959,13 @@ function AuthStep3(props) {
                 <div style={{fontSize:15,fontFamily:"'Syne',sans-serif",color:"#1a1a1a"}}>{c.name}</div>
                 <div style={{fontSize:10,color:"#86868b",fontFamily:"'Inter',sans-serif"}}>{c.pop}</div>
               </div>
-              {chosenCity===c.id ? <span style={{color:"#ffcc00",fontSize:20,fontWeight:700}}>✓</span> : null}
+              {chosenCity===c.id ? <span style={{color:"#ffcc00",fontSize:20,fontWeight:700}}>ok</span> : null}
             </button>
           );
         })}
       </div>
       <div onClick={function(){setAgreed(function(a){return !a;});}} style={{display:"flex",alignItems:"flex-start",gap:12,padding:"12px 14px",background:"#fff",borderRadius:12,border:"1.5px solid "+(agreed?"#1a7a3c":"#e8e8ed"),cursor:"pointer",marginBottom:16}}>
-        <div style={{width:22,height:22,borderRadius:6,border:"2px solid "+(agreed?"#1a7a3c":"#e8e8ed"),background:agreed?"#1a7a3c":"transparent",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,marginTop:1}}>{agreed?<span style={{color:"#fff",fontSize:13,fontWeight:700}}>✓</span>:null}</div>
+        <div style={{width:22,height:22,borderRadius:6,border:"2px solid "+(agreed?"#1a7a3c":"#e8e8ed"),background:agreed?"#1a7a3c":"transparent",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,marginTop:1}}>{agreed?<span style={{color:"#fff",fontSize:13,fontWeight:700}}>ok</span>:null}</div>
         <div style={{fontSize:12,color:"#86868b",fontFamily:"'Inter',sans-serif",lineHeight:1.5}}>Acepto los <span style={{color:"#0066ff",fontWeight:700}}>Terminos</span> y la <span style={{color:"#0066ff",fontWeight:700}}>Privacidad</span> de Epale</div>
       </div>
       {error ? <div style={{background:"#fff0f0",border:"1px solid #ffb3b3",borderRadius:10,padding:"9px 13px",marginBottom:13,fontSize:13,color:"#ff2d2d",fontFamily:"'Inter',sans-serif"}}>{error}</div> : null}
