@@ -518,7 +518,7 @@ function Feed(props) {
           <div style={{marginTop:4}}>{postsList}</div>
           <div style={{margin:"10px 14px 20px"}}>{inviteBanner}</div>
         </div>
-        <button onClick={function(){setShowComposer(true);}} style={{position:"fixed",bottom:24,right:20,width:52,height:52,borderRadius:26,background:C.yellow,border:"none",cursor:"pointer",fontSize:30,fontWeight:300,boxShadow:"0 4px 18px rgba(255,204,0,0.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:50,lineHeight:1}}>{ICONS.pencil}</button>
+        <button onClick={function(){setShowComposer(true);}} style={{position:"fixed",bottom:24,right:20,width:52,height:52,borderRadius:26,background:C.yellow,border:"none",cursor:"pointer",fontSize:30,fontWeight:300,boxShadow:"0 4px 18px rgba(255,204,0,0.5)",display:window.innerWidth>=768?"none":"flex",alignItems:"center",justifyContent:"center",zIndex:50,lineHeight:1}}>{ICONS.pencil}</button>
       </div>
     );
   }
@@ -613,8 +613,8 @@ function Composer(props) {
   };
 
   return (
-    <div style={{position:"fixed",inset:0,zIndex:200,background:"rgba(0,0,0,0.5)",display:"flex",alignItems:"flex-end",justifyContent:"center"}} onClick={onClose}>
-      <div onClick={function(e){e.stopPropagation();}} style={{width:"100%",maxWidth:480,background:C.card,borderRadius:"22px 22px 0 0",padding:"0 0 36px",maxHeight:"90vh",overflowY:"auto"}}>
+    <div style={{position:"fixed",inset:0,zIndex:200,background:"rgba(0,0,0,0.5)",display:"flex",alignItems:window.innerWidth>=768?"center":"flex-end",justifyContent:"center"}} onClick={onClose}>
+      <div onClick={function(e){e.stopPropagation();}} style={{width:"100%",maxWidth:560,background:C.card,borderRadius:window.innerWidth>=768?"22px":"22px 22px 0 0",padding:"0 0 36px",maxHeight:"90vh",overflowY:"auto"}}>
         <div style={{display:"flex",justifyContent:"center",padding:"12px 0 4px"}}><div style={{width:36,height:4,borderRadius:2,background:C.border}}/></div>
         <div style={{padding:"4px 20px 0"}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
@@ -829,7 +829,7 @@ function Profile(props) {
         </div>
         <div style={{padding:"0 20px 20px",position:"relative"}}>
           <div style={{position:"absolute",top:-36,left:20,padding:3,borderRadius:9999,background:C.card}}>
-            <Av t="Tu" i={0} s={72}/>
+            <Av t={userName} i={0} s={72}/>
           </div>
           <div style={{paddingTop:46,display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
             <div>
@@ -1442,6 +1442,7 @@ export default function App() {
           return (
             <button key={tab.id} onClick={function(){
               if(tab.id==="me"){ setShowProfile(true); return; }
+              if(tab.id==="post"){ setShowProfile(false); return; }
               setActiveTab(tab.id);
             }} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:2,background:tab.action?C.yellow:"none",border:"none",cursor:"pointer",padding:tab.action?"8px 16px":"6px 10px",borderRadius:tab.action?12:8,minWidth:48}}>
               <span style={{fontSize:tab.action?20:18,color:tab.action?C.text:isActive?C.blue:C.muted}}>{tab.icon}</span>
