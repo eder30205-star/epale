@@ -12,7 +12,14 @@ var api = {
       method:"POST",
       headers:{"Content-Type":"application/json","apikey":SUPA_KEY},
       body:JSON.stringify({email:email, password:password, data:{name:name, city:city, username:username}})
-    }).then(function(r){return r.json();});
+    }).then(function(r){return r.json();}).then(function(res){
+      if(res.access_token || (res.session && res.session.access_token)) return res;
+      return fetch(SUPA_URL+"/auth/v1/token?grant_type=password", {
+        method:"POST",
+        headers:{"Content-Type":"application/json","apikey":SUPA_KEY},
+        body:JSON.stringify({email:email, password:password})
+      }).then(function(r){return r.json();});
+    });
   },
   signIn: function(email, password) {
     return fetch(SUPA_URL+"/auth/v1/token?grant_type=password", {
@@ -613,8 +620,8 @@ function Composer(props) {
   };
 
   return (
-    <div style={{position:"fixed",inset:0,zIndex:200,background:"rgba(0,0,0,0.5)",display:"flex",alignItems:window.innerWidth>=768?"center":"flex-end",justifyContent:"center"}} onClick={onClose}>
-      <div onClick={function(e){e.stopPropagation();}} style={{width:"100%",maxWidth:560,background:C.card,borderRadius:window.innerWidth>=768?"22px":"22px 22px 0 0",padding:"0 0 36px",maxHeight:"90vh",overflowY:"auto"}}>
+    <div style={{position:"fixed",inset:0,zIndex:200,background:"rgba(0,0,0,0.5)",display:"flex",alignItems:"center",justifyContent:"center"}} onClick={onClose}>
+      <div onClick={function(e){e.stopPropagation();}} style={{width:"100%",maxWidth:560,background:C.card,borderRadius:22,padding:"0 0 36px",maxHeight:"90vh",overflowY:"auto",margin:"0 16px"}}>
         <div style={{display:"flex",justifyContent:"center",padding:"12px 0 4px"}}><div style={{width:36,height:4,borderRadius:2,background:C.border}}/></div>
         <div style={{padding:"4px 20px 0"}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
@@ -1276,16 +1283,27 @@ function AuthStep4(props) {
     if(verifyCode!==DEMO){setError("Codigo incorrecto");return;}
     setLoading(true); setError("");
     api.signUp(email, password, userName, chosenCity, userName.toLowerCase().replace(/\s/g,"")).then(function(res) {
-      if(res.error || res.error_description) {
-        setError(res.error_description || res.msg || "Error al crear cuenta");
+      if(res.error && res.error !== "User already registered") {
+        setError(res.error_description || res.msg || res.error || "Error al crear cuenta");
         setLoading(false); return;
       }
       var token = (res.session && res.session.access_token) || res.access_token || "";
       var uid = (res.user && res.user.id) || (res.session && res.session.user && res.session.user.id) || "";
-      window._supaToken = token;
-      if(uid) api.upsertProfile(uid, userName, chosenCity, userName.toLowerCase().replace(/\s/g,""));
-      setLoading(false);
-      onDone(chosenCity, userName, userPhoto, token, uid);
+      if(token) {
+        window._supaToken = token;
+        if(uid) api.upsertProfile(uid, userName, chosenCity, userName.toLowerCase().replace(/\s/g,""));
+        setLoading(false);
+        onDone(chosenCity, userName, userPhoto, token, uid);
+      } else {
+        api.signIn(email, password).then(function(r2) {
+          var t2 = r2.access_token || (r2.session && r2.session.access_token) || "";
+          var u2 = (r2.user && r2.user.id) || (r2.session && r2.session.user && r2.session.user.id) || "";
+          if(t2) window._supaToken = t2;
+          if(u2) api.upsertProfile(u2, userName, chosenCity, userName.toLowerCase().replace(/\s/g,""));
+          setLoading(false);
+          onDone(chosenCity, userName, userPhoto, t2, u2);
+        }).catch(function(){ setLoading(false); onDone(chosenCity, userName, userPhoto, "", ""); });
+      }
     }).catch(function(e) {
       setError("Error de conexion"); setLoading(false);
     });
