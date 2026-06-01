@@ -1342,12 +1342,12 @@ export default function App() {
   }, []);
 
   var handleDone = function(city, name, photo, token, uid) {
-    setUserCity(city);
+    setUserCity(city||"madrid");
     if(name) setUserName(name);
     if(photo) setUserPhoto(photo);
-    if(token) { window._supaToken = token; localStorage.setItem("epale_token", token); }
+    if(token) { window._supaToken = token; try { localStorage.setItem("epale_token", token); } catch(e){} }
     if(uid) setUserId(uid);
-    localStorage.setItem("epale_profile", JSON.stringify({id:uid, name:name, photo_url:photo, city:city}));
+    try { localStorage.setItem("epale_profile", JSON.stringify({id:uid, name:name, city:city})); } catch(e){}
     setScreen("feed");
   };
 
@@ -1371,7 +1371,7 @@ export default function App() {
 
   return (
     <div>
-      <style>{"@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Syne:wght@700;800&display=swap'); *{margin:0;padding:0;box-sizing:border-box;} body{font-family:\'Inter\',sans-serif;background:#f5f5f7;}"}</style>
+      <style>{"@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Syne:wght@700;800&display=swap'); *{margin:0;padding:0;box-sizing:border-box;} body{font-family:sans-serif;background:#f5f5f7;}"}</style>
       {screen==="auth" ? <Auth onDone={handleDone}/> : null}
       {screen==="feed" ? (
         <div>
