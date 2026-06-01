@@ -1,5 +1,51 @@
-import { useState, useEffect } from "react"; // v2
+import { useState, useEffect } from "react";
 import React from "react";
+
+const SUPA_URL = "https://zkydbsymcnnbepvmbchr.supabase.co";
+const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpreWRic3ltY25uYmVwdm1iY2hyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyNjExNjksImV4cCI6MjA5NTgzNzE2OX0.bIiUt752AROIfQkQTHqN7r9OrjRTzxmwNQLDw0WVVS4";
+
+var getToken = function(){ return window._supaToken || SUPA_KEY; };
+
+var api = {
+  signUp: function(email, password, name, city, username) {
+    return fetch(SUPA_URL+"/auth/v1/signup", {
+      method:"POST",
+      headers:{"Content-Type":"application/json","apikey":SUPA_KEY},
+      body:JSON.stringify({email:email, password:password, data:{name:name, city:city, username:username}})
+    }).then(function(r){return r.json();});
+  },
+  signIn: function(email, password) {
+    return fetch(SUPA_URL+"/auth/v1/token?grant_type=password", {
+      method:"POST",
+      headers:{"Content-Type":"application/json","apikey":SUPA_KEY},
+      body:JSON.stringify({email:email, password:password})
+    }).then(function(r){return r.json();});
+  },
+  upsertProfile: function(id, name, city, username) {
+    return fetch(SUPA_URL+"/rest/v1/profiles", {
+      method:"POST",
+      headers:{"Content-Type":"application/json","apikey":SUPA_KEY,"Authorization":"Bearer "+getToken(),"Prefer":"resolution=merge-duplicates"},
+      body:JSON.stringify({id:id, name:name, city:city, username:username})
+    }).then(function(r){return r.json();});
+  },
+  getProfile: function(id) {
+    return fetch(SUPA_URL+"/rest/v1/profiles?id=eq."+id+"&select=*", {
+      headers:{"apikey":SUPA_KEY,"Authorization":"Bearer "+getToken()}
+    }).then(function(r){return r.json();});
+  },
+  getPosts: function(city) {
+    return fetch(SUPA_URL+"/rest/v1/posts?city=eq."+city+"&select=*,profiles(name,photo_url,username)&order=created_at.desc&limit=50", {
+      headers:{"apikey":SUPA_KEY,"Authorization":"Bearer "+getToken()}
+    }).then(function(r){return r.json();});
+  },
+  createPost: function(userId, city, type, content) {
+    return fetch(SUPA_URL+"/rest/v1/posts", {
+      method:"POST",
+      headers:{"Content-Type":"application/json","apikey":SUPA_KEY,"Authorization":"Bearer "+getToken(),"Prefer":"return=representation"},
+      body:JSON.stringify({user_id:userId, city:city, type:type, content:content})
+    }).then(function(r){return r.json();});
+  }
+};
 
 const LIGHT = { bg:"#f5f5f7", card:"#ffffff", border:"#e8e8ed", yellow:"#ffcc00", blue:"#0066ff", red:"#ff2d2d", text:"#1a1a1a", muted:"#86868b", green:"#1a7a3c", wa:"#25D366" };
 const DARK  = { bg:"#0d0d0d", card:"#1c1c1e", border:"#2c2c2e", yellow:"#ffcc00", blue:"#0a84ff", red:"#ff453a", text:"#f2f2f7", muted:"#636366", green:"#32d74b", wa:"#25D366" };
@@ -287,6 +333,16 @@ function Feed(props) {
 
   useEffect(function(){
     setPosts(SEED);
+    if(window._supaToken) {
+      api.getPosts(userCity).then(function(data) {
+        if(Array.isArray(data) && data.length > 0) {
+          var mapped = data.map(function(p) {
+            return {id:p.id, city:p.city, type:p.type||"post", name:(p.profiles&&p.profiles.name)||"Anonimo", av:(p.profiles&&p.profiles.name)||"?", content:p.content, likes:p.likes||0, comments:p.comments||0, time:"reciente"};
+          });
+          setPosts(mapped.concat(SEED));
+        }
+      }).catch(function(){});
+    }
   }, []);
 
   useEffect(function(){
@@ -334,6 +390,9 @@ function Feed(props) {
   var addPost = function(p){
     var newPost = {id:Date.now(),city:p.city,type:p.type,name:userName||"Tu",av:userName||"Tu",content:p.content,media:p.media,likes:0,comments:0,time:"ahora"};
     setPosts(function(pp){ return [newPost].concat(pp); });
+    if(userId && window._supaToken) {
+      api.createPost(userId, p.city, p.type, p.content).catch(function(){});
+    }
   };
 
   var handleCopy = function(){ if(navigator.clipboard) navigator.clipboard.writeText(refLink); setCopiedRef(true); setTimeout(function(){setCopiedRef(false);},2000); };
@@ -1008,7 +1067,25 @@ function AuthLogin(props) {
   var go = function() {
     if(!email||!password){setError("Completa todos los campos");return;}
     setLoading(true); setError("");
-    setTimeout(function(){ setLoading(false); onDone("madrid","",null,"",""); }, 800);
+    api.signIn(email, password).then(function(res) {
+      if(res.error || res.error_description) {
+        setError(res.error_description || "Correo o contrasena incorrectos");
+        setLoading(false); return;
+      }
+      var token = res.access_token || (res.session && res.session.access_token) || "";
+      var uid = (res.user && res.user.id) || (res.session && res.session.user && res.session.user.id) || "";
+      window._supaToken = token;
+      api.getProfile(uid).then(function(profiles) {
+        var profile = Array.isArray(profiles) && profiles[0];
+        setLoading(false);
+        onDone(profile ? profile.city : "madrid", profile ? profile.name : "", profile ? profile.photo_url : null, token, uid);
+      }).catch(function(){
+        setLoading(false);
+        onDone("madrid", "", null, token, uid);
+      });
+    }).catch(function(e) {
+      setError("Error de conexion"); setLoading(false);
+    });
   };
   return (
     <div style={{flex:1,padding:"22px 20px 32px"}}>
@@ -1156,10 +1233,20 @@ function AuthStep4(props) {
   var finish = function() {
     if(verifyCode!==DEMO){setError("Codigo incorrecto");return;}
     setLoading(true); setError("");
-    setTimeout(function(){
+    api.signUp(email, password, userName, chosenCity, userName.toLowerCase().replace(/\s/g,"")).then(function(res) {
+      if(res.error || res.error_description) {
+        setError(res.error_description || res.msg || "Error al crear cuenta");
+        setLoading(false); return;
+      }
+      var token = (res.session && res.session.access_token) || res.access_token || "";
+      var uid = (res.user && res.user.id) || (res.session && res.session.user && res.session.user.id) || "";
+      window._supaToken = token;
+      if(uid) api.upsertProfile(uid, userName, chosenCity, userName.toLowerCase().replace(/\s/g,""));
       setLoading(false);
-      onDone(chosenCity, userName, userPhoto, "", "");
-    }, 800);
+      onDone(chosenCity, userName, userPhoto, token, uid);
+    }).catch(function(e) {
+      setError("Error de conexion"); setLoading(false);
+    });
   };
   return (
     <div style={{flex:1,padding:"22px 20px 32px",textAlign:"center"}}>
