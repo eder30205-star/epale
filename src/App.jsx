@@ -4,11 +4,16 @@ import React from "react";
 const SUPA_URL = "https://zkydbsymcnnbepvmbchr.supabase.co";
 const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpreWRic3ltY25uYmVwdm1iY2hyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyNjExNjksImV4cCI6MjA5NTgzNzE2OX0.bIiUt752AROIfQkQTHqN7r9OrjRTzxmwNQLDw0WVVS4";
 
+const SUPA_SERVICE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpreWRic3ltY25uYmVwdm1iY2hyIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MDI2MTE2OSwiZXhwIjoyMDk1ODM3MTY5fQ.XuQjjwjiXqPWalh12fVAAsAxsQhRD2OTrE-ZaunJBHc";
+
 const supa = {
   auth: {
     signUp: async function(email, password, meta) {
-      var r = await fetch(SUPA_URL+"/auth/v1/signup", {method:"POST", headers:{"Content-Type":"application/json","apikey":SUPA_KEY}, body:JSON.stringify({email:email,password:password,data:meta})});
-      return r.json();
+      var r = await fetch(SUPA_URL+"/auth/v1/admin/users", {method:"POST", headers:{"Content-Type":"application/json","apikey":SUPA_SERVICE_KEY,"Authorization":"Bearer "+SUPA_SERVICE_KEY}, body:JSON.stringify({email:email,password:password,email_confirm:true,user_metadata:meta})});
+      var d = await r.json();
+      if(!r.ok) return {error: d};
+      var loginRes = await supa.auth.signIn(email, password);
+      return loginRes;
     },
     signIn: async function(email, password) {
       var r = await fetch(SUPA_URL+"/auth/v1/token?grant_type=password", {method:"POST", headers:{"Content-Type":"application/json","apikey":SUPA_KEY}, body:JSON.stringify({email:email,password:password})});
