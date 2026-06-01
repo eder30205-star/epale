@@ -1349,6 +1349,7 @@ export default function App() {
   var [showProfile,setShowProfile]=useState(false);
   var [following,setFollowing]=useState([]);
   var [crashMsg,setCrashMsg]=useState("");
+  var [activeTab,setActiveTab]=useState("feed");
 
   if(saved&&saved.token) { window._supaToken = saved.token; }
 
@@ -1380,8 +1381,6 @@ export default function App() {
   );
 
   if(screen==="auth") return <Auth onDone={handleDone}/>;
-
-  var [activeTab,setActiveTab]=useState("feed");
 
   if(screen==="feed") return (
     <div>
