@@ -1322,16 +1322,19 @@ export default function App() {
   var [userId,setUserId]=useState(null);
   var [showProfile,setShowProfile]=useState(false);
   var [following,setFollowing]=useState([]);
+  var [crashMsg,setCrashMsg]=useState("");
 
   var toggleFollow = function(name){ setFollowing(function(f){ return f.includes(name)?f.filter(function(x){return x!==name;}):[].concat(f,[name]); }); };
 
   var handleDone = function(city, name, photo, token, uid) {
-    try { setUserCity(city||"madrid"); } catch(e){}
-    try { if(name) setUserName(name); } catch(e){}
-    try { if(photo) setUserPhoto(photo); } catch(e){}
-    try { if(uid) setUserId(uid); } catch(e){}
-    try { if(token) { window._supaToken = token; localStorage.setItem("epale_token", token); localStorage.setItem("epale_uid", uid||""); localStorage.setItem("epale_name", name||""); localStorage.setItem("epale_city", city||"madrid"); } } catch(e){}
-    setScreen("feed");
+    try {
+      setUserCity(city||"madrid");
+      if(name) setUserName(name);
+      if(photo) setUserPhoto(photo);
+      if(uid) setUserId(uid);
+      if(token) window._supaToken = token;
+      setScreen("feed");
+    } catch(e) { setCrashMsg("handleDone error: "+e.message); }
   };
 
   var handleLogout = function() {
@@ -1341,15 +1344,22 @@ export default function App() {
     setScreen("auth");
   };
 
-  return (
-    <div>
-      {screen==="auth" ? <Auth onDone={handleDone}/> : null}
-      {screen==="feed" ? (
-        <div>
-          {showProfile ? <Profile userCity={userCity} onLogout={handleLogout} onClose={function(){setShowProfile(false);}} onSetDark={setDark} onSetLang={setLang} isDark={dark} currentLang={lang} following={following} onFollow={toggleFollow} userPhoto={userPhoto} userName={userName} onPhotoChange={setUserPhoto} userId={userId}/> : null}
-          <Feed userCity={userCity} onProfile={function(){setShowProfile(true);}} following={following} onFollow={toggleFollow} userPhoto={userPhoto} userName={userName} userId={userId}/>
-        </div>
-      ) : null}
+  if(crashMsg) return (
+    <div style={{padding:20,color:"red",fontFamily:"monospace",fontSize:13}}>
+      <div style={{fontWeight:700,marginBottom:8}}>Error:</div>
+      <div>{crashMsg}</div>
+      <button onClick={function(){setCrashMsg("");setScreen("auth");}} style={{marginTop:16,padding:"8px 16px",background:"#ffcc00",border:"none",borderRadius:8,cursor:"pointer",fontWeight:700}}>Reintentar</button>
     </div>
   );
+
+  if(screen==="auth") return <Auth onDone={handleDone}/>;
+
+  if(screen==="feed") return (
+    <div>
+      {showProfile ? <Profile userCity={userCity} onLogout={handleLogout} onClose={function(){setShowProfile(false);}} onSetDark={setDark} onSetLang={setLang} isDark={dark} currentLang={lang} following={following} onFollow={toggleFollow} userPhoto={userPhoto} userName={userName} onPhotoChange={setUserPhoto} userId={userId}/> : null}
+      <Feed userCity={userCity} onProfile={function(){setShowProfile(true);}} following={following} onFollow={toggleFollow} userPhoto={userPhoto} userName={userName} userId={userId}/>
+    </div>
+  );
+
+  return <div style={{padding:20}}>Cargando...</div>;
 }
