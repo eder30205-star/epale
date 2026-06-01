@@ -315,6 +315,15 @@ function Feed(props) {
   var [filter,setFilter]=useState("all");
   var [posts,setPosts]=useState(SEED);
   var [loadingPosts,setLoadingPosts]=useState(false);
+  var [showComposer,setShowComposer]=useState(false);
+  var [inviteCount,setInviteCount]=useState(0);
+  var [activeCity,setActiveCity]=useState(userCity);
+  var [savedPosts,setSavedPosts]=useState([]);
+  var [feedTab,setFeedTab]=useState("forYou");
+  var following=props.following||[];
+  var toggleFollow=props.onFollow||function(){};
+  var [copiedRef,setCopiedRef]=useState(false);
+  var [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   useEffect(function(){
     var load = async function(){
@@ -332,14 +341,12 @@ function Feed(props) {
     };
     load();
   }, []);
-  var [showComposer,setShowComposer]=useState(false);
-  var [inviteCount,setInviteCount]=useState(0);
-  var [activeCity,setActiveCity]=useState(userCity);
-  var [savedPosts,setSavedPosts]=useState([]);
-  var [feedTab,setFeedTab]=useState("forYou");
-  var following=props.following||[];
-  var toggleFollow=props.onFollow||function(){};
-  var [copiedRef,setCopiedRef]=useState(false);
+
+  useEffect(function(){
+    var handler = function(){ setIsMobile(window.innerWidth < 768); };
+    window.addEventListener("resize", handler);
+    return function(){ window.removeEventListener("resize", handler); };
+  }, []);
 
   var cityObj = getCity(activeCity);
   var refLink = "https://epaleapp.online/"+activeCity;
@@ -388,13 +395,6 @@ function Feed(props) {
   };
 
   var handleCopy = function(){ if(navigator.clipboard) navigator.clipboard.writeText(refLink); setCopiedRef(true); setTimeout(function(){setCopiedRef(false);},2000); };
-
-  var [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-  useEffect(function(){
-    var handler = function(){ setIsMobile(window.innerWidth < 768); };
-    window.addEventListener("resize", handler);
-    return function(){ window.removeEventListener("resize", handler); };
-  }, []);
 
   var dollarWidget = (
     <div style={{background:C.card,borderRadius:14,border:"1px solid "+C.border,overflow:"hidden",marginBottom:16}}>
