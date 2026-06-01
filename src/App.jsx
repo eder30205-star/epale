@@ -1064,6 +1064,7 @@ function AuthLogin(props) {
     try {
       var res = await supa.auth.signIn(email, password);
       console.log("LOGIN RESPONSE:", JSON.stringify(res));
+      if(res.error_description || res.error) { setError(res.error_description || res.error || "Error"); setLoading(false); return; }
       var token = res.access_token || (res.session && res.session.access_token) || "";
       var uid = (res.user && res.user.id) || (res.session && res.session.user && res.session.user.id) || "";
       if(!token && !uid) { setError("Correo o contrasena incorrectos"); setLoading(false); return; }
