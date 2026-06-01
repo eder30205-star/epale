@@ -1,4 +1,4 @@
-mport { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import React from "react";
 
 const SUPA_URL = "https://zkydbsymcnnbepvmbchr.supabase.co";
@@ -73,6 +73,37 @@ const supa = {
 
 const LIGHT = { bg:"#f5f5f7", card:"#ffffff", border:"#e8e8ed", yellow:"#ffcc00", blue:"#0066ff", red:"#ff2d2d", text:"#1a1a1a", muted:"#86868b", green:"#1a7a3c", wa:"#25D366" };
 const DARK  = { bg:"#0d0d0d", card:"#1c1c1e", border:"#2c2c2e", yellow:"#ffcc00", blue:"#0a84ff", red:"#ff453a", text:"#f2f2f7", muted:"#636366", green:"#32d74b", wa:"#25D366" };
+
+var ICONS = {
+  heart:    "\u2764\uFE0F",
+  heartEmpty: "\u{1F90D}",
+  comment:  "\u{1F4AC}",
+  bookmark: "\u{1F516}",
+  phone:    "\u{1F4F1}",
+  dollar:   "\u{1F4B5}",
+  fire:     "\u{1F525}",
+  pencil:   "\u270F\uFE0F",
+  briefcase:"\u{1F4BC}",
+  house:    "\u{1F3E0}",
+  wrench:   "\u{1F527}",
+  handshake:"\u{1F91D}",
+  bell:     "\u{1F514}",
+  gear:     "\u2699\uFE0F",
+  eye:      "\u{1F441}\uFE0F",
+  photo:    "\u{1F5BC}\uFE0F",
+  video:    "\u{1F3AC}",
+  camera:   "\u{1F4F7}",
+  notepad:  "\u{1F4DD}",
+  check:    "\u2705",
+  key:      "\u{1F511}",
+  email:    "\u{1F4E7}",
+  group:    "\u{1F465}",
+  flag_ve:  "\u{1F1FB}\u{1F1EA}",
+  share:    "\u2197\uFE0F",
+  like_on:  "\u2764\uFE0F",
+  like_off: "\u{1F90D}",
+};
+
 var _theme = LIGHT;
 var C = LIGHT;
 
@@ -100,11 +131,11 @@ const toFlag = function(code) {
 const getCity = function(id){ return CITIES.find(function(c){ return c.id===id; }) || CITIES[0]; };
 
 const TYPES = {
-  post:    { label:"Post",     icon:"pen",  badgeBg:null },
-  job:     { label:"Trabajo",  icon:"bag",  badgeBg:"#ffcc00", badgeFg:"#1a1a1a" },
-  housing: { label:"Vivienda", icon:"hom",  badgeBg:"#1a4fa0", badgeFg:"#fff" },
-  service: { label:"Servicio", icon:"wrn",  badgeBg:"#1a7a3c", badgeFg:"#fff" },
-  help:    { label:"Ayuda",    icon:"hnd",  badgeBg:"#cc2200", badgeFg:"#fff" },
+  post:    { label:"Post",     icon:ICONS.pencil,  badgeBg:null },
+  job:     { label:"Trabajo",  icon:ICONS.briefcase,  badgeBg:"#ffcc00", badgeFg:"#1a1a1a" },
+  housing: { label:"Vivienda", icon:ICONS.house,  badgeBg:"#1a4fa0", badgeFg:"#fff" },
+  service: { label:"Servicio", icon:ICONS.wrench,  badgeBg:"#1a7a3c", badgeFg:"#fff" },
+  help:    { label:"Ayuda",    icon:ICONS.handshake,  badgeBg:"#cc2200", badgeFg:"#fff" },
 };
 
 const GR = ["linear-gradient(135deg,#ffcc00,#1a4fa0)","linear-gradient(135deg,#1a4fa0,#cc2200)","linear-gradient(135deg,#cc2200,#ffcc00)","linear-gradient(135deg,#1a7a3c,#1a4fa0)","linear-gradient(135deg,#ffcc00,#cc2200)","linear-gradient(135deg,#1a4fa0,#1a7a3c)"];
@@ -232,7 +263,7 @@ function PostCard(props) {
             <div style={{background:C.bg,borderRadius:12,border:"1px solid "+C.border,marginBottom:10,padding:"14px 16px"}}>
               {flagDone ? (
                 <div style={{textAlign:"center",padding:"10px 0"}}>
-                  <div style={{fontSize:32,marginBottom:8}}>ok</div>
+                  <div style={{fontSize:32,marginBottom:8}}>{ICONS.check}</div>
                   <div style={{fontSize:14,fontFamily:"'Syne',sans-serif",color:C.text,marginBottom:4}}>Reporte enviado</div>
                   <div style={{fontSize:12,color:C.muted,fontFamily:"'Inter',sans-serif",marginBottom:12}}>Revisaremos en menos de 24 horas</div>
                   <button onClick={function(){setShowFlag(false);setFlagDone(false);}} style={{padding:"8px 20px",background:C.blue,color:"#fff",border:"none",borderRadius:100,cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:13,fontWeight:700}}>Listo</button>
@@ -263,10 +294,10 @@ function PostCard(props) {
 
           <div style={{display:"flex",gap:6,marginBottom:10}}>
             <button onClick={function(){setLiked(function(l){return !l;}); setLikes(function(l){return liked?l-1:l+1;});}} style={{display:"flex",alignItems:"center",gap:5,padding:"6px 10px",background:liked?"#fff0f0":C.bg,border:"1px solid "+(liked?"#ffb3b3":C.border),borderRadius:100,cursor:"pointer",color:liked?C.red:C.muted,fontFamily:"'Inter',sans-serif",fontSize:12}}>
-              {liked?"v":"o"} {likes.toLocaleString()}
+              {liked?ICONS.like_on:ICONS.like_off} {likes.toLocaleString()}
             </button>
             <button onClick={function(){setOpen(function(o){return !o;});}} style={{display:"flex",alignItems:"center",gap:5,padding:"6px 10px",background:open?"#e8f0fc":C.bg,border:"1px solid "+(open?"#b3c8ff":C.border),borderRadius:100,cursor:"pointer",color:open?C.blue:C.muted,fontFamily:"'Inter',sans-serif",fontSize:12}}>
-               c {(post.comments+comments.length).toLocaleString()}
+               {ICONS.comment} {(post.comments+comments.length).toLocaleString()}
             </button>
             <button onClick={function(){if(onSave) onSave(post.id);}} style={{display:"flex",alignItems:"center",gap:5,padding:"6px 10px",background:saved?"#fffbea":C.bg,border:"1px solid "+(saved?"#ffe066":C.border),borderRadius:100,cursor:"pointer",color:saved?C.yellow:C.muted,fontFamily:"'Inter',sans-serif",fontSize:12,marginLeft:"auto"}}>
                {saved?"Guardado":"Guardar"}
@@ -275,7 +306,7 @@ function PostCard(props) {
 
           <a href={waShare(post, cityObj ? cityObj.id : "ve")} target="_blank" rel="noreferrer" style={{textDecoration:"none",display:"block",marginBottom:14}}>
             <div style={{display:"flex",alignItems:"center",gap:10,padding:"11px 14px",background:C.wa,borderRadius:12,cursor:"pointer"}}>
-              <span style={{fontSize:20}}>m</span>
+              <span style={{fontSize:20}}>{ICONS.phone}</span>
               <div style={{flex:1}}>
                 <div style={{fontSize:13,fontWeight:700,color:"#fff",fontFamily:"'Inter',sans-serif"}}>Compartir en WhatsApp</div>
                 <div style={{fontSize:11,color:"rgba(255,255,255,0.8)",fontFamily:"'Inter',sans-serif"}}>Envia este post a tus panas</div>
@@ -399,7 +430,7 @@ function Feed(props) {
   var dollarWidget = (
     <div style={{background:C.card,borderRadius:14,border:"1px solid "+C.border,overflow:"hidden",marginBottom:16}}>
       <div style={{background:"#0d0d0d",padding:"9px 14px",display:"flex",alignItems:"center",gap:10}}>
-        <span style={{fontSize:16}}>$</span>
+        <span style={{fontSize:16}}>{ICONS.dollar}</span>
         <div style={{flex:1,display:"flex",gap:12,alignItems:"center",flexWrap:"wrap"}}>
           <span style={{fontFamily:"'Inter',sans-serif",fontSize:11,color:"rgba(255,255,255,0.5)"}}>BCV <strong style={{fontSize:14,color:"#ffcc00"}}>Bs 36.84</strong></span>
           <span style={{fontFamily:"'Inter',sans-serif",fontSize:11,color:"rgba(255,255,255,0.5)"}}>Paralelo <strong style={{fontSize:14,color:"#7defa0"}}>Bs 38.20</strong></span>
@@ -409,7 +440,7 @@ function Feed(props) {
       </div>
       {filtered[0] ? (
         <div style={{padding:"8px 14px",display:"flex",gap:8,alignItems:"center"}}>
-          <span style={{fontSize:14}}>!</span>
+          <span style={{fontSize:14}}>{ICONS.fire}</span>
           <span style={{fontSize:11,color:C.muted,fontFamily:"'Inter',sans-serif"}}>Trending:</span>
           <span style={{fontSize:12,color:C.text,fontFamily:"'Inter',sans-serif",fontWeight:600,flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{filtered[0].content.slice(0,80)}...</span>
         </div>
@@ -502,7 +533,7 @@ function Feed(props) {
           <div style={{marginTop:4}}>{postsList}</div>
           <div style={{margin:"10px 14px 20px"}}>{inviteBanner}</div>
         </div>
-        <button onClick={function(){setShowComposer(true);}} style={{position:"fixed",bottom:24,right:20,width:52,height:52,borderRadius:26,background:C.yellow,border:"none",cursor:"pointer",fontSize:30,fontWeight:300,boxShadow:"0 4px 18px rgba(255,204,0,0.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:50,lineHeight:1}}>+</button>
+        <button onClick={function(){setShowComposer(true);}} style={{position:"fixed",bottom:24,right:20,width:52,height:52,borderRadius:26,background:C.yellow,border:"none",cursor:"pointer",fontSize:30,fontWeight:300,boxShadow:"0 4px 18px rgba(255,204,0,0.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:50,lineHeight:1}}>{ICONS.pencil}</button>
       </div>
     );
   }
@@ -619,7 +650,7 @@ function Composer(props) {
             </div>
           ) : (
             <div style={{display:"flex",gap:8,marginBottom:14}}>
-              {[["img","Foto","image/*","image"],["vid","Video","video/*","video"],["cam","Camara","image/*","image"]].map(function(item,idx){
+              {[[ICONS.photo,"Foto","image/*","image"],[ICONS.video,"Video","video/*","video"],[ICONS.camera,"Camara","image/*","image"]].map(function(item,idx){
                 return (
                   <label key={idx} style={{flex:1}}>
                     <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:6,padding:"10px",background:C.bg,border:"1.5px solid "+C.border,borderRadius:12,cursor:"pointer"}}>
@@ -654,7 +685,7 @@ function MisPublicaciones(props) {
       <div style={{paddingBottom:40}}>
         {myPosts.length===0 ? (
           <div style={{textAlign:"center",padding:"60px 20px"}}>
-            <div style={{fontSize:48,marginBottom:12}}>p</div>
+            <div style={{fontSize:48,marginBottom:12}}>{ICONS.notepad}</div>
             <div style={{fontSize:16,fontFamily:"'Syne',sans-serif",color:C.text,marginBottom:8}}>Aun no has publicado nada</div>
             <div style={{fontSize:13,color:C.muted,fontFamily:"'Inter',sans-serif"}}>Tus publicaciones apareceran aqui</div>
           </div>
@@ -688,7 +719,7 @@ function Guardados(props) {
       <div style={{paddingBottom:40}}>
         {savedPosts.length===0 ? (
           <div style={{textAlign:"center",padding:"60px 20px"}}>
-            <div style={{fontSize:48,marginBottom:12}}>v</div>
+            <div style={{fontSize:48,marginBottom:12}}>{ICONS.heart}</div>
             <div style={{fontSize:16,fontFamily:"'Syne',sans-serif",color:C.text,marginBottom:8}}>No tienes posts guardados</div>
             <div style={{fontSize:13,color:C.muted,fontFamily:"'Inter',sans-serif"}}>Toca el icono guardar en cualquier post</div>
           </div>
@@ -724,7 +755,7 @@ function FollowersList(props) {
       <div style={{paddingBottom:40}}>
         {users.length===0 ? (
           <div style={{textAlign:"center",padding:"60px 20px"}}>
-            <div style={{fontSize:48,marginBottom:12}}>g</div>
+            <div style={{fontSize:48,marginBottom:12}}>{ICONS.group}</div>
             <div style={{fontSize:16,fontFamily:"'Syne',sans-serif",color:C.text}}>Nadie aqui aun</div>
           </div>
         ) : users.map(function(u,i){
@@ -749,13 +780,13 @@ function FollowersList(props) {
 
 
 var NOTIF_SEED = [
-  { id:1, icon:"hrt", iconBg:"#fdecea", text:"Carlos Mendez le dio like a tu post", time:"hace 2 min", read:false },
-  { id:2, icon:"cmt", iconBg:"#e8f0fc", text:"Andreina Lopez comento: Que bueno esto!", time:"hace 15 min", read:false },
-  { id:3, icon:"hrt", iconBg:"#fdecea", text:"3 personas mas le dieron like a tu post", time:"hace 1h", read:false },
-  { id:4, icon:"shr", iconBg:"#e8f8ee", text:"Tu post fue compartido en WhatsApp 2 veces", time:"hace 2h", read:true },
-  { id:5, icon:"cmt", iconBg:"#e8f0fc", text:"Jose Rodriguez comento: Epale que buena info!", time:"hace 3h", read:true },
-  { id:6, icon:"hrt", iconBg:"#fdecea", text:"5 personas le dieron like a tu post", time:"hace 5h", read:true },
-  { id:7, icon:"VE", iconBg:"#fffbea", text:"Bienvenido a Epale! Conecta con venezolanos en tu ciudad", time:"hace 1 dia", read:true },
+  { id:1, icon:ICONS.heart, iconBg:"#fdecea", text:"Carlos Mendez le dio like a tu post", time:"hace 2 min", read:false },
+  { id:2, icon:ICONS.comment, iconBg:"#e8f0fc", text:"Andreina Lopez comento: Que bueno esto!", time:"hace 15 min", read:false },
+  { id:3, icon:ICONS.heart, iconBg:"#fdecea", text:"3 personas mas le dieron like a tu post", time:"hace 1h", read:false },
+  { id:4, icon:ICONS.share, iconBg:"#e8f8ee", text:"Tu post fue compartido en WhatsApp 2 veces", time:"hace 2h", read:true },
+  { id:5, icon:ICONS.comment, iconBg:"#e8f0fc", text:"Jose Rodriguez comento: Epale que buena info!", time:"hace 3h", read:true },
+  { id:6, icon:ICONS.heart, iconBg:"#fdecea", text:"5 personas le dieron like a tu post", time:"hace 5h", read:true },
+  { id:7, icon:ICONS.flag_ve, iconBg:"#fffbea", text:"Bienvenido a Epale! Conecta con venezolanos en tu ciudad", time:"hace 1 dia", read:true },
 ];
 
 function Notificaciones(props) {
@@ -836,7 +867,7 @@ function Profile(props) {
       </div>
 
       <div style={{background:C.card,marginBottom:10}}>
-        {[{icon:"pen",label:"Mis publicaciones",sub:"Posts que has compartido",action:function(){setSubScreen("posts");}},{icon:"hrt",label:"Guardados",sub:"Posts que marcaste como favoritos",action:function(){setSubScreen("saved");}},{icon:"bel",label:"Notificaciones",sub:"Likes, comentarios, menciones",action:function(){setSubScreen("notifs");}},{icon:"cfg",label:"Configuracion",sub:"Cuenta, privacidad, idioma",action:function(){setSubScreen("config");}}].map(function(item,i){
+        {[{icon:ICONS.pencil,label:"Mis publicaciones",sub:"Posts que has compartido",action:function(){setSubScreen("posts");}},{icon:ICONS.heart,label:"Guardados",sub:"Posts que marcaste como favoritos",action:function(){setSubScreen("saved");}},{icon:ICONS.bell,label:"Notificaciones",sub:"Likes, comentarios, menciones",action:function(){setSubScreen("notifs");}},{icon:ICONS.gear,label:"Configuracion",sub:"Cuenta, privacidad, idioma",action:function(){setSubScreen("config");}}].map(function(item,i){
           return (
             <div key={i} onClick={item.action||function(){}} style={{display:"flex",alignItems:"center",gap:14,padding:"14px 20px",borderBottom:i<3?"1px solid "+C.border:"none",cursor:"pointer"}}>
               <div style={{width:42,height:42,borderRadius:12,background:C.bg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20}}>{item.icon}</div>
@@ -853,7 +884,7 @@ function Profile(props) {
       <div style={{margin:"0 14px 10px"}}>
         <a href={waInvite(userCity)} target="_blank" rel="noreferrer" style={{textDecoration:"none"}}>
           <div style={{background:C.wa,borderRadius:14,padding:"14px 18px",display:"flex",alignItems:"center",gap:12}}>
-            <span style={{fontSize:22}}>m</span>
+            <span style={{fontSize:22}}>{ICONS.phone}</span>
             <div style={{flex:1}}>
               <div style={{fontWeight:700,color:"#fff",fontFamily:"'Inter',sans-serif",fontSize:13}}>Invitar venezolanos a Epale</div>
               <div style={{fontSize:11,color:"rgba(255,255,255,0.8)",fontFamily:"'Inter',sans-serif"}}>Comparte con tus panas en {cityObj.name}</div>
@@ -958,7 +989,7 @@ function Configuracion(props) {
         <div style={{fontSize:18,fontFamily:"'Syne',sans-serif",color:C.text}}>Cambiar contrasena</div>
       </div>
       <div style={{padding:"24px 20px",textAlign:"center"}}>
-        <div style={{fontSize:48,marginBottom:12}}>k</div>
+        <div style={{fontSize:48,marginBottom:12}}>{ICONS.key}</div>
         <div style={{fontSize:15,color:C.muted,fontFamily:"'Inter',sans-serif"}}>Funcionalidad disponible cuando conectes Supabase</div>
       </div>
     </div>
@@ -1007,7 +1038,7 @@ function Configuracion(props) {
             <button key={l.id} onClick={function(){if(onSetLang) onSetLang(l.id); setSubPage(null);}} style={{width:"100%",display:"flex",alignItems:"center",gap:14,padding:"16px",background:currentLang===l.id?"#fffbea":C.card,border:"2px solid "+(currentLang===l.id?C.yellow:C.border),borderRadius:14,cursor:"pointer",textAlign:"left",marginBottom:10}}>
               <span style={{fontSize:28}}>{l.flag}</span>
               <span style={{fontSize:16,fontFamily:"'Syne',sans-serif",color:C.text,fontWeight:700,flex:1}}>{l.name}</span>
-              {currentLang===l.id ? <div style={{width:22,height:22,borderRadius:9999,background:C.yellow,display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontWeight:700}}>ok</div> : null}
+              {currentLang===l.id ? <div style={{width:22,height:22,borderRadius:9999,background:C.yellow,display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontWeight:700}}>{ICONS.check}</div> : null}
             </button>
           );
         })}
@@ -1092,7 +1123,7 @@ function AuthLogin(props) {
         <div style={{fontSize:10,fontFamily:"'Inter',sans-serif",color:"#86868b",marginBottom:7,letterSpacing:1}}>CONTRASENA</div>
         <div style={{position:"relative"}}>
           <input value={password} onChange={function(e){setPassword(e.target.value);}} type={showPass?"text":"password"} placeholder="Tu contrasena" style={{width:"100%",padding:"13px 46px 13px 16px",background:"#fff",border:"1.5px solid "+(password?"#0066ff":"#e8e8ed"),borderRadius:12,color:"#1a1a1a",fontFamily:"'Inter',sans-serif",fontSize:15,outline:"none",boxSizing:"border-box"}}/>
-          <button onClick={function(){setShowPass(function(s){return !s;});}} style={{position:"absolute",right:14,top:10,background:"none",border:"none",cursor:"pointer",fontSize:18}}>o</button>
+          <button onClick={function(){setShowPass(function(s){return !s;});}} style={{position:"absolute",right:14,top:10,background:"none",border:"none",cursor:"pointer",fontSize:18}}>{ICONS.eye}</button>
         </div>
       </div>
       <div style={{textAlign:"right",marginBottom:20}}><button style={{background:"none",border:"none",cursor:"pointer",color:"#0066ff",fontFamily:"'Inter',sans-serif",fontSize:11}}>Olvidaste tu contrasena?</button></div>
@@ -1124,7 +1155,7 @@ function AuthStep1(props) {
         <div style={{fontSize:10,fontFamily:"'Inter',sans-serif",color:"#86868b",marginBottom:7,letterSpacing:1}}>CONTRASENA</div>
         <div style={{position:"relative"}}>
           <input value={password} onChange={function(e){setPassword(e.target.value);}} type={showPass?"text":"password"} placeholder="Minimo 6 caracteres" style={{width:"100%",padding:"13px 46px 13px 16px",background:"#fff",border:"1.5px solid "+(password?"#0066ff":"#e8e8ed"),borderRadius:12,color:"#1a1a1a",fontFamily:"'Inter',sans-serif",fontSize:15,outline:"none",boxSizing:"border-box"}}/>
-          <button onClick={function(){setShowPass(function(s){return !s;});}} style={{position:"absolute",right:14,top:10,background:"none",border:"none",cursor:"pointer",fontSize:18}}>o</button>
+          <button onClick={function(){setShowPass(function(s){return !s;});}} style={{position:"absolute",right:14,top:10,background:"none",border:"none",cursor:"pointer",fontSize:18}}>{ICONS.eye}</button>
         </div>
         {password ? (
           <div>
@@ -1191,13 +1222,13 @@ function AuthStep3(props) {
                 <div style={{fontSize:15,fontFamily:"'Syne',sans-serif",color:"#1a1a1a"}}>{c.name}</div>
                 <div style={{fontSize:10,color:"#86868b",fontFamily:"'Inter',sans-serif"}}>{c.pop}</div>
               </div>
-              {chosenCity===c.id ? <span style={{color:"#ffcc00",fontSize:20,fontWeight:700}}>ok</span> : null}
+              {chosenCity===c.id ? <span style={{color:"#ffcc00",fontSize:20,fontWeight:700}}>{ICONS.check}</span> : null}
             </button>
           );
         })}
       </div>
       <div onClick={function(){setAgreed(function(a){return !a;});}} style={{display:"flex",alignItems:"flex-start",gap:12,padding:"12px 14px",background:"#fff",borderRadius:12,border:"1.5px solid "+(agreed?"#1a7a3c":"#e8e8ed"),cursor:"pointer",marginBottom:16}}>
-        <div style={{width:22,height:22,borderRadius:6,border:"2px solid "+(agreed?"#1a7a3c":"#e8e8ed"),background:agreed?"#1a7a3c":"transparent",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,marginTop:1}}>{agreed?<span style={{color:"#fff",fontSize:13,fontWeight:700}}>ok</span>:null}</div>
+        <div style={{width:22,height:22,borderRadius:6,border:"2px solid "+(agreed?"#1a7a3c":"#e8e8ed"),background:agreed?"#1a7a3c":"transparent",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,marginTop:1}}>{agreed?<span style={{color:"#fff",fontSize:13,fontWeight:700}}>{ICONS.check}</span>:null}</div>
         <div style={{fontSize:12,color:"#86868b",fontFamily:"'Inter',sans-serif",lineHeight:1.5}}>Acepto los <span style={{color:"#0066ff",fontWeight:700}}>Terminos</span> y la <span style={{color:"#0066ff",fontWeight:700}}>Privacidad</span> de Epale</div>
       </div>
       {error ? <div style={{background:"#fff0f0",border:"1px solid #ffb3b3",borderRadius:10,padding:"9px 13px",marginBottom:13,fontSize:13,color:"#ff2d2d",fontFamily:"'Inter',sans-serif"}}>{error}</div> : null}
@@ -1241,7 +1272,7 @@ function AuthStep4(props) {
   };
   return (
     <div style={{flex:1,padding:"22px 20px 32px",textAlign:"center"}}>
-      <div style={{fontSize:52,marginBottom:10}}>e</div>
+      <div style={{fontSize:52,marginBottom:10}}>{ICONS.email}</div>
       <div style={{fontSize:20,fontFamily:"'Syne',sans-serif",color:"#1a1a1a",marginBottom:6,fontWeight:700}}>Verifica tu correo</div>
       <div style={{fontSize:13,color:"#86868b",fontFamily:"'Inter',sans-serif",marginBottom:20}}>Codigo enviado a <strong>{email}</strong></div>
       <input value={verifyCode} onChange={function(e){setVerifyCode(e.target.value.replace(/\D/g,"").slice(0,4));}} placeholder="0000" maxLength={4} style={{width:"100%",padding:"18px",background:"#fff",border:"2px solid "+(verifyCode.length===4?(verifyCode===DEMO?"#1a7a3c":"#ff2d2d"):"#e8e8ed"),borderRadius:14,color:"#1a1a1a",fontFamily:"'Inter',sans-serif",fontSize:32,fontWeight:700,outline:"none",boxSizing:"border-box",textAlign:"center",marginBottom:10}}/>
@@ -1267,7 +1298,7 @@ function AuthHero(props) {
         <div style={{fontSize:54,fontFamily:"'Syne',sans-serif",letterSpacing:-2,fontWeight:800,marginBottom:6}}>
           <span style={{color:"#ffcc00"}}>E</span><span style={{color:"#0066ff"}}>pa</span><span style={{color:"#ff2d2d"}}>le</span>
         </div>
-        <div style={{fontSize:22}}>VE</div>
+        <div style={{fontSize:22}}>{ICONS.flag_ve}</div>
         <div style={{fontSize:12,color:"rgba(255,255,255,0.4)",fontFamily:"'Inter',sans-serif",marginTop:6}}>venezolanos del mundo</div>
         {mode==="register" ? (
           <div style={{marginTop:16,display:"flex",alignItems:"center",gap:8}}>
