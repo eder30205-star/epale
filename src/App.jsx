@@ -60,6 +60,42 @@ var api = {
       headers:{"Content-Type":"application/json","apikey":SUPA_KEY,"Authorization":"Bearer "+getToken(),"Prefer":"return=representation"},
       body:JSON.stringify(body)
     }).then(function(r){return r.json();});
+  },
+  getFollowing: function(uid) {
+    return fetch(SUPA_URL+"/rest/v1/follows?follower_id=eq."+uid+"&select=following_name", {
+      headers:{"apikey":SUPA_KEY,"Authorization":"Bearer "+getToken()}
+    }).then(function(r){return r.json();});
+  },
+  follow: function(uid, name) {
+    return fetch(SUPA_URL+"/rest/v1/follows", {
+      method:"POST",
+      headers:{"Content-Type":"application/json","apikey":SUPA_KEY,"Authorization":"Bearer "+getToken(),"Prefer":"resolution=merge-duplicates"},
+      body:JSON.stringify({follower_id:uid, following_name:name})
+    }).then(function(r){return r.json();});
+  },
+  unfollow: function(uid, name) {
+    return fetch(SUPA_URL+"/rest/v1/follows?follower_id=eq."+uid+"&following_name=eq."+encodeURIComponent(name), {
+      method:"DELETE",
+      headers:{"apikey":SUPA_KEY,"Authorization":"Bearer "+getToken()}
+    }).then(function(r){return r.json();});
+  },
+  getSaved: function(uid) {
+    return fetch(SUPA_URL+"/rest/v1/saved_posts?user_id=eq."+uid+"&select=post_id", {
+      headers:{"apikey":SUPA_KEY,"Authorization":"Bearer "+getToken()}
+    }).then(function(r){return r.json();});
+  },
+  savePost: function(uid, postId) {
+    return fetch(SUPA_URL+"/rest/v1/saved_posts", {
+      method:"POST",
+      headers:{"Content-Type":"application/json","apikey":SUPA_KEY,"Authorization":"Bearer "+getToken(),"Prefer":"resolution=merge-duplicates"},
+      body:JSON.stringify({user_id:uid, post_id:String(postId)})
+    }).then(function(r){return r.json();});
+  },
+  unsavePost: function(uid, postId) {
+    return fetch(SUPA_URL+"/rest/v1/saved_posts?user_id=eq."+uid+"&post_id=eq."+String(postId), {
+      method:"DELETE",
+      headers:{"apikey":SUPA_KEY,"Authorization":"Bearer "+getToken()}
+    }).then(function(r){return r.json();});
   }
 };
 
@@ -357,7 +393,8 @@ function Feed(props) {
   var [showComposer,setShowComposer]=useState(false);
   var [inviteCount,setInviteCount]=useState(0);
   var [activeCity,setActiveCity]=useState(userCity);
-  var [savedPosts,setSavedPosts]=useState([]);
+  var savedPosts=props.savedPosts||[];
+  var toggleSaveLocal=props.onSave||function(){};
   var [feedTab,setFeedTab]=useState("forYou");
   var following=props.following||[];
   var toggleFollow=props.onFollow||function(){};
@@ -422,7 +459,7 @@ function Feed(props) {
     );
   });
 
-  var toggleSave = function(id){ setSavedPosts(function(s){ return s.includes(id)?s.filter(function(x){return x!==id;}):[].concat(s,[id]); }); };
+  var toggleSave = toggleSaveLocal;
 
   var allFiltered = posts.filter(function(p){ return filter==="all"||p.type===filter; });
   var cityFiltered = allFiltered.filter(function(p){ return p.city===activeCity; });
@@ -1392,10 +1429,10 @@ function Auth(props) {
 }
 
 export default function App() {
-  var [dark,setDark]=useState(false);
-  var [lang,setLang]=useState("es");
+  var [dark,setDark]=useState(function(){ try{return localStorage.getItem("epale_dark")==="1";}catch(e){return false;} });
+  var [lang,setLang]=useState(function(){ try{return localStorage.getItem("epale_lang")||"es";}catch(e){return "es";} });
   var [screen,setScreen]=useState(function(){
-    try { var s=localStorage.getItem("epale_session"); var d=s?JSON.parse(s):null; return d&&d.token?"feed":"auth"; } catch(e){ return "auth"; }
+    try { var s=localStorage.getItem("epale_session"); var d=s?JSON.parse(s):null; return d&&d.token&&d.token.length>10?"feed":"auth"; } catch(e){ return "auth"; }
   });
   var [userCity,setUserCity]=useState(function(){
     try { var s=localStorage.getItem("epale_session"); var d=s?JSON.parse(s):null; return d&&d.city?d.city:"madrid"; } catch(e){ return "madrid"; }
@@ -1411,10 +1448,49 @@ export default function App() {
   });
   var [showProfile,setShowProfile]=useState(false);
   var [following,setFollowing]=useState([]);
+  var savedPosts=props.savedPosts||[];
+  var toggleSaveLocal=props.onSave||function(){};
   var [crashMsg,setCrashMsg]=useState("");
   var [activeTab,setActiveTab]=useState("feed");
 
-  var toggleFollow = function(name){ setFollowing(function(f){ return f.includes(name)?f.filter(function(x){return x!==name;}):[].concat(f,[name]); }); };
+  useEffect(function(){
+    if(userId && window._supaToken) {
+      api.getFollowing(userId).then(function(data){
+        if(Array.isArray(data)) {
+          var names = data.map(function(r){return r.following_name;}).filter(Boolean);
+          if(names.length>0) setFollowing(names);
+        }
+      }).catch(function(){});
+      api.getSaved(userId).then(function(data){
+        if(Array.isArray(data)) {
+          var ids = data.map(function(r){return r.post_id;}).filter(Boolean);
+          if(ids.length>0) setSavedPosts(ids);
+        }
+      }).catch(function(){});
+    }
+  }, [userId]);
+
+  var toggleSave = function(postId){
+    setSavedPosts(function(s){
+      var isSaved = s.includes(postId);
+      if(userId && window._supaToken) {
+        if(isSaved) api.unsavePost(userId, postId).catch(function(){});
+        else api.savePost(userId, postId).catch(function(){});
+      }
+      return isSaved ? s.filter(function(x){return x!==postId;}) : [].concat(s,[postId]);
+    });
+  };
+
+  var toggleFollow = function(name){
+    setFollowing(function(f){
+      var isFollowing = f.includes(name);
+      if(userId && window._supaToken) {
+        if(isFollowing) api.unfollow(userId, name).catch(function(){});
+        else api.follow(userId, name).catch(function(){});
+      }
+      return isFollowing ? f.filter(function(x){return x!==name;}) : [].concat(f,[name]);
+    });
+  };
 
   var handleDone = function(city, name, photo, token, uid) {
     try {
@@ -1436,6 +1512,9 @@ export default function App() {
     } catch(e) { setCrashMsg("handleDone error: "+e.message); }
   };
 
+  var setDarkSaved = function(v){ setDark(v); try{localStorage.setItem("epale_dark",v?"1":"0");}catch(e){} };
+  var setLangSaved = function(v){ setLang(v); try{localStorage.setItem("epale_lang",v);}catch(e){} };
+
   var handleLogout = function() {
     try { localStorage.removeItem("epale_session"); } catch(e){}
     window._supaToken = null;
@@ -1455,8 +1534,8 @@ export default function App() {
 
   if(screen==="feed") return (
     <div>
-      {showProfile ? <Profile userCity={userCity} onLogout={handleLogout} onClose={function(){setShowProfile(false);}} onSetDark={setDark} onSetLang={setLang} isDark={dark} currentLang={lang} following={following} onFollow={toggleFollow} userPhoto={userPhoto} userName={userName} onPhotoChange={setUserPhoto} userId={userId}/> : null}
-      <Feed userCity={userCity} onProfile={function(){setShowProfile(true);}} following={following} onFollow={toggleFollow} userPhoto={userPhoto} userName={userName} userId={userId}/>
+      {showProfile ? <Profile userCity={userCity} onLogout={handleLogout} onClose={function(){setShowProfile(false);}} onSetDark={setDarkSaved} onSetLang={setLangSaved} isDark={dark} currentLang={lang} following={following} onFollow={toggleFollow} userPhoto={userPhoto} userName={userName} onPhotoChange={setUserPhoto} userId={userId}/> : null}
+      <Feed userCity={userCity} onProfile={function(){setShowProfile(true);}} following={following} onFollow={toggleFollow} userPhoto={userPhoto} userName={userName} userId={userId} savedPosts={savedPosts} onSave={toggleSave}/>
       <div style={{position:"fixed",bottom:0,left:0,right:0,height:60,background:C.card,borderTop:"1px solid "+C.border,display:"flex",alignItems:"center",justifyContent:"space-around",zIndex:90,maxWidth:768,margin:"0 auto",visibility:window.innerWidth>=768?"hidden":"visible"}}>
         {[
           {id:"feed",  icon:ICONS.fire,    label:"Inicio"},
