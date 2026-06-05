@@ -536,6 +536,7 @@ function Feed(props) {
     <div style={{minHeight:"100vh",background:C.bg}}>
       {showComposer ? <Composer cityObj={cityObj} onPost={addPost} onClose={function(){setShowComposer(false);}}/> : null}
       {header}
+      <button onClick={function(){setShowComposer(true);}} style={{position:"fixed",bottom:32,right:32,width:56,height:56,borderRadius:28,background:C.yellow,border:"none",cursor:"pointer",fontSize:28,fontWeight:300,boxShadow:"0 4px 18px rgba(255,204,0,0.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:150,lineHeight:1}}>{ICONS.pencil}</button>
       <div style={{maxWidth:1200,margin:"0 auto",padding:"20px",display:"flex",gap:24,alignItems:"flex-start"}}>
         <div style={{width:240,flexShrink:0,position:"sticky",top:170}}>
           <div style={{background:C.card,borderRadius:16,border:"1px solid "+C.border,overflow:"hidden",marginBottom:16}}>
