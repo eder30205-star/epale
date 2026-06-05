@@ -51,6 +51,15 @@ var api = {
       headers:{"Content-Type":"application/json","apikey":SUPA_KEY,"Authorization":"Bearer "+getToken(),"Prefer":"return=representation"},
       body:JSON.stringify({user_id:userId, city:city, type:type, content:content})
     }).then(function(r){return r.json();});
+  },
+  updateProfile: function(uid, name, city, username, photoUrl) {
+    var body = {id:uid, name:name, city:city, username:username};
+    if(photoUrl) body.photo_url = photoUrl;
+    return fetch(SUPA_URL+"/rest/v1/profiles?id=eq."+uid, {
+      method:"PATCH",
+      headers:{"Content-Type":"application/json","apikey":SUPA_KEY,"Authorization":"Bearer "+getToken(),"Prefer":"return=representation"},
+      body:JSON.stringify(body)
+    }).then(function(r){return r.json();});
   }
 };
 
@@ -357,17 +366,26 @@ function Feed(props) {
 
   useEffect(function(){
     setPosts(SEED);
-    if(window._supaToken) {
-      api.getPosts(userCity).then(function(data) {
-        if(Array.isArray(data) && data.length > 0) {
-          var mapped = data.map(function(p) {
-            return {id:p.id, city:p.city, type:p.type||"post", name:(p.profiles&&p.profiles.name)||"Anonimo", av:(p.profiles&&p.profiles.name)||"?", content:p.content, likes:p.likes||0, comments:p.comments||0, time:"reciente"};
-          });
-          setPosts(mapped.concat(SEED));
-        }
-      }).catch(function(){});
-    }
-  }, []);
+    api.getPosts(activeCity).then(function(data) {
+      if(Array.isArray(data) && data.length > 0) {
+        var mapped = data.map(function(p) {
+          return {
+            id:p.id,
+            city:p.city,
+            type:p.type||"post",
+            name:(p.profiles&&p.profiles.name)||"Anonimo",
+            av:(p.profiles&&p.profiles.name)||"?",
+            photo:(p.profiles&&p.profiles.photo_url)||null,
+            content:p.content,
+            likes:p.likes||0,
+            comments:p.comments||0,
+            time:p.created_at||"reciente"
+          };
+        });
+        setPosts(mapped.concat(SEED));
+      }
+    }).catch(function(){});
+  }, [activeCity]);
 
   useEffect(function(){
     var handler = function(){ setIsMobile(window.innerWidth < 768); };
@@ -914,32 +932,20 @@ function EditProfile(props) {
   var save = function() {
     setLoading(true);
     var uid = (function(){ try { var s=localStorage.getItem("epale_session"); var d=s?JSON.parse(s):null; return d&&d.uid?d.uid:""; } catch(e){ return ""; } })();
+    var finish = function() {
+      try {
+        var s=localStorage.getItem("epale_session"); var d=s?JSON.parse(s):{};
+        d.name=name; if(photo) d.photo=photo;
+        localStorage.setItem("epale_session", JSON.stringify(d));
+      } catch(e){}
+      setLoading(false); setSaved(true);
+      onPhotoChange(photo);
+      setTimeout(onClose, 1200);
+    };
     if(uid) {
-      api.upsertProfile(uid, name, userCity, username).then(function(){
-        try {
-          var s=localStorage.getItem("epale_session"); var d=s?JSON.parse(s):{};
-          d.name=name; d.photo=photo||d.photo;
-          localStorage.setItem("epale_session", JSON.stringify(d));
-        } catch(e){}
-        setLoading(false); setSaved(true);
-        onPhotoChange(photo);
-        setTimeout(onClose, 1200);
-      }).catch(function(){
-        setLoading(false); setSaved(true);
-        onPhotoChange(photo);
-        setTimeout(onClose, 1200);
-      });
+      api.updateProfile(uid, name, userCity, username, photo).then(finish).catch(finish);
     } else {
-      setTimeout(function(){
-        try {
-          var s=localStorage.getItem("epale_session"); var d=s?JSON.parse(s):{};
-          d.name=name; d.photo=photo||d.photo;
-          localStorage.setItem("epale_session", JSON.stringify(d));
-        } catch(e){}
-        setLoading(false); setSaved(true);
-        onPhotoChange(photo);
-        setTimeout(onClose, 1200);
-      }, 600);
+      finish();
     }
   };
 
