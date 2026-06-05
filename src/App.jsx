@@ -185,8 +185,10 @@ var formatTime = function(ts) {
 };
 
 function Av(props) {
-  var t=props.t||"?", i=props.i||0, s=props.s||40;
-  return <div style={{width:s,height:s,borderRadius:9999,background:GR[i%GR.length],display:"flex",alignItems:"center",justifyContent:"center",fontSize:s*0.3,fontWeight:700,color:"#fff",flexShrink:0,fontFamily:"'Syne',sans-serif"}}>{t}</div>;
+  var t=props.t||"?", i=props.i||0, s=props.s||40, photo=props.photo;
+  var letter = t ? t[0].toUpperCase() : "?";
+  if(photo) return <div style={{width:s,height:s,borderRadius:9999,overflow:"hidden",flexShrink:0,border:"2px solid #fff"}}><img src={photo} alt="av" style={{width:"100%",height:"100%",objectFit:"cover"}}/></div>;
+  return <div style={{width:s,height:s,borderRadius:9999,background:GR[i%GR.length],display:"flex",alignItems:"center",justifyContent:"center",fontSize:s*0.38,fontWeight:700,color:"#fff",flexShrink:0,fontFamily:"'Syne',sans-serif"}}>{letter}</div>;
 }
 
 function Stripe() {
@@ -194,7 +196,7 @@ function Stripe() {
 }
 
 function PostCard(props) {
-  var post=props.post, idx=props.idx, cityObj=props.cityObj, saved=props.saved, onSave=props.onSave, following=props.following||[], onFollow=props.onFollow;
+  var post=props.post, idx=props.idx, cityObj=props.cityObj, saved=props.saved, onSave=props.onSave, following=props.following||[], onFollow=props.onFollow, userName=props.userName||"";
   var [liked,setLiked]=useState(false);
   var [likes,setLikes]=useState(post.likes);
   var [open,setOpen]=useState(false);
@@ -226,7 +228,7 @@ function PostCard(props) {
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                 <span style={{fontWeight:700,fontSize:15,fontFamily:"'Syne',sans-serif",color:C.text}}>{post.name}</span>
                 <div style={{display:"flex",alignItems:"center",gap:8}}>
-                  {post.name !== "Tu" && onFollow ? (
+                  {post.name !== "Tu" && post.name !== userName && onFollow ? (
                     <button onClick={function(){onFollow(post.name);}} style={{padding:"4px 12px",borderRadius:100,border:"1.5px solid "+(following.includes(post.name)?C.border:C.blue),background:"transparent",color:following.includes(post.name)?C.muted:C.blue,fontFamily:"'Inter',sans-serif",fontSize:11,fontWeight:700,cursor:"pointer"}}>
                       {following.includes(post.name)?"Siguiendo":"Seguir"}
                     </button>
@@ -240,12 +242,12 @@ function PostCard(props) {
 
           {showMenu ? (
             <div style={{background:C.bg,borderRadius:12,border:"1px solid "+C.border,marginBottom:10,overflow:"hidden"}}>
-              {post.name !== "Tu" && onFollow ? (
+              {post.name !== "Tu" && post.name !== userName && onFollow ? (
                 <button onClick={function(){onFollow(post.name);setShowMenu(false);}} style={{width:"100%",padding:"12px 16px",background:"none",border:"none",borderBottom:"1px solid "+C.border,cursor:"pointer",textAlign:"left",fontFamily:"'Inter',sans-serif",fontSize:14,color:C.text,display:"flex",alignItems:"center",gap:10}}>
                   <span>{following.includes(post.name)?"Dejar de seguir":"Seguir"}</span>
                 </button>
               ) : null}
-              {post.name !== "Tu" ? (
+              {post.name !== "Tu" && post.name !== userName ? (
                 <button onClick={function(){setBlocked(true);setShowMenu(false);}} style={{width:"100%",padding:"12px 16px",background:"none",border:"none",borderBottom:"1px solid "+C.border,cursor:"pointer",textAlign:"left",fontFamily:"'Inter',sans-serif",fontSize:14,color:C.red,display:"flex",alignItems:"center",gap:10}}>
                   <span>Bloquear usuario</span>
                 </button>
@@ -446,7 +448,7 @@ function Feed(props) {
       <div style={{fontSize:15,fontFamily:"'Inter',sans-serif"}}>{feedTab==="following"?"Sigue a alguien para ver sus posts":"Se el primero en publicar"}</div>
     </div>
   ) : filtered.map(function(p,i){
-    return <PostCard key={p.id} post={p} idx={i} cityObj={cityObj} saved={savedPosts.includes(p.id)} onSave={toggleSave} following={following} onFollow={toggleFollow}/>;
+    return <PostCard key={p.id} post={p} idx={i} cityObj={cityObj} saved={savedPosts.includes(p.id)} onSave={toggleSave} following={following} onFollow={toggleFollow} userName={userName}/>;
   });
 
   var inviteBanner = (
@@ -525,7 +527,7 @@ function Feed(props) {
           <div style={{marginTop:4}}>{postsList}</div>
           <div style={{margin:"10px 14px 20px"}}>{inviteBanner}</div>
         </div>
-        <button onClick={function(){setShowComposer(true);}} style={{position:"fixed",bottom:24,right:20,width:52,height:52,borderRadius:26,background:C.yellow,border:"none",cursor:"pointer",fontSize:30,fontWeight:300,boxShadow:"0 4px 18px rgba(255,204,0,0.5)",display:window.innerWidth>=768?"none":"flex",alignItems:"center",justifyContent:"center",zIndex:50,lineHeight:1}}>{ICONS.pencil}</button>
+        <button onClick={function(){setShowComposer(true);}} style={{position:"fixed",bottom:24,right:24,width:52,height:52,borderRadius:26,background:C.yellow,border:"none",cursor:"pointer",fontSize:30,fontWeight:300,boxShadow:"0 4px 18px rgba(255,204,0,0.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:50,lineHeight:1}}>{ICONS.pencil}</button>
       </div>
     );
   }
