@@ -527,7 +527,7 @@ function Feed(props) {
           <div style={{marginTop:4}}>{postsList}</div>
           <div style={{margin:"10px 14px 20px"}}>{inviteBanner}</div>
         </div>
-        <button onClick={function(){setShowComposer(true);}} style={{position:"fixed",bottom:24,right:24,width:52,height:52,borderRadius:26,background:C.yellow,border:"none",cursor:"pointer",fontSize:30,fontWeight:300,boxShadow:"0 4px 18px rgba(255,204,0,0.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:50,lineHeight:1}}>{ICONS.pencil}</button>
+        <button onClick={function(){setShowComposer(true);}} style={{position:"fixed",bottom:80,right:24,width:52,height:52,borderRadius:26,background:C.yellow,border:"none",cursor:"pointer",fontSize:30,fontWeight:300,boxShadow:"0 4px 18px rgba(255,204,0,0.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:150,lineHeight:1}}>{ICONS.pencil}</button>
       </div>
     );
   }
