@@ -1497,8 +1497,7 @@ export default function App() {
   });
   var [showProfile,setShowProfile]=useState(false);
   var [following,setFollowing]=useState([]);
-  var savedPosts=props.savedPosts||[];
-  var toggleSaveLocal=props.onSave||function(){};
+  var [savedPosts,setSavedPosts]=useState([]);
   var [crashMsg,setCrashMsg]=useState("");
   var [activeTab,setActiveTab]=useState("feed");
 
