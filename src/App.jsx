@@ -183,15 +183,15 @@ const DARK  = { bg:"#111118", card:"#1c1c28", border:"#2e2e40", yellow:"#ffd60a"
 
 var T = {
   es: {
-    forYou:TR.forYou, following:TR.following, todos:"Todos", post:"Post",
+    forYou:"Para ti", following:"Siguiendo", todos:"Todos", post:"Post",
     trabajo:"Trabajo", vivienda:"Vivienda", servicio:"Servicio", ayuda:"Ayuda", evento:"Evento",
-    publicar:"+ Publicar", verPerfil:"Ver perfil", invitar:TR.invitar,
-    invitaVene:"Invita venezolanos a", invitaTusP:TR.invitaTusP,
+    publicar:"+ Publicar", verPerfil:"Ver perfil", invitar:"Invitar por WhatsApp",
+    invitaVene:"Invita venezolanos a", invitaTusP:"Invita a tus panas",
     trending:"Trending", venezolanos:"Venezolanos en", epaleDesc:"La red social de los venezolanos en el mundo.",
-    compartir:TR.compartir, enviaPost:TR.enviaPost,
-    guardar:TR.guardar, guardado:TR.guardado, seguir:TR.seguir, siguiendo:TR.following,
+    compartir:"Compartir en WhatsApp", enviaPost:"Envia este post a tus panas",
+    guardar:"Guardar", guardado:"Guardado", seguir:"Seguir", siguiendo:"Siguiendo",
     misPubl:"Mis publicaciones", guardados:"Guardados", notifs:"Notificaciones", config:"Configuracion",
-    proxEventos:TR.proxEventos, noEventos:"No hay eventos aun", crearEvento:TR.crearEvento,
+    proxEventos:"Proximos eventos", noEventos:"No hay eventos aun", crearEvento:"Crear evento",
     nueva:"Nueva publicacion", queEsta:"Que esta pasando en tu pais?",
     foto:"Foto", video:"Video", camara:"Camara", publicarBtn:"Publicar", publicando:"Publicando...",
     bienvenido:"Bienvenido de vuelta", entraConectar:"Entra para conectarte con tu gente",
