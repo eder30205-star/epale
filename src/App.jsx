@@ -326,6 +326,10 @@ function PostCard(props) {
   var post=props.post, idx=props.idx, cityObj=props.cityObj, saved=props.saved, onSave=props.onSave, following=props.following||[], onFollow=props.onFollow, userName=props.userName||"", liked=props.liked||false, onLike=props.onLike||function(){};
   var [likedLocal,setLikedLocal]=useState(liked);
   var [likes,setLikes]=useState(post.likes+(liked?1:0));
+
+  useEffect(function(){
+    setLikedLocal(liked);
+  }, [liked]);
   var [open,setOpen]=useState(false);
   var [comment,setComment]=useState("");
   var [comments,setComments]=useState([]);
