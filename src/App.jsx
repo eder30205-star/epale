@@ -1251,11 +1251,16 @@ function AuthLogin(props) {
       }
       var token = res.access_token || (res.session && res.session.access_token) || "";
       var uid = (res.user && res.user.id) || (res.session && res.session.user && res.session.user.id) || "";
+      var refresh = res.refresh_token || (res.session && res.session.refresh_token) || "";
       window._supaToken = token;
       api.getProfile(uid).then(function(profiles) {
         var profile = Array.isArray(profiles) && profiles[0];
         setLoading(false);
-        onDone(profile ? profile.city : "madrid", profile ? profile.name : "", profile ? profile.photo_url : null, token, uid);
+        var city = profile ? profile.city : "madrid";
+        var name = profile ? profile.name : "";
+        var photo = profile ? profile.photo_url : null;
+        try { localStorage.setItem("epale_session", JSON.stringify({city:city,name:name,photo:photo,token:token,uid:uid,refresh:refresh})); } catch(e){}
+        onDone(city, name, photo, token, uid);
       }).catch(function(){
         setLoading(false);
         onDone("madrid", "", null, token, uid);
@@ -1417,10 +1422,12 @@ function AuthStep4(props) {
       }
       var token = (res.session && res.session.access_token) || res.access_token || "";
       var uid = (res.user && res.user.id) || (res.session && res.session.user && res.session.user.id) || "";
+      var refresh = (res.session && res.session.refresh_token) || res.refresh_token || "";
       if(token) {
         window._supaToken = token;
         if(uid) api.upsertProfile(uid, userName, chosenCity, userName.toLowerCase().replace(/\s/g,""));
         setLoading(false);
+        try { localStorage.setItem("epale_session", JSON.stringify({city:chosenCity,name:userName,photo:userPhoto,token:token,uid:uid,refresh:refresh})); } catch(e){}
         onDone(chosenCity, userName, userPhoto, token, uid);
       } else {
         setLoading(false);
@@ -1557,7 +1564,14 @@ export default function App() {
     try { var s=localStorage.getItem("epale_session"); var d=s?JSON.parse(s):null; return d&&d.photo?d.photo:null; } catch(e){ return null; }
   });
   var [userId,setUserId]=useState(function(){
-    try { var s=localStorage.getItem("epale_session"); var d=s?JSON.parse(s):null; if(d&&d.token) window._supaToken=d.token; return d&&d.uid?d.uid:""; } catch(e){ return ""; }
+    try {
+      var s=localStorage.getItem("epale_session");
+      var d=s?JSON.parse(s):null;
+      if(d&&d.token&&d.token.length>10) {
+        window._supaToken = d.token;
+      }
+      return d&&d.uid?d.uid:"";
+    } catch(e){ return ""; }
   });
   var [showProfile,setShowProfile]=useState(false);
   var [following,setFollowing]=useState([]);
@@ -1565,6 +1579,27 @@ export default function App() {
   var [likedPosts,setLikedPosts]=useState([]);
   var [crashMsg,setCrashMsg]=useState("");
   var [activeTab,setActiveTab]=useState("feed");
+
+  useEffect(function(){
+    try {
+      var s = localStorage.getItem("epale_session");
+      var d = s ? JSON.parse(s) : null;
+      if(d && d.refresh) {
+        fetch(SUPA_URL+"/auth/v1/token?grant_type=refresh_token", {
+          method:"POST",
+          headers:{"Content-Type":"application/json","apikey":SUPA_KEY},
+          body:JSON.stringify({refresh_token:d.refresh})
+        }).then(function(r){return r.json();}).then(function(res){
+          if(res.access_token) {
+            window._supaToken = res.access_token;
+            d.token = res.access_token;
+            if(res.refresh_token) d.refresh = res.refresh_token;
+            localStorage.setItem("epale_session", JSON.stringify(d));
+          }
+        }).catch(function(){});
+      }
+    } catch(e){}
+  }, []);
 
   useEffect(function(){
     if(userId && window._supaToken) {
