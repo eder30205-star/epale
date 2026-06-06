@@ -63,6 +63,24 @@ var api = {
       body:JSON.stringify({user_id:userId, city:city, type:type, content:content, name:name||"Anonimo"})
     }).then(function(r){return r.json();});
   },
+  uploadPhoto: function(uid, base64data) {
+    var blob = (function(){
+      var parts = base64data.split(",");
+      var mime = parts[0].match(/:(.*?);/)[1];
+      var raw = atob(parts[1]);
+      var arr = new Uint8Array(raw.length);
+      for(var i=0;i<raw.length;i++) arr[i] = raw.charCodeAt(i);
+      return new Blob([arr], {type:mime});
+    })();
+    return fetch(SUPA_URL+"/storage/v1/object/avatars/"+uid+".jpg", {
+      method:"POST",
+      headers:{"apikey":SUPA_KEY,"Authorization":"Bearer "+getToken(),"Content-Type":"image/jpeg","x-upsert":"true"},
+      body:blob
+    }).then(function(r){return r.json();}).then(function(res){
+      if(res.Key) return SUPA_URL+"/storage/v1/object/public/avatars/"+uid+".jpg";
+      return null;
+    });
+  },
   updateProfile: function(uid, name, city, username, photoUrl) {
     var body = {id:uid, name:name, city:city, username:username};
     if(photoUrl) body.photo_url = photoUrl;
@@ -137,6 +155,11 @@ var api = {
       headers:{"Content-Type":"application/json","apikey":SUPA_KEY},
       body:JSON.stringify({email:email})
     }).then(function(r){return r.json();});
+  },
+  getDollarRate: function() {
+    return fetch("https://pydolarve.org/api/v1/dollar?page=bcv", {
+      headers:{"Accept":"application/json"}
+    }).then(function(r){return r.json();}).catch(function(){ return null; });
   }
 };
 
@@ -547,14 +570,26 @@ function Feed(props) {
 
   var handleCopy = function(){ if(navigator.clipboard) navigator.clipboard.writeText(refLink); setCopiedRef(true); setTimeout(function(){setCopiedRef(false);},2000); };
 
+  var [dollarBCV, setDollarBCV] = useState("36.84");
+  var [dollarPar, setDollarPar] = useState("38.20");
+  useEffect(function(){
+    api.getDollarRate().then(function(data){
+      if(data && data.monitors) {
+        var bcv = data.monitors.usd && data.monitors.usd.price;
+        var par = data.monitors.usdparalelobancarios && data.monitors.usdparalelobancarios.price;
+        if(bcv) setDollarBCV(parseFloat(bcv).toFixed(2));
+        if(par) setDollarPar(parseFloat(par).toFixed(2));
+      }
+    }).catch(function(){});
+  }, []);
+
   var dollarWidget = (
     <div style={{background:C.card,borderRadius:14,border:"1px solid "+C.border,overflow:"hidden",marginBottom:16}}>
       <div style={{background:"#0d0d0d",padding:"9px 14px",display:"flex",alignItems:"center",gap:10}}>
         <span style={{fontSize:16}}>{ICONS.dollar}</span>
         <div style={{flex:1,display:"flex",gap:12,alignItems:"center",flexWrap:"wrap"}}>
-          <span style={{fontFamily:"'Inter',sans-serif",fontSize:11,color:"rgba(255,255,255,0.5)"}}>BCV <strong style={{fontSize:14,color:"#ffcc00"}}>Bs 36.84</strong></span>
-          <span style={{fontFamily:"'Inter',sans-serif",fontSize:11,color:"rgba(255,255,255,0.5)"}}>Paralelo <strong style={{fontSize:14,color:"#7defa0"}}>Bs 38.20</strong></span>
-          <span style={{fontSize:11,color:"#7defa0",fontFamily:"'Inter',sans-serif",fontWeight:700}}>{"+0.35"}</span>
+          <span style={{fontFamily:"'Inter',sans-serif",fontSize:11,color:"rgba(255,255,255,0.5)"}}>BCV <strong style={{fontSize:14,color:"#ffcc00"}}>{"Bs "+dollarBCV}</strong></span>
+          <span style={{fontFamily:"'Inter',sans-serif",fontSize:11,color:"rgba(255,255,255,0.5)"}}>Paralelo <strong style={{fontSize:14,color:"#7defa0"}}>{"Bs "+dollarPar}</strong></span>
         </div>
         <span style={{fontSize:10,color:"rgba(255,255,255,0.3)",fontFamily:"'Inter',sans-serif"}}>hoy</span>
       </div>
@@ -797,6 +832,53 @@ function Composer(props) {
             {loading?"Publicando...":"Publicar"}
           </button>
         </div>
+      </div>
+    </div>
+  );
+}
+
+
+function Search(props) {
+  var onClose=props.onClose, posts=props.posts||[];
+  var [query,setQuery]=useState("");
+  var results = query.length > 1 ? posts.filter(function(p){
+    return p.content.toLowerCase().includes(query.toLowerCase()) ||
+           p.name.toLowerCase().includes(query.toLowerCase());
+  }) : [];
+
+  return (
+    <div style={{position:"fixed",inset:0,zIndex:300,background:C.bg,maxWidth:480,margin:"0 auto",overflowY:"auto"}}>
+      <div style={{display:"flex",height:4}}><div style={{flex:1,background:C.yellow}}/><div style={{flex:1,background:C.blue}}/><div style={{flex:1,background:C.red}}/></div>
+      <div style={{position:"sticky",top:0,background:C.card,borderBottom:"1px solid "+C.border,padding:"12px 16px",display:"flex",gap:10,alignItems:"center"}}>
+        <button onClick={onClose} style={{background:"none",border:"none",cursor:"pointer",color:C.blue,fontSize:18,flexShrink:0}}>{"<-"}</button>
+        <input autoFocus value={query} onChange={function(e){setQuery(e.target.value);}} placeholder="Buscar posts y personas..." style={{flex:1,padding:"10px 14px",background:C.bg,border:"1.5px solid "+C.border,borderRadius:100,fontFamily:"'Inter',sans-serif",fontSize:14,color:C.text,outline:"none"}}/>
+      </div>
+      <div style={{paddingBottom:40}}>
+        {query.length < 2 ? (
+          <div style={{textAlign:"center",padding:"60px 20px"}}>
+            <div style={{fontSize:48,marginBottom:12}}>{ICONS.comment}</div>
+            <div style={{fontSize:15,fontFamily:"'Syne',sans-serif",color:C.text,marginBottom:6}}>Busca en Epale</div>
+            <div style={{fontSize:13,color:C.muted,fontFamily:"'Inter',sans-serif"}}>Encuentra posts, trabajos, eventos y personas</div>
+          </div>
+        ) : results.length === 0 ? (
+          <div style={{textAlign:"center",padding:"60px 20px"}}>
+            <div style={{fontSize:48,marginBottom:12}}>{ICONS.group}</div>
+            <div style={{fontSize:15,fontFamily:"'Syne',sans-serif",color:C.text}}>Sin resultados para "{query}"</div>
+          </div>
+        ) : results.map(function(p,i){
+          return (
+            <div key={p.id} style={{background:C.card,borderBottom:"1px solid "+C.border,padding:"14px 16px"}}>
+              <div style={{display:"flex",gap:10,marginBottom:6}}>
+                <Av t={p.av||p.name} i={i} s={36}/>
+                <div>
+                  <div style={{fontWeight:700,fontSize:13,fontFamily:"'Syne',sans-serif",color:C.text}}>{p.name}</div>
+                  <div style={{fontSize:10,color:C.blue,fontFamily:"'Inter',sans-serif"}}>{toFlag(CITY_FLAGS[p.city])} {getCity(p.city).name} - {formatTime(p.time||p.created_at)}</div>
+                </div>
+              </div>
+              <p style={{fontSize:13,lineHeight:1.6,color:C.text,fontFamily:"'Inter',sans-serif",margin:0}}>{p.content}</p>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -1062,20 +1144,29 @@ function EditProfile(props) {
   var save = function() {
     setLoading(true);
     var uid = (function(){ try { var s=localStorage.getItem("epale_session"); var d=s?JSON.parse(s):null; return d&&d.uid?d.uid:""; } catch(e){ return ""; } })();
-    var finish = function() {
+    var finish = function(photoUrl) {
+      var finalPhoto = photoUrl || photo;
       try {
         var s=localStorage.getItem("epale_session"); var d=s?JSON.parse(s):{};
-        d.name=name; if(photo) d.photo=photo;
+        d.name=name; if(finalPhoto) d.photo=finalPhoto;
         localStorage.setItem("epale_session", JSON.stringify(d));
       } catch(e){}
       setLoading(false); setSaved(true);
-      onPhotoChange(photo);
+      onPhotoChange(finalPhoto);
       setTimeout(onClose, 1200);
     };
     if(uid) {
-      api.updateProfile(uid, name, userCity, username, photo).then(finish).catch(finish);
+      if(photo && photo.startsWith("data:")) {
+        api.uploadPhoto(uid, photo).then(function(url){
+          api.updateProfile(uid, name, userCity, username, url||photo).then(function(){ finish(url||photo); }).catch(function(){ finish(photo); });
+        }).catch(function(){
+          api.updateProfile(uid, name, userCity, username, photo).then(function(){ finish(photo); }).catch(function(){ finish(photo); });
+        });
+      } else {
+        api.updateProfile(uid, name, userCity, username, photo).then(function(){ finish(photo); }).catch(function(){ finish(photo); });
+      }
     } else {
-      finish();
+      finish(photo);
     }
   };
 
@@ -1593,6 +1684,7 @@ export default function App() {
   var [likedPosts,setLikedPosts]=useState([]);
   var [crashMsg,setCrashMsg]=useState("");
   var [activeTab,setActiveTab]=useState("feed");
+  var [showSearch,setShowSearch]=useState(false);
 
   useEffect(function(){
     try {
@@ -1744,6 +1836,7 @@ export default function App() {
   if(screen==="feed") return (
     <div>
       {showProfile ? <Profile userCity={userCity} onLogout={handleLogout} onClose={function(){setShowProfile(false);}} onSetDark={setDarkSaved} onSetLang={setLangSaved} isDark={dark} currentLang={lang} following={following} onFollow={toggleFollow} userPhoto={userPhoto} userName={userName} onPhotoChange={setUserPhoto} userId={userId} savedPosts={savedPosts} likedPosts={likedPosts}/> : null}
+      {showSearch ? <Search onClose={function(){setShowSearch(false);}} posts={[]} /> : null}
       <Feed userCity={userCity} onProfile={function(){setShowProfile(true);}} following={following} onFollow={toggleFollow} userPhoto={userPhoto} userName={userName} userId={userId} savedPosts={savedPosts} onSave={toggleSave} likedPosts={likedPosts} onLike={toggleLike}/>
       <div style={{position:"fixed",bottom:0,left:0,right:0,height:60,background:C.card,borderTop:"1px solid "+C.border,display:"flex",alignItems:"center",justifyContent:"space-around",zIndex:90,maxWidth:768,margin:"0 auto",visibility:window.innerWidth>=768?"hidden":"visible"}}>
         {[
@@ -1757,6 +1850,7 @@ export default function App() {
           return (
             <button key={tab.id} onClick={function(){
               if(tab.id==="me"){ setShowProfile(true); return; }
+              if(tab.id==="search"){ setShowSearch(true); return; }
               if(tab.id==="post"){ setShowProfile(false); return; }
               setActiveTab(tab.id);
             }} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:2,background:tab.action?C.yellow:"none",border:"none",cursor:"pointer",padding:tab.action?"8px 16px":"6px 10px",borderRadius:tab.action?12:8,minWidth:48}}>
