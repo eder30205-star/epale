@@ -621,17 +621,6 @@ function Feed(props) {
               <button onClick={onProfile} style={{width:"100%",padding:"8px",background:C.yellow,border:"none",borderRadius:10,cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:12,fontWeight:700,color:C.text}}>Ver perfil</button>
             </div>
           </div>
-          <div style={{background:C.card,borderRadius:16,border:"1px solid "+C.border,padding:"14px 16px",marginBottom:16}}>
-            <div style={{fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:13,color:C.text,marginBottom:12}}>Ciudades</div>
-            {CITIES.slice(0,6).map(function(c){
-              return (
-                <div key={c.id} onClick={function(){setActiveCity(c.id);}} style={{display:"flex",alignItems:"center",gap:10,padding:"7px 10px",borderRadius:10,cursor:"pointer",background:activeCity===c.id?C.bg:"transparent",marginBottom:2}}>
-                  <span style={{fontSize:16}}>{toFlag(CITY_FLAGS[c.id])}</span>
-                  <span style={{fontFamily:"'Inter',sans-serif",fontSize:13,color:activeCity===c.id?C.blue:C.text,fontWeight:activeCity===c.id?700:400}}>{c.name}</span>
-                </div>
-              );
-            })}
-          </div>
           <button onClick={function(){setShowComposer(true);}} style={{width:"100%",padding:"12px",background:C.yellow,border:"none",borderRadius:12,cursor:"pointer",fontFamily:"'Syne',sans-serif",fontSize:14,fontWeight:700,color:C.text}}>+ Publicar</button>
         </div>
         <div style={{flex:1,minWidth:0}}>
