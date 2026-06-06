@@ -136,13 +136,27 @@ var api = {
       method:"POST",
       headers:{"Content-Type":"application/json","apikey":SUPA_KEY,"Authorization":"Bearer "+getToken(),"Prefer":"resolution=merge-duplicates"},
       body:JSON.stringify({user_id:uid, post_id:String(postId)})
-    }).then(function(r){return r.json();});
+    }).then(function(r){
+      fetch(SUPA_URL+"/rest/v1/rpc/increment_likes", {
+        method:"POST",
+        headers:{"Content-Type":"application/json","apikey":SUPA_KEY,"Authorization":"Bearer "+getToken()},
+        body:JSON.stringify({post_id:String(postId)})
+      }).catch(function(){});
+      return r.json();
+    });
   },
   unlikePost: function(uid, postId) {
     return fetch(SUPA_URL+"/rest/v1/likes?user_id=eq."+uid+"&post_id=eq."+String(postId), {
       method:"DELETE",
       headers:{"apikey":SUPA_KEY,"Authorization":"Bearer "+getToken()}
-    }).then(function(r){return r.json();});
+    }).then(function(r){
+      fetch(SUPA_URL+"/rest/v1/rpc/decrement_likes", {
+        method:"POST",
+        headers:{"Content-Type":"application/json","apikey":SUPA_KEY,"Authorization":"Bearer "+getToken()},
+        body:JSON.stringify({post_id:String(postId)})
+      }).catch(function(){});
+      return r.json();
+    });
   },
   getUserPosts: function(uid) {
     return fetch(SUPA_URL+"/rest/v1/posts?user_id=eq."+uid+"&select=*&order=created_at.desc", {
