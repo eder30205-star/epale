@@ -646,7 +646,7 @@ function Feed(props) {
   );
 
   var header = (
-    <div style={{position:"sticky",top:0,zIndex:100,background:"rgba(255,255,255,0.95)",backdropFilter:"blur(20px)",boxShadow:"0 1px 0 rgba(0,0,0,0.06)"}}>
+    <div style={{position:"sticky",top:0,zIndex:100,background:C.card,backdropFilter:"blur(20px)",boxShadow:"0 1px 0 rgba(0,0,0,0.1)"}}>
       <div style={{display:"flex",height:4}}>
         <div style={{flex:1,background:C.yellow}}/><div style={{flex:1,background:C.blue}}/><div style={{flex:1,background:C.red}}/>
       </div>
@@ -1670,7 +1670,7 @@ function Auth(props) {
   var [agreed,setAgreed]=useState(false);
   var [userPhoto,setUserPhoto]=useState(null);
   return (
-    <div style={{minHeight:"100vh",background:"#f5f5f7",display:"flex",flexDirection:"column",maxWidth:480,margin:"0 auto"}}>
+    <div style={{minHeight:"100vh",background:C.bg,display:"flex",flexDirection:"column",maxWidth:480,margin:"0 auto"}}>
       <AuthHero mode={mode} step={step}/>
       {mode==="login"||step===1 ? (
         <div style={{display:"flex",margin:"18px 20px 0",background:"#fff",borderRadius:100,padding:4,border:"1px solid #e8e8ed"}}>
