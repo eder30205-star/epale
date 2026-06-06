@@ -4,7 +4,18 @@ import React from "react";
 const SUPA_URL = "https://zkydbsymcnnbepvmbchr.supabase.co";
 const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpreWRic3ltY25uYmVwdm1iY2hyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyNjExNjksImV4cCI6MjA5NTgzNzE2OX0.bIiUt752AROIfQkQTHqN7r9OrjRTzxmwNQLDw0WVVS4";
 
-var getToken = function(){ return window._supaToken || SUPA_KEY; };
+var getToken = function(){
+  try {
+    if(window._supaToken && window._supaToken.length > 10) return window._supaToken;
+    var s = localStorage.getItem("epale_session");
+    var d = s ? JSON.parse(s) : null;
+    if(d && d.token && d.token.length > 10) {
+      window._supaToken = d.token;
+      return d.token;
+    }
+  } catch(e){}
+  return SUPA_KEY;
+};
 
 var api = {
   signUp: function(email, password, name, city, username) {
