@@ -178,7 +178,46 @@ var api = {
 };
 
 const LIGHT = { bg:"#f5f5f7", card:"#ffffff", border:"#e8e8ed", yellow:"#ffcc00", blue:"#0066ff", red:"#ff2d2d", text:"#1a1a1a", muted:"#86868b", green:"#1a7a3c", wa:"#25D366" };
-const DARK  = { bg:"#0d0d0d", card:"#1c1c1e", border:"#2c2c2e", yellow:"#ffcc00", blue:"#0a84ff", red:"#ff453a", text:"#f2f2f7", muted:"#636366", green:"#32d74b", wa:"#25D366" };
+const DARK  = { bg:"#0a0a0f", card:"#16161e", border:"#2a2a3a", yellow:"#ffd60a", blue:"#4da3ff", red:"#ff6b6b", text:"#e8e8f0", muted:"#8e8ea0", green:"#30d158", wa:"#25D366" };
+
+var T = {
+  es: {
+    forYou:TR.forYou, following:TR.following, todos:"Todos", post:"Post",
+    trabajo:"Trabajo", vivienda:"Vivienda", servicio:"Servicio", ayuda:"Ayuda", evento:"Evento",
+    publicar:"+ Publicar", verPerfil:"Ver perfil", invitar:TR.invitar,
+    invitaVene:"Invita venezolanos a", invitaTusP:TR.invitaTusP,
+    trending:"Trending", venezolanos:"Venezolanos en", epaleDesc:"La red social de los venezolanos en el mundo.",
+    compartir:TR.compartir, enviaPost:TR.enviaPost,
+    guardar:TR.guardar, guardado:TR.guardado, seguir:TR.seguir, siguiendo:TR.following,
+    misPubl:"Mis publicaciones", guardados:"Guardados", notifs:"Notificaciones", config:"Configuracion",
+    proxEventos:TR.proxEventos, noEventos:"No hay eventos aun", crearEvento:TR.crearEvento,
+    nueva:"Nueva publicacion", queEsta:"Que esta pasando en tu pais?",
+    foto:"Foto", video:"Video", camara:"Camara", publicarBtn:"Publicar", publicando:"Publicando...",
+    bienvenido:"Bienvenido de vuelta", entraConectar:"Entra para conectarte con tu gente",
+    correo:"CORREO", contrasena:"CONTRASENA", entrar:"Entrar", entrando:"Entrando...",
+    olvidaste:"Olvidaste tu contrasena?", crearCuenta:"Crear cuenta nueva",
+    terminos:"Terminos", privacidad:"Privacidad", contacto:"Contacto",
+    cerrarSesion:"Cerrar Sesion"
+  },
+  en: {
+    forYou:"For you", following:"Following", todos:"All", post:"Post",
+    trabajo:"Jobs", vivienda:"Housing", servicio:"Services", ayuda:"Help", evento:"Events",
+    publicar:"+ Post", verPerfil:"View profile", invitar:"Invite via WhatsApp",
+    invitaVene:"Invite Venezuelans to", invitaTusP:"Invite your friends",
+    trending:"Trending", venezolanos:"Venezuelans in", epaleDesc:"The social network for Venezuelans worldwide.",
+    compartir:"Share on WhatsApp", enviaPost:"Send this post to your friends",
+    guardar:"Save", guardado:"Saved", seguir:"Follow", siguiendo:"Following",
+    misPubl:"My posts", guardados:"Saved", notifs:"Notifications", config:"Settings",
+    proxEventos:"Upcoming events", noEventos:"No events yet", crearEvento:"Create event",
+    nueva:"New post", queEsta:"What is happening in your country?",
+    foto:"Photo", video:"Video", camara:"Camera", publicarBtn:"Post", publicando:"Posting...",
+    bienvenido:"Welcome back", entraConectar:"Sign in to connect with your people",
+    correo:"EMAIL", contrasena:"PASSWORD", entrar:"Sign in", entrando:"Signing in...",
+    olvidaste:"Forgot your password?", crearCuenta:"Create new account",
+    terminos:"Terms", privacidad:"Privacy", contacto:"Contact",
+    cerrarSesion:"Sign out"
+  }
+};
 
 var ICONS = {
   heart: "\u2764\uFE0F",
@@ -377,7 +416,7 @@ function PostCard(props) {
                 <div style={{display:"flex",alignItems:"center",gap:8}}>
                   {post.name !== "Tu" && post.name !== userName && onFollow ? (
                     <button onClick={function(){onFollow(post.name);}} style={{padding:"4px 12px",borderRadius:100,border:"1.5px solid "+(following.includes(post.name)?C.border:C.blue),background:"transparent",color:following.includes(post.name)?C.muted:C.blue,fontFamily:"'Inter',sans-serif",fontSize:11,fontWeight:700,cursor:"pointer"}}>
-                      {following.includes(post.name)?"Siguiendo":"Seguir"}
+                      {following.includes(post.name)?TR.following:TR.seguir}
                     </button>
                   ) : null}
                   <button onClick={function(){setShowMenu(function(m){return !m;});}} style={{background:"none",border:"none",cursor:"pointer",color:C.muted,fontSize:18,padding:"0 4px"}}>...</button>
@@ -391,7 +430,7 @@ function PostCard(props) {
             <div style={{background:C.bg,borderRadius:12,border:"1px solid "+C.border,marginBottom:10,overflow:"hidden"}}>
               {post.name !== "Tu" && post.name !== userName && onFollow ? (
                 <button onClick={function(){onFollow(post.name);setShowMenu(false);}} style={{width:"100%",padding:"12px 16px",background:"none",border:"none",borderBottom:"1px solid "+C.border,cursor:"pointer",textAlign:"left",fontFamily:"'Inter',sans-serif",fontSize:14,color:C.text,display:"flex",alignItems:"center",gap:10}}>
-                  <span>{following.includes(post.name)?"Dejar de seguir":"Seguir"}</span>
+                  <span>{following.includes(post.name)?"Dejar de seguir":TR.seguir}</span>
                 </button>
               ) : null}
               {post.name !== "Tu" && post.name !== userName ? (
@@ -447,7 +486,7 @@ function PostCard(props) {
                {ICONS.comment} {(post.comments+comments.length).toLocaleString()}
             </button>
             <button onClick={function(){if(onSave) onSave(post.id);}} style={{display:"flex",alignItems:"center",gap:5,padding:"6px 10px",background:saved?"#fffbea":C.bg,border:"1px solid "+(saved?"#ffe066":C.border),borderRadius:100,cursor:"pointer",color:saved?C.yellow:C.muted,fontFamily:"'Inter',sans-serif",fontSize:12,marginLeft:"auto"}}>
-               {saved?"Guardado":"Guardar"}
+               {saved?TR.guardado:TR.guardar}
             </button>
           </div>
 
@@ -488,7 +527,8 @@ function PostCard(props) {
 }
 
 function Feed(props) {
-  var userCity=props.userCity, onProfile=props.onProfile, userPhoto=props.userPhoto, userName=props.userName||"Tu";
+  var userCity=props.userCity, onProfile=props.onProfile, userPhoto=props.userPhoto, userName=props.userName||"Tu", lang=props.lang||"es";
+  var TR = T[lang]||T.es;
   var userId=props.userId||null;
   var [filter,setFilter]=useState("all");
   var [posts,setPosts]=useState(SEED);
@@ -553,7 +593,7 @@ function Feed(props) {
     );
   });
 
-  var tabButtons = [["forYou","Para ti"],["following","Siguiendo"]].map(function(item){
+  var tabButtons = [["forYou",TR.forYou],["following",TR.following]].map(function(item){
     var id=item[0], label=item[1];
     return (
       <button key={id} onClick={function(){setFeedTab(id);}} style={{background:"none",border:"none",cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:13,fontWeight:feedTab===id?700:500,color:feedTab===id?C.text:C.muted,paddingBottom:2,borderBottom:feedTab===id?"2px solid "+C.text:"2px solid transparent"}}>
@@ -636,7 +676,7 @@ function Feed(props) {
     <a href={waInvite(activeCity)} target="_blank" rel="noreferrer" style={{textDecoration:"none",display:"block",marginBottom:16}} onClick={function(){setInviteCount(function(c){return Math.min(c+1,3);});}}>
       <div style={{background:C.wa,borderRadius:16,padding:"16px"}}>
         <div style={{fontSize:13,fontWeight:700,color:"#fff",fontFamily:"'Inter',sans-serif",marginBottom:4}}>Invita venezolanos a {cityObj.name}</div>
-        <div style={{fontSize:11,color:"rgba(255,255,255,0.8)",fontFamily:"'Inter',sans-serif",marginBottom:10}}>{inviteCount>=3?"Meta cumplida!":inviteCount===0?"Invita a tus panas":inviteCount+" de 3 invitados"}</div>
+        <div style={{fontSize:11,color:"rgba(255,255,255,0.8)",fontFamily:"'Inter',sans-serif",marginBottom:10}}>{inviteCount>=3?"Meta cumplida!":inviteCount===0?TR.invitaTusP:inviteCount+" de 3 invitados"}</div>
         <div style={{display:"flex",gap:6,marginBottom:10}}>
           {[0,1,2].map(function(j){ return <div key={j} style={{flex:1,height:4,borderRadius:2,background:j<inviteCount?"#fff":"rgba(255,255,255,0.3)"}}/>; })}
         </div>
@@ -1029,7 +1069,7 @@ function FollowersList(props) {
                 <div style={{fontSize:12,color:C.muted,fontFamily:"'Inter',sans-serif",marginTop:2}}>{u.bio}</div>
               </div>
               <button onClick={function(){onFollow(u.name);}} style={{padding:"7px 16px",borderRadius:100,border:"1.5px solid "+(following.includes(u.name)?C.border:C.blue),background:"transparent",color:following.includes(u.name)?C.muted:C.blue,fontFamily:"'Inter',sans-serif",fontSize:12,fontWeight:700,cursor:"pointer",flexShrink:0}}>
-                {following.includes(u.name)?"Siguiendo":"Seguir"}
+                {following.includes(u.name)?TR.following:TR.seguir}
               </button>
             </div>
           );
@@ -1090,7 +1130,7 @@ function Profile(props) {
   if(subScreen==="posts") return <MisPublicaciones userId={props.userId} userName={userName} onClose={function(){setSubScreen(null);}}/>;
   if(subScreen==="saved") return <Guardados saved={savedPosts} allPosts={SEED} onClose={function(){setSubScreen(null);}}/>;
   if(subScreen==="seguidores") return <FollowersList title="Seguidores" users={SAMPLE_USERS} following={following} onFollow={onFollow||function(){}} onClose={function(){setSubScreen(null);}}/>;
-  if(subScreen==="siguiendo") return <FollowersList title="Siguiendo" users={SAMPLE_USERS.filter(function(u){return following.includes(u.name);})} following={following} onFollow={onFollow||function(){}} onClose={function(){setSubScreen(null);}}/>;
+  if(subScreen==="siguiendo") return <FollowersList title=TR.following users={SAMPLE_USERS.filter(function(u){return following.includes(u.name);})} following={following} onFollow={onFollow||function(){}} onClose={function(){setSubScreen(null);}}/>;
   if(subScreen==="notifs") return <Notificaciones onClose={function(){setSubScreen(null);}}/>;
   if(subScreen==="config") return <Configuracion userCity={userCity} onClose={function(){setSubScreen(null);}} onLogout={onLogout} onSetDark={onSetDark} onSetLang={onSetLang} isDark={isDark} currentLang={currentLang} userName={userName} userEmail={(function(){ try{var d=JSON.parse(localStorage.getItem("epale_session")); return d&&d.email?d.email:"";} catch(e){return "";} })()}/>;
   if(subScreen==="edit") return <EditProfile userCity={userCity} userPhoto={userPhoto} userName={userName} onPhotoChange={onPhotoChange} onClose={function(){setSubScreen(null);}}/>;
@@ -1114,7 +1154,7 @@ function Profile(props) {
             <button onClick={function(){setSubScreen("edit");}} style={{padding:"7px 16px",background:C.blue,border:"none",borderRadius:100,color:"#fff",cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:11,fontWeight:700}}>Editar perfil</button>
           </div>
           <div style={{display:"flex",marginTop:16,borderTop:"1px solid "+C.border,paddingTop:14}}>
-            {[{val:0,label:"Posts",color:C.blue,action:null},{val:SAMPLE_USERS.length,label:"Seguidores",color:C.yellow,action:function(){setSubScreen("seguidores");}},{val:following.length,label:"Siguiendo",color:C.red,action:function(){setSubScreen("siguiendo");}}].map(function(s,i){
+            {[{val:0,label:"Posts",color:C.blue,action:null},{val:SAMPLE_USERS.length,label:"Seguidores",color:C.yellow,action:function(){setSubScreen("seguidores");}},{val:following.length,label:TR.following,color:C.red,action:function(){setSubScreen("siguiendo");}}].map(function(s,i){
               return (
                 <div key={s.label} onClick={s.action} style={{flex:1,textAlign:"center",borderRight:i<2?"1px solid "+C.border:"none",cursor:s.action?"pointer":"default",padding:"4px 0"}}>
                   <div style={{fontSize:22,fontWeight:800,fontFamily:"'Syne',sans-serif",color:s.color}}>{s.val}</div>
@@ -1211,7 +1251,7 @@ function EditProfile(props) {
       <div style={{position:"sticky",top:0,background:C.card,borderBottom:"1px solid "+C.border,padding:"14px 20px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
         <button onClick={onClose} style={{background:"none",border:"none",cursor:"pointer",color:C.muted,fontFamily:"'Inter',sans-serif",fontSize:14,fontWeight:600}}>Cancelar</button>
         <div style={{fontSize:16,fontFamily:"'Syne',sans-serif",color:C.text,fontWeight:700}}>Editar perfil</div>
-        <button onClick={save} style={{background:"none",border:"none",cursor:"pointer",color:C.blue,fontFamily:"'Inter',sans-serif",fontSize:14,fontWeight:700}}>{loading?"...":saved?"ok":"Guardar"}</button>
+        <button onClick={save} style={{background:"none",border:"none",cursor:"pointer",color:C.blue,fontFamily:"'Inter',sans-serif",fontSize:14,fontWeight:700}}>{loading?"...":saved?"ok":TR.guardar}</button>
       </div>
       <div style={{padding:"24px 20px 60px"}}>
         <div style={{display:"flex",flexDirection:"column",alignItems:"center",marginBottom:28}}>
@@ -1243,7 +1283,7 @@ function EditProfile(props) {
           <div style={{fontSize:11,color:C.muted,textAlign:"right",marginTop:4}}>{bio.length}/150</div>
         </div>
         <button onClick={save} style={{width:"100%",padding:"15px",background:C.yellow,color:C.text,border:"none",borderRadius:100,cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:15,fontWeight:700}}>
-          {loading?"Guardando...":saved?"Guardado":"Guardar cambios"}
+          {loading?"Guardando...":saved?TR.guardado:"Guardar cambios"}
         </button>
       </div>
     </div>
@@ -1873,7 +1913,7 @@ export default function App() {
     <div>
       {showProfile ? <Profile userCity={userCity} onLogout={handleLogout} onClose={function(){setShowProfile(false);}} onSetDark={setDarkSaved} onSetLang={setLangSaved} isDark={dark} currentLang={lang} following={following} onFollow={toggleFollow} userPhoto={userPhoto} userName={userName} onPhotoChange={setUserPhoto} userId={userId} savedPosts={savedPosts} likedPosts={likedPosts}/> : null}
       {showSearch ? <Search onClose={function(){setShowSearch(false);}} posts={[]} /> : null}
-      <Feed userCity={userCity} onProfile={function(){setShowProfile(true);}} following={following} onFollow={toggleFollow} userPhoto={userPhoto} userName={userName} userId={userId} savedPosts={savedPosts} onSave={toggleSave} likedPosts={likedPosts} onLike={toggleLike}/>
+      <Feed userCity={userCity} onProfile={function(){setShowProfile(true);}} following={following} onFollow={toggleFollow} userPhoto={userPhoto} userName={userName} userId={userId} savedPosts={savedPosts} onSave={toggleSave} likedPosts={likedPosts} onLike={toggleLike} lang={lang}/>
       <div style={{position:"fixed",bottom:0,left:0,right:0,height:60,background:C.card,borderTop:"1px solid "+C.border,display:"flex",alignItems:"center",justifyContent:"space-around",zIndex:90,maxWidth:768,margin:"0 auto",visibility:window.innerWidth>=768?"hidden":"visible"}}>
         {[
           {id:"feed",  icon:ICONS.fire,    label:"Inicio"},
