@@ -136,20 +136,21 @@ var _theme = LIGHT;
 var C = LIGHT;
 
 const CITIES = [
-  { id:"madrid",    name:"Madrid",     flag:"ES", pop:"280K venezolanos" },
-  { id:"miami",     name:"Miami",      flag:"US", pop:"180K venezolanos" },
-  { id:"orlando",   name:"Orlando",    flag:"US", pop:"45K venezolanos"  },
-  { id:"houston",   name:"Houston",    flag:"US", pop:"60K venezolanos"  },
-  { id:"bogota",    name:"Bogota",     flag:"CO", pop:"500K venezolanos" },
-  { id:"medellin",  name:"Medellin",   flag:"CO", pop:"80K venezolanos"  },
-  { id:"santiago",  name:"Santiago",   flag:"CL", pop:"150K venezolanos" },
-  { id:"lima",      name:"Lima",       flag:"PE", pop:"130K venezolanos" },
-  { id:"buenos",    name:"Bs. Aires",  flag:"AR", pop:"90K venezolanos"  },
-  { id:"quito",     name:"Quito",      flag:"EC", pop:"70K venezolanos"  },
+  { id:"madrid",    name:"Espana",     flag:"ES", pop:"280K venezolanos" },
+  { id:"miami",     name:"USA",        flag:"US", pop:"350K venezolanos" },
+  { id:"bogota",    name:"Colombia",   flag:"CO", pop:"600K venezolanos" },
+  { id:"santiago",  name:"Chile",      flag:"CL", pop:"150K venezolanos" },
+  { id:"lima",      name:"Peru",       flag:"PE", pop:"130K venezolanos" },
+  { id:"buenos",    name:"Argentina",  flag:"AR", pop:"90K venezolanos"  },
+  { id:"quito",     name:"Ecuador",    flag:"EC", pop:"70K venezolanos"  },
   { id:"panama",    name:"Panama",     flag:"PA", pop:"55K venezolanos"  },
-  { id:"caracas",   name:"Caracas",    flag:"VE", pop:"Capital"          },
+  { id:"caracas",   name:"Venezuela",  flag:"VE", pop:"Capital"          },
+  { id:"portugal",  name:"Portugal",   flag:"PT", pop:"40K venezolanos"  },
+  { id:"italia",    name:"Italia",     flag:"IT", pop:"35K venezolanos"  },
+  { id:"canada",    name:"Canada",     flag:"CA", pop:"30K venezolanos"  },
 ];
-const CITY_FLAGS = { madrid:"ES", miami:"US", orlando:"US", houston:"US", bogota:"CO", medellin:"CO", santiago:"CL", lima:"PE", buenos:"AR", quito:"EC", panama:"PA", caracas:"VE" };
+const CITY_FLAGS = { madrid:"ES", miami:"US", bogota:"CO", santiago:"CL", lima:"PE", buenos:"AR", quito:"EC", panama:"PA", caracas:"VE", portugal:"PT", italia:"IT", canada:"CA" };
+const COUNTRY_NAMES = { ES:"Espana", US:"USA", CO:"Colombia", CL:"Chile", PE:"Peru", AR:"Argentina", EC:"Ecuador", PA:"Panama", VE:"Venezuela", PT:"Portugal", IT:"Italia", CA:"Canada" };
 const toFlag = function(code) {
   if(!code) return "";
   var a = code.toUpperCase().charCodeAt(0) - 65 + 127462;
@@ -159,11 +160,12 @@ const toFlag = function(code) {
 const getCity = function(id){ return CITIES.find(function(c){ return c.id===id; }) || CITIES[0]; };
 
 const TYPES = {
-  post:    { label:"Post",     icon:ICONS.pencil,  badgeBg:null },
-  job:     { label:"Trabajo",  icon:ICONS.briefcase,  badgeBg:"#ffcc00", badgeFg:"#1a1a1a" },
-  housing: { label:"Vivienda", icon:ICONS.house,  badgeBg:"#1a4fa0", badgeFg:"#fff" },
-  service: { label:"Servicio", icon:ICONS.wrench,  badgeBg:"#1a7a3c", badgeFg:"#fff" },
-  help:    { label:"Ayuda",    icon:ICONS.handshake,  badgeBg:"#cc2200", badgeFg:"#fff" },
+  post:    { label:"Post",     icon:ICONS.pencil,    badgeBg:null },
+  job:     { label:"Trabajo",  icon:ICONS.briefcase, badgeBg:"#ffcc00", badgeFg:"#1a1a1a" },
+  housing: { label:"Vivienda", icon:ICONS.house,     badgeBg:"#1a4fa0", badgeFg:"#fff" },
+  service: { label:"Servicio", icon:ICONS.wrench,    badgeBg:"#1a7a3c", badgeFg:"#fff" },
+  help:    { label:"Ayuda",    icon:ICONS.handshake, badgeBg:"#cc2200", badgeFg:"#fff" },
+  evento:  { label:"Evento",   icon:ICONS.bell,      badgeBg:"#7b2d8b", badgeFg:"#fff" },
 };
 
 const GR = ["linear-gradient(135deg,#ffcc00,#1a4fa0)","linear-gradient(135deg,#1a4fa0,#cc2200)","linear-gradient(135deg,#cc2200,#ffcc00)","linear-gradient(135deg,#1a7a3c,#1a4fa0)","linear-gradient(135deg,#ffcc00,#cc2200)","linear-gradient(135deg,#1a4fa0,#1a7a3c)"];
@@ -190,11 +192,27 @@ const SEED = [
   { id:19, city:"santiago", type:"post",    name:"Raul Jimenez",     av:"RJ", content:"Hoy me dieron la ciudadania chilena. Llore. No porque deje de ser venezolano, sino porque despues de tanto sacrificio alguien dice: bienvenido.", likes:5678, comments:1234, time:"2h" },
   { id:20, city:"lima",     type:"post",    name:"Rafael Mora",      av:"RM", content:"Tres anos en Lima. La ciudad que mas me ha retado y mas me ha hecho crecer. Los peruanos en el fondo son bien buenos.", likes:445,  comments:123, time:"7 min" },
   { id:21, city:"lima",     type:"post",    name:"Simon Pacheco",    av:"SP", content:"Cinco palabras para los venezolanos en Lima: ustedes ya son peruanos tambien. Esta ciudad los adopto.", likes:2345, comments:567, time:"5h" },
+  // PORTUGAL
+  { id:80, city:"portugal", type:"post",    name:"Carlos Vidal",     av:"CV", content:"Lisboa me recibio con los brazos abiertos. Los portugueses tienen algo especial, una calidez que me recuerda a Venezuela. Ya van 2 anos aqui.", likes:345, comments:89, time:"1h" },
+  { id:81, city:"portugal", type:"job",     name:"Tech Lisboa",      av:"TL", content:"Empresa de tecnologia en Lisboa busca desarrolladores venezolanos. React, Python. Visa patrocinada. Excelente ambiente.", likes:67,  comments:34, time:"3h" },
+  // ITALIA
+  { id:82, city:"italia",   type:"post",    name:"Gabriela Funes",   av:"GF", content:"Roma es una ciudad que te cambia para siempre. Llege sin saber italiano y hoy trabajo en un restaurante del centro historico.", likes:456, comments:123, time:"2h" },
+  { id:83, city:"italia",   type:"service", name:"Abog. Milano",     av:"AM", content:"Abogado venezolano en Milan. Permisos de residencia, ciudadania italiana por descendencia. Consulta gratuita.", likes:89,  comments:45, time:"4h" },
+  // CANADA
+  { id:84, city:"canada",   type:"post",    name:"Pedro Montoya",    av:"PM", content:"Toronto en invierno es otro nivel de frio. Pero la calidad de vida, las oportunidades y la seguridad hacen que valga cada grado bajo cero.", likes:567, comments:145, time:"1h" },
+  { id:85, city:"canada",   type:"job",     name:"Canada VE Jobs",   av:"CJ", content:"Buscamos venezolanos con experiencia en construccion para trabajar en Calgary. Visa de trabajo disponible. Salario muy competitivo.", likes:123, comments:67, time:"2h" },
+  // EVENTOS
+  { id:90, city:"madrid",   type:"evento",  name:"Epale Madrid",     av:"EM", content:"Gran Rumba Venezolana este sabado en Usera! Cachapas, caraotas, pepitos y musica venezolana de los 2000. Entrada libre. 8pm en adelante.", likes:234,  comments:89, time:"1h" },
+  { id:91, city:"miami",    type:"evento",  name:"Venezuela Miami",  av:"VM", content:"Festival Venezuela en Miami este domingo en Doral. Gastronomia, cultura, musica en vivo. Traigan a la familia. Entrada gratuita.", likes:567,  comments:145, time:"2h" },
+  { id:92, city:"bogota",   type:"evento",  name:"VE Bogota",        av:"VB", content:"Encuentro de venezolanos en Bogota este fin de semana. Arepas, empanadas y mucha nostalgia. Todos bienvenidos en el Parque El Virrey.", likes:389,  comments:112, time:"3h" },
+  { id:93, city:"santiago", type:"evento",  name:"Vzla Santiago",    av:"VS", content:"Noche venezolana en Santiago! Este viernes en Barrio Italia. DJ, comida tipica y concurso de joropo. No se lo pierdan.", likes:445,  comments:134, time:"4h" },
+  { id:94, city:"buenos",   type:"evento",  name:"VE Buenos Aires",  av:"VA", content:"Primer festival venezolano en Buenos Aires. Palermo, sabado 3pm. Gaita, salsa, comida y mucho pabillon criollo.", likes:678,  comments:201, time:"5h" },
+  // CARACAS
   { id:22, city:"caracas",  type:"post",    name:"Luis Miguel",      av:"LM", content:"Buenos dias desde Caracas. El Avila amanecio despejado hoy. Para los que estan lejos: la ciudad sigue siendo bella aunque este herida.", likes:8901, comments:2345, time:"2 min" },
   { id:23, city:"caracas",  type:"post",    name:"Gabriela Castro",  av:"GC", content:"Hoy hubo luz todo el dia en mi barrio. Eso en Caracas es noticia. A veces la felicidad es corriente electrica continua.", likes:12345,comments:3456, time:"48 min" },
   { id:24, city:"caracas",  type:"post",    name:"Profesora Ana",    av:"PA", content:"Doy clases en escuela publica de Petare. 28 alumnos, ningun libro, tres meses sin sueldo. Sigo yendo porque alguien tiene que ir.", likes:34567,comments:8901, time:"3h" },
-  { id:25, city:"orlando",  type:"post",    name:"Maria Garcia",     av:"MG", content:"Orlando tiene algo especial para los venezolanos. La comunidad aqui es muy unida y siempre hay alguien que te ayuda cuando llegas.", likes:234,  comments:67, time:"15 min" },
-  { id:26, city:"orlando",  type:"job",     name:"Empresa VE-FL",    av:"EV", content:"Buscamos repartidores en Orlando area. Horario flexible, pago semanal. Venezolanos bienvenidos, no requiere experiencia.", likes:45,   comments:23, time:"1h" },
+  { id:25, city:"miami",  type:"post",    name:"Maria Garcia",     av:"MG", content:"Orlando tiene algo especial para los venezolanos. La comunidad aqui es muy unida y siempre hay alguien que te ayuda cuando llegas.", likes:234,  comments:67, time:"15 min" },
+  { id:26, city:"miami",  type:"job",     name:"Empresa VE-FL",    av:"EV", content:"Buscamos repartidores en Orlando area. Horario flexible, pago semanal. Venezolanos bienvenidos, no requiere experiencia.", likes:45,   comments:23, time:"1h" },
 ];
 
 const SAMPLE_USERS = [
@@ -873,12 +891,12 @@ function Notificaciones(props) {
 }
 
 function Profile(props) {
-  var userCity=props.userCity, onLogout=props.onLogout, onClose=props.onClose, onSetDark=props.onSetDark, onSetLang=props.onSetLang, isDark=props.isDark, currentLang=props.currentLang, following=props.following||[], onFollow=props.onFollow, userPhoto=props.userPhoto||null, userName=props.userName||"Tu", onPhotoChange=props.onPhotoChange||function(){};
+  var userCity=props.userCity, onLogout=props.onLogout, onClose=props.onClose, onSetDark=props.onSetDark, onSetLang=props.onSetLang, isDark=props.isDark, currentLang=props.currentLang, following=props.following||[], onFollow=props.onFollow, userPhoto=props.userPhoto||null, userName=props.userName||"Tu", onPhotoChange=props.onPhotoChange||function(){}, savedPosts=props.savedPosts||[];
   var [subScreen,setSubScreen]=useState(null);
   var cityObj = getCity(userCity);
 
   if(subScreen==="posts") return <MisPublicaciones posts={SEED} onClose={function(){setSubScreen(null);}}/>;
-  if(subScreen==="saved") return <Guardados saved={[]} allPosts={SEED} onClose={function(){setSubScreen(null);}}/>;
+  if(subScreen==="saved") return <Guardados saved={props.savedPosts||[]} allPosts={SEED} onClose={function(){setSubScreen(null);}}/>;
   if(subScreen==="seguidores") return <FollowersList title="Seguidores" users={SAMPLE_USERS} following={following} onFollow={onFollow||function(){}} onClose={function(){setSubScreen(null);}}/>;
   if(subScreen==="siguiendo") return <FollowersList title="Siguiendo" users={SAMPLE_USERS.filter(function(u){return following.includes(u.name);})} following={following} onFollow={onFollow||function(){}} onClose={function(){setSubScreen(null);}}/>;
   if(subScreen==="notifs") return <Notificaciones onClose={function(){setSubScreen(null);}}/>;
@@ -1314,10 +1332,10 @@ function AuthStep3(props) {
 function AuthStep4(props) {
   var onDone=props.onDone, onBack=props.onBack, email=props.email, chosenCity=props.chosenCity;
   var userName=props.userName||"", userPhoto=props.userPhoto, setUserPhoto=props.setUserPhoto||function(){}, password=props.password||"";
-  var [verifyCode,setVerifyCode]=useState("");
   var [loading,setLoading]=useState(false);
   var [error,setError]=useState("");
-  var DEMO="4782";
+  var [sent,setSent]=useState(false);
+
   var handlePhoto = function(e){
     var file = e.target.files && e.target.files[0];
     if(!file) return;
@@ -1325,8 +1343,8 @@ function AuthStep4(props) {
     reader.onload = function(ev){ setUserPhoto(ev.target.result); };
     reader.readAsDataURL(file);
   };
+
   var finish = function() {
-    if(verifyCode!==DEMO){setError("Codigo incorrecto");return;}
     setLoading(true); setError("");
     api.signUp(email, password, userName, chosenCity, userName.toLowerCase().replace(/\s/g,"")).then(function(res) {
       if(res.error && res.error !== "User already registered") {
@@ -1341,32 +1359,63 @@ function AuthStep4(props) {
         setLoading(false);
         onDone(chosenCity, userName, userPhoto, token, uid);
       } else {
-        api.signIn(email, password).then(function(r2) {
-          var t2 = r2.access_token || (r2.session && r2.session.access_token) || "";
-          var u2 = (r2.user && r2.user.id) || (r2.session && r2.session.user && r2.session.user.id) || "";
-          if(t2) window._supaToken = t2;
-          if(u2) api.upsertProfile(u2, userName, chosenCity, userName.toLowerCase().replace(/\s/g,""));
-          setLoading(false);
-          onDone(chosenCity, userName, userPhoto, t2, u2);
-        }).catch(function(){ setLoading(false); onDone(chosenCity, userName, userPhoto, "", ""); });
+        setLoading(false);
+        setSent(true);
       }
     }).catch(function(e) {
       setError("Error de conexion"); setLoading(false);
     });
   };
+
+  if(sent) return (
+    <div style={{flex:1,padding:"40px 20px",textAlign:"center"}}>
+      <div style={{fontSize:64,marginBottom:16}}>{ICONS.email}</div>
+      <div style={{fontSize:22,fontFamily:"'Syne',sans-serif",color:"#1a1a1a",marginBottom:10,fontWeight:700}}>Revisa tu correo</div>
+      <div style={{fontSize:14,color:"#86868b",fontFamily:"'Inter',sans-serif",marginBottom:8,lineHeight:1.6}}>
+        Enviamos un enlace de confirmacion a
+      </div>
+      <div style={{fontSize:15,color:"#0066ff",fontFamily:"'Inter',sans-serif",fontWeight:700,marginBottom:24}}>{email}</div>
+      <div style={{background:"#fffbea",borderRadius:14,padding:"14px 18px",marginBottom:24,textAlign:"left"}}>
+        <div style={{fontSize:13,color:"#86868b",fontFamily:"'Inter',sans-serif",lineHeight:1.6}}>
+          1. Abre tu correo electronico
+        </div>
+        <div style={{fontSize:13,color:"#86868b",fontFamily:"'Inter',sans-serif",lineHeight:1.6}}>
+          2. Busca el correo de Epale
+        </div>
+        <div style={{fontSize:13,color:"#86868b",fontFamily:"'Inter',sans-serif",lineHeight:1.6}}>
+          3. Haz clic en el enlace de confirmacion
+        </div>
+        <div style={{fontSize:13,color:"#86868b",fontFamily:"'Inter',sans-serif",lineHeight:1.6}}>
+          4. Vuelve aqui e inicia sesion
+        </div>
+      </div>
+      <button onClick={function(){onBack();}} style={{background:"none",border:"none",cursor:"pointer",color:"#0066ff",fontFamily:"'Inter',sans-serif",fontSize:13}}>Volver al inicio</button>
+    </div>
+  );
+
   return (
     <div style={{flex:1,padding:"22px 20px 32px",textAlign:"center"}}>
       <div style={{fontSize:52,marginBottom:10}}>{ICONS.email}</div>
-      <div style={{fontSize:20,fontFamily:"'Syne',sans-serif",color:"#1a1a1a",marginBottom:6,fontWeight:700}}>Verifica tu correo</div>
-      <div style={{fontSize:13,color:"#86868b",fontFamily:"'Inter',sans-serif",marginBottom:20}}>Codigo enviado a <strong>{email}</strong></div>
-      <input value={verifyCode} onChange={function(e){setVerifyCode(e.target.value.replace(/\D/g,"").slice(0,4));}} placeholder="0000" maxLength={4} style={{width:"100%",padding:"18px",background:"#fff",border:"2px solid "+(verifyCode.length===4?(verifyCode===DEMO?"#1a7a3c":"#ff2d2d"):"#e8e8ed"),borderRadius:14,color:"#1a1a1a",fontFamily:"'Inter',sans-serif",fontSize:32,fontWeight:700,outline:"none",boxSizing:"border-box",textAlign:"center",marginBottom:10}}/>
-      <div style={{background:"#fffbea",borderRadius:12,padding:"9px 14px",marginBottom:18}}>
-        <span style={{fontSize:12,color:"#86868b",fontFamily:"'Inter',sans-serif"}}>Codigo de prueba: </span>
-        <span style={{fontSize:12,color:"#ffcc00",fontFamily:"'Inter',sans-serif",fontWeight:700}}>{DEMO}</span>
+      <div style={{fontSize:20,fontFamily:"'Syne',sans-serif",color:"#1a1a1a",marginBottom:6,fontWeight:700}}>Casi listo!</div>
+      <div style={{fontSize:13,color:"#86868b",fontFamily:"'Inter',sans-serif",marginBottom:20}}>Agrega tu foto y crea tu cuenta</div>
+      <div style={{display:"flex",flexDirection:"column",alignItems:"center",marginBottom:24}}>
+        <div style={{position:"relative",marginBottom:8}}>
+          <div style={{width:90,height:90,borderRadius:9999,overflow:"hidden",background:"linear-gradient(135deg,#ffcc00,#0066ff)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:32,color:"#fff",fontFamily:"'Syne',sans-serif",fontWeight:800}}>
+            {userPhoto ? <img src={userPhoto} alt="foto" style={{width:"100%",height:"100%",objectFit:"cover"}}/> : (userName?userName[0].toUpperCase():"?")}
+          </div>
+          <label style={{position:"absolute",bottom:0,right:0,width:28,height:28,borderRadius:9999,background:"#ffcc00",border:"2px solid #fff",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",fontSize:16,fontWeight:700}}>
+            +<input type="file" accept="image/*" onChange={handlePhoto} style={{display:"none"}}/>
+          </label>
+        </div>
+        <div style={{fontSize:12,color:"#86868b",fontFamily:"'Inter',sans-serif"}}>Opcional - puedes agregar foto despues</div>
+      </div>
+      <div style={{background:"#fffbea",borderRadius:12,padding:"10px 14px",marginBottom:18,textAlign:"left"}}>
+        <div style={{fontSize:12,color:"#86868b",fontFamily:"'Inter',sans-serif"}}>Se enviara un correo de confirmacion a:</div>
+        <div style={{fontSize:13,color:"#0066ff",fontFamily:"'Inter',sans-serif",fontWeight:700,marginTop:2}}>{email}</div>
       </div>
       {error ? <div style={{background:"#fff0f0",border:"1px solid #ffb3b3",borderRadius:10,padding:"9px 13px",marginBottom:13,fontSize:13,color:"#ff2d2d",fontFamily:"'Inter',sans-serif"}}>{error}</div> : null}
-      <button onClick={finish} disabled={verifyCode.length!==4} style={{width:"100%",padding:"14px",background:verifyCode.length===4?"#ffcc00":"#e8e8ed",color:verifyCode.length===4?"#1a1a1a":"#86868b",border:"none",borderRadius:100,cursor:verifyCode.length===4?"pointer":"not-allowed",fontFamily:"'Inter',sans-serif",fontSize:14,fontWeight:700,marginBottom:12}}>
-        {loading?"Verificando...":"Entrar a Epale"}
+      <button onClick={finish} style={{width:"100%",padding:"14px",background:"#ffcc00",color:"#1a1a1a",border:"none",borderRadius:100,cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:14,fontWeight:700,marginBottom:12}}>
+        {loading?"Creando cuenta...":"Crear cuenta y verificar correo"}
       </button>
       <button onClick={onBack} style={{background:"none",border:"none",cursor:"pointer",color:"#0066ff",fontFamily:"'Inter',sans-serif",fontSize:11}}>Volver</button>
     </div>
@@ -1534,7 +1583,7 @@ export default function App() {
 
   if(screen==="feed") return (
     <div>
-      {showProfile ? <Profile userCity={userCity} onLogout={handleLogout} onClose={function(){setShowProfile(false);}} onSetDark={setDarkSaved} onSetLang={setLangSaved} isDark={dark} currentLang={lang} following={following} onFollow={toggleFollow} userPhoto={userPhoto} userName={userName} onPhotoChange={setUserPhoto} userId={userId}/> : null}
+      {showProfile ? <Profile userCity={userCity} onLogout={handleLogout} onClose={function(){setShowProfile(false);}} onSetDark={setDarkSaved} onSetLang={setLangSaved} isDark={dark} currentLang={lang} following={following} onFollow={toggleFollow} userPhoto={userPhoto} userName={userName} onPhotoChange={setUserPhoto} userId={userId} savedPosts={savedPosts}/> : null}
       <Feed userCity={userCity} onProfile={function(){setShowProfile(true);}} following={following} onFollow={toggleFollow} userPhoto={userPhoto} userName={userName} userId={userId} savedPosts={savedPosts} onSave={toggleSave}/>
       <div style={{position:"fixed",bottom:0,left:0,right:0,height:60,background:C.card,borderTop:"1px solid "+C.border,display:"flex",alignItems:"center",justifyContent:"space-around",zIndex:90,maxWidth:768,margin:"0 auto",visibility:window.innerWidth>=768?"hidden":"visible"}}>
         {[
