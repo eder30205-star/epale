@@ -517,10 +517,20 @@ function Feed(props) {
   var filtered = feedTab==="following" ? followFiltered : cityFiltered;
 
   var addPost = function(p){
-    var displayName = userName || (function(){ try { var s=localStorage.getItem("epale_session"); var d=s?JSON.parse(s):null; return d&&d.name?d.name:"Tu"; } catch(e){ return "Tu"; } })(); var newPost = {id:Date.now(),city:p.city,type:p.type,name:displayName,av:displayName,content:p.content,media:p.media,likes:0,comments:0,time:new Date().toISOString()};
+    var displayName = userName || (function(){ try { var s=localStorage.getItem("epale_session"); var d=s?JSON.parse(s):null; return d&&d.name?d.name:"Tu"; } catch(e){ return "Tu"; } })();
+    var newPost = {id:Date.now(),city:p.city,type:p.type,name:displayName,av:displayName,content:p.content,media:p.media,likes:0,comments:0,time:new Date().toISOString()};
     setPosts(function(pp){ return [newPost].concat(pp); });
     if(userId && window._supaToken) {
-      api.createPost(userId, p.city, p.type, p.content).catch(function(){});
+      api.createPost(userId, p.city, p.type, p.content).then(function(){
+        api.getPosts(p.city).then(function(data){
+          if(Array.isArray(data) && data.length > 0) {
+            var mapped = data.map(function(r){
+              return {id:r.id, city:r.city, type:r.type||"post", name:(r.profiles&&r.profiles.name)||displayName, av:(r.profiles&&r.profiles.name)||displayName, content:r.content, likes:r.likes||0, comments:r.comments||0, time:r.created_at||"ahora"};
+            });
+            setPosts(mapped.concat(SEED));
+          }
+        }).catch(function(){});
+      }).catch(function(){});
     }
   };
 
