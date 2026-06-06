@@ -96,6 +96,36 @@ var api = {
       method:"DELETE",
       headers:{"apikey":SUPA_KEY,"Authorization":"Bearer "+getToken()}
     }).then(function(r){return r.json();});
+  },
+  getLikes: function(uid) {
+    return fetch(SUPA_URL+"/rest/v1/likes?user_id=eq."+uid+"&select=post_id", {
+      headers:{"apikey":SUPA_KEY,"Authorization":"Bearer "+getToken()}
+    }).then(function(r){return r.json();});
+  },
+  likePost: function(uid, postId) {
+    return fetch(SUPA_URL+"/rest/v1/likes", {
+      method:"POST",
+      headers:{"Content-Type":"application/json","apikey":SUPA_KEY,"Authorization":"Bearer "+getToken(),"Prefer":"resolution=merge-duplicates"},
+      body:JSON.stringify({user_id:uid, post_id:String(postId)})
+    }).then(function(r){return r.json();});
+  },
+  unlikePost: function(uid, postId) {
+    return fetch(SUPA_URL+"/rest/v1/likes?user_id=eq."+uid+"&post_id=eq."+String(postId), {
+      method:"DELETE",
+      headers:{"apikey":SUPA_KEY,"Authorization":"Bearer "+getToken()}
+    }).then(function(r){return r.json();});
+  },
+  getUserPosts: function(uid) {
+    return fetch(SUPA_URL+"/rest/v1/posts?user_id=eq."+uid+"&select=*&order=created_at.desc", {
+      headers:{"apikey":SUPA_KEY,"Authorization":"Bearer "+getToken()}
+    }).then(function(r){return r.json();});
+  },
+  resetPassword: function(email) {
+    return fetch(SUPA_URL+"/auth/v1/recover", {
+      method:"POST",
+      headers:{"Content-Type":"application/json","apikey":SUPA_KEY},
+      body:JSON.stringify({email:email})
+    }).then(function(r){return r.json();});
   }
 };
 
@@ -259,9 +289,9 @@ function Stripe() {
 }
 
 function PostCard(props) {
-  var post=props.post, idx=props.idx, cityObj=props.cityObj, saved=props.saved, onSave=props.onSave, following=props.following||[], onFollow=props.onFollow, userName=props.userName||"";
-  var [liked,setLiked]=useState(false);
-  var [likes,setLikes]=useState(post.likes);
+  var post=props.post, idx=props.idx, cityObj=props.cityObj, saved=props.saved, onSave=props.onSave, following=props.following||[], onFollow=props.onFollow, userName=props.userName||"", liked=props.liked||false, onLike=props.onLike||function(){};
+  var [likedLocal,setLikedLocal]=useState(liked);
+  var [likes,setLikes]=useState(post.likes+(liked?1:0));
   var [open,setOpen]=useState(false);
   var [comment,setComment]=useState("");
   var [comments,setComments]=useState([]);
@@ -356,8 +386,8 @@ function PostCard(props) {
           ) : null}
 
           <div style={{display:"flex",gap:6,marginBottom:10}}>
-            <button onClick={function(){setLiked(function(l){return !l;}); setLikes(function(l){return liked?l-1:l+1;});}} style={{display:"flex",alignItems:"center",gap:5,padding:"6px 10px",background:liked?"#fff0f0":C.bg,border:"1px solid "+(liked?"#ffb3b3":C.border),borderRadius:100,cursor:"pointer",color:liked?C.red:C.muted,fontFamily:"'Inter',sans-serif",fontSize:12}}>
-              {liked?ICONS.like_on:ICONS.like_off} {likes.toLocaleString()}
+            <button onClick={function(){var newLiked=!likedLocal; setLikedLocal(newLiked); setLikes(function(l){return newLiked?l+1:l-1;}); onLike(post.id);}} style={{display:"flex",alignItems:"center",gap:5,padding:"6px 10px",background:likedLocal?"#fff0f0":C.bg,border:"1px solid "+(likedLocal?"#ffb3b3":C.border),borderRadius:100,cursor:"pointer",color:likedLocal?C.red:C.muted,fontFamily:"'Inter',sans-serif",fontSize:12}}>
+              {likedLocal?ICONS.like_on:ICONS.like_off} {likes.toLocaleString()}
             </button>
             <button onClick={function(){setOpen(function(o){return !o;});}} style={{display:"flex",alignItems:"center",gap:5,padding:"6px 10px",background:open?"#e8f0fc":C.bg,border:"1px solid "+(open?"#b3c8ff":C.border),borderRadius:100,cursor:"pointer",color:open?C.blue:C.muted,fontFamily:"'Inter',sans-serif",fontSize:12}}>
                {ICONS.comment} {(post.comments+comments.length).toLocaleString()}
@@ -413,6 +443,8 @@ function Feed(props) {
   var [activeCity,setActiveCity]=useState(userCity);
   var savedPosts=props.savedPosts||[];
   var toggleSaveLocal=props.onSave||function(){};
+  var likedPosts=props.likedPosts||[];
+  var toggleLike=props.onLike||function(){};
   var [feedTab,setFeedTab]=useState("forYou");
   var following=props.following||[];
   var toggleFollow=props.onFollow||function(){};
@@ -521,7 +553,7 @@ function Feed(props) {
       <div style={{fontSize:15,fontFamily:"'Inter',sans-serif"}}>{feedTab==="following"?"Sigue a alguien para ver sus posts":"Se el primero en publicar"}</div>
     </div>
   ) : filtered.map(function(p,i){
-    return <PostCard key={p.id} post={p} idx={i} cityObj={cityObj} saved={savedPosts.includes(p.id)} onSave={toggleSave} following={following} onFollow={toggleFollow} userName={userName}/>;
+    return <PostCard key={p.id} post={p} idx={i} cityObj={cityObj} saved={savedPosts.includes(p.id)} onSave={toggleSave} following={following} onFollow={toggleFollow} userName={userName} liked={likedPosts.includes(String(p.id))} onLike={toggleLike}/>;
   });
 
   var inviteBanner = (
@@ -750,8 +782,19 @@ function Composer(props) {
 }
 
 function MisPublicaciones(props) {
-  var posts=props.posts||[], onClose=props.onClose;
-  var myPosts = posts.filter(function(p){ return p.name==="Tu"; });
+  var onClose=props.onClose, userId=props.userId, userName=props.userName||"";
+  var [myPosts,setMyPosts]=useState([]);
+  var [loading,setLoading]=useState(true);
+  useEffect(function(){
+    if(userId && window._supaToken) {
+      api.getUserPosts(userId).then(function(data){
+        if(Array.isArray(data)) setMyPosts(data);
+        setLoading(false);
+      }).catch(function(){ setLoading(false); });
+    } else {
+      setLoading(false);
+    }
+  }, [userId]);
   return (
     <div style={{position:"fixed",inset:0,zIndex:300,background:C.bg,maxWidth:480,margin:"0 auto",overflowY:"auto"}}>
       <Stripe/>
@@ -760,7 +803,9 @@ function MisPublicaciones(props) {
         <div style={{fontSize:18,fontFamily:"'Syne',sans-serif",color:C.text,fontWeight:700}}>Mis publicaciones</div>
       </div>
       <div style={{paddingBottom:40}}>
-        {myPosts.length===0 ? (
+        {loading ? (
+          <div style={{textAlign:"center",padding:"60px 20px",color:C.muted,fontFamily:"'Inter',sans-serif"}}>Cargando...</div>
+        ) : myPosts.length===0 ? (
           <div style={{textAlign:"center",padding:"60px 20px"}}>
             <div style={{fontSize:48,marginBottom:12}}>{ICONS.notepad}</div>
             <div style={{fontSize:16,fontFamily:"'Syne',sans-serif",color:C.text,marginBottom:8}}>Aun no has publicado nada</div>
@@ -904,7 +949,7 @@ function Profile(props) {
   var [subScreen,setSubScreen]=useState(null);
   var cityObj = getCity(userCity);
 
-  if(subScreen==="posts") return <MisPublicaciones posts={SEED} onClose={function(){setSubScreen(null);}}/>;
+  if(subScreen==="posts") return <MisPublicaciones userId={props.userId} userName={userName} onClose={function(){setSubScreen(null);}}/>;
   if(subScreen==="saved") return <Guardados saved={savedPosts} allPosts={SEED} onClose={function(){setSubScreen(null);}}/>;
   if(subScreen==="seguidores") return <FollowersList title="Seguidores" users={SAMPLE_USERS} following={following} onFollow={onFollow||function(){}} onClose={function(){setSubScreen(null);}}/>;
   if(subScreen==="siguiendo") return <FollowersList title="Siguiendo" users={SAMPLE_USERS.filter(function(u){return following.includes(u.name);})} following={following} onFollow={onFollow||function(){}} onClose={function(){setSubScreen(null);}}/>;
@@ -1224,7 +1269,7 @@ function AuthLogin(props) {
           <button onClick={function(){setShowPass(function(s){return !s;});}} style={{position:"absolute",right:14,top:10,background:"none",border:"none",cursor:"pointer",fontSize:18}}>{ICONS.eye}</button>
         </div>
       </div>
-      <div style={{textAlign:"right",marginBottom:20}}><button style={{background:"none",border:"none",cursor:"pointer",color:"#0066ff",fontFamily:"'Inter',sans-serif",fontSize:11}}>Olvidaste tu contrasena?</button></div>
+      <div style={{textAlign:"right",marginBottom:20}}><button onClick={function(){ var em=email; if(!em){setError("Ingresa tu correo primero");return;} api.resetPassword(em).then(function(){setError("Correo de recuperacion enviado!");}).catch(function(){setError("Error al enviar correo");}); }} style={{background:"none",border:"none",cursor:"pointer",color:"#0066ff",fontFamily:"'Inter',sans-serif",fontSize:11}}>Olvidaste tu contrasena?</button></div>
       {error ? <div style={{background:"#fff0f0",border:"1px solid #ffb3b3",borderRadius:10,padding:"9px 13px",marginBottom:13,fontSize:13,color:"#ff2d2d",fontFamily:"'Inter',sans-serif"}}>{error}</div> : null}
       <button onClick={go} style={{width:"100%",padding:"14px",background:"#ffcc00",color:"#1a1a1a",border:"none",borderRadius:100,cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:14,fontWeight:700}}>{loading?"Entrando...":"Entrar"}</button>
     </div>
@@ -1507,6 +1552,7 @@ export default function App() {
   var [showProfile,setShowProfile]=useState(false);
   var [following,setFollowing]=useState([]);
   var [savedPosts,setSavedPosts]=useState([]);
+  var [likedPosts,setLikedPosts]=useState([]);
   var [crashMsg,setCrashMsg]=useState("");
   var [activeTab,setActiveTab]=useState("feed");
 
@@ -1524,8 +1570,55 @@ export default function App() {
           if(ids.length>0) setSavedPosts(ids);
         }
       }).catch(function(){});
+      api.getLikes(userId).then(function(data){
+        if(Array.isArray(data)) {
+          var ids = data.map(function(r){return r.post_id;}).filter(Boolean);
+          if(ids.length>0) setLikedPosts(ids);
+        }
+      }).catch(function(){});
     }
   }, [userId]);
+
+  useEffect(function(){
+    var hash = window.location.hash;
+    if(!hash) return;
+    var params = {};
+    hash.replace("#","").split("&").forEach(function(pair){
+      var parts = pair.split("=");
+      params[parts[0]] = decodeURIComponent(parts[1]||"");
+    });
+    var token = params["access_token"];
+    var uid = params["user_id"] || "";
+    var type = params["type"] || "";
+    if(token && (type==="signup" || type==="magiclink" || type==="recovery" || token.length>10)) {
+      window._supaToken = token;
+      api.getProfile(uid).then(function(profiles){
+        var prof = Array.isArray(profiles) && profiles[0];
+        var city = prof&&prof.city ? prof.city : "madrid";
+        var name = prof&&prof.name ? prof.name : "";
+        var photo = prof&&prof.photo_url ? prof.photo_url : null;
+        try { localStorage.setItem("epale_session", JSON.stringify({city:city,name:name,photo:photo,token:token,uid:uid})); } catch(e){}
+        setUserCity(city); setUserName(name); setUserPhoto(photo); setUserId(uid);
+        setScreen("feed");
+        window.history.replaceState(null, "", "/");
+      }).catch(function(){
+        try { localStorage.setItem("epale_session", JSON.stringify({city:"madrid",name:"",photo:null,token:token,uid:uid})); } catch(e){}
+        setUserId(uid); setScreen("feed");
+        window.history.replaceState(null, "", "/");
+      });
+    }
+  }, []);
+
+  var toggleLike = function(postId){
+    setLikedPosts(function(s){
+      var isLiked = s.includes(String(postId));
+      if(userId && window._supaToken) {
+        if(isLiked) api.unlikePost(userId, postId).catch(function(){});
+        else api.likePost(userId, postId).catch(function(){});
+      }
+      return isLiked ? s.filter(function(x){return x!==String(postId);}) : [].concat(s,[String(postId)]);
+    });
+  };
 
   var toggleSave = function(postId){
     setSavedPosts(function(s){
@@ -1591,8 +1684,8 @@ export default function App() {
 
   if(screen==="feed") return (
     <div>
-      {showProfile ? <Profile userCity={userCity} onLogout={handleLogout} onClose={function(){setShowProfile(false);}} onSetDark={setDarkSaved} onSetLang={setLangSaved} isDark={dark} currentLang={lang} following={following} onFollow={toggleFollow} userPhoto={userPhoto} userName={userName} onPhotoChange={setUserPhoto} userId={userId} savedPosts={savedPosts}/> : null}
-      <Feed userCity={userCity} onProfile={function(){setShowProfile(true);}} following={following} onFollow={toggleFollow} userPhoto={userPhoto} userName={userName} userId={userId} savedPosts={savedPosts} onSave={toggleSave}/>
+      {showProfile ? <Profile userCity={userCity} onLogout={handleLogout} onClose={function(){setShowProfile(false);}} onSetDark={setDarkSaved} onSetLang={setLangSaved} isDark={dark} currentLang={lang} following={following} onFollow={toggleFollow} userPhoto={userPhoto} userName={userName} onPhotoChange={setUserPhoto} userId={userId} savedPosts={savedPosts} likedPosts={likedPosts}/> : null}
+      <Feed userCity={userCity} onProfile={function(){setShowProfile(true);}} following={following} onFollow={toggleFollow} userPhoto={userPhoto} userName={userName} userId={userId} savedPosts={savedPosts} onSave={toggleSave} likedPosts={likedPosts} onLike={toggleLike}/>
       <div style={{position:"fixed",bottom:0,left:0,right:0,height:60,background:C.card,borderTop:"1px solid "+C.border,display:"flex",alignItems:"center",justifyContent:"space-around",zIndex:90,maxWidth:768,margin:"0 auto",visibility:window.innerWidth>=768?"hidden":"visible"}}>
         {[
           {id:"feed",  icon:ICONS.fire,    label:"Inicio"},
