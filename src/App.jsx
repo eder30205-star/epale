@@ -621,7 +621,27 @@ function Feed(props) {
               <button onClick={onProfile} style={{width:"100%",padding:"8px",background:C.yellow,border:"none",borderRadius:10,cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:12,fontWeight:700,color:C.text}}>Ver perfil</button>
             </div>
           </div>
-          <button onClick={function(){setShowComposer(true);}} style={{width:"100%",padding:"12px",background:C.yellow,border:"none",borderRadius:12,cursor:"pointer",fontFamily:"'Syne',sans-serif",fontSize:14,fontWeight:700,color:C.text}}>+ Publicar</button>
+          <button onClick={function(){setShowComposer(true);}} style={{width:"100%",padding:"12px",background:C.yellow,border:"none",borderRadius:12,cursor:"pointer",fontFamily:"'Syne',sans-serif",fontSize:14,fontWeight:700,color:C.text,marginBottom:16}}>+ Publicar</button>
+          <div style={{background:C.card,borderRadius:16,border:"1px solid "+C.border,padding:"14px 16px"}}>
+            <div style={{fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:13,color:C.text,marginBottom:12}}>Proximos eventos</div>
+            {SEED.filter(function(p){ return p.type==="evento" && p.city===activeCity; }).slice(0,3).map(function(ev,i){
+              return (
+                <div key={ev.id} onClick={function(){setFilter("evento");}} style={{display:"flex",gap:10,marginBottom:12,cursor:"pointer",padding:"8px 10px",borderRadius:10,background:C.bg}}>
+                  <div style={{width:36,height:36,borderRadius:10,background:"#7b2d8b",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,flexShrink:0}}>{ICONS.bell}</div>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{fontSize:12,fontWeight:700,color:C.text,fontFamily:"'Inter',sans-serif",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{ev.name}</div>
+                    <div style={{fontSize:11,color:C.muted,fontFamily:"'Inter',sans-serif",marginTop:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{ev.content.slice(0,45)}...</div>
+                  </div>
+                </div>
+              );
+            })}
+            {SEED.filter(function(p){ return p.type==="evento" && p.city===activeCity; }).length===0 ? (
+              <div style={{textAlign:"center",padding:"10px 0"}}>
+                <div style={{fontSize:11,color:C.muted,fontFamily:"'Inter',sans-serif"}}>No hay eventos en este pais aun</div>
+                <button onClick={function(){setShowComposer(true);}} style={{marginTop:8,padding:"6px 14px",background:C.yellow,border:"none",borderRadius:100,cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:11,fontWeight:700,color:C.text}}>Crear evento</button>
+              </div>
+            ) : null}
+          </div>
         </div>
         <div style={{flex:1,minWidth:0}}>
           {dollarWidget}
