@@ -5,8 +5,8 @@ const SUPA_URL = "https://zkydbsymcnnbepvmbchr.supabase.co";
 const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpreWRic3ltY25uYmVwdm1iY2hyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyNjExNjksImV4cCI6MjA5NTgzNzE2OX0.bIiUt752AROIfQkQTHqN7r9OrjRTzxmwNQLDw0WVVS4";
 
 var getToken = function(){
+  if(window._supaToken && window._supaToken.length > 10) return window._supaToken;
   try {
-    if(window._supaToken && window._supaToken.length > 10) return window._supaToken;
     var s = localStorage.getItem("epale_session");
     var d = s ? JSON.parse(s) : null;
     if(d && d.token && d.token.length > 10) {
@@ -529,10 +529,11 @@ function Feed(props) {
 
   var addPost = function(p){
     var displayName = userName || (function(){ try { var s=localStorage.getItem("epale_session"); var d=s?JSON.parse(s):null; return d&&d.name?d.name:"Tu"; } catch(e){ return "Tu"; } })();
+    var currentUserId = userId || (function(){ try { var s=localStorage.getItem("epale_session"); var d=s?JSON.parse(s):null; return d&&d.uid?d.uid:""; } catch(e){ return ""; } })();
     var newPost = {id:Date.now(),city:p.city,type:p.type,name:displayName,av:displayName,content:p.content,media:p.media,likes:0,comments:0,time:new Date().toISOString()};
     setPosts(function(pp){ return [newPost].concat(pp); });
-    if(userId && window._supaToken) {
-      api.createPost(userId, p.city, p.type, p.content).then(function(){
+    if(currentUserId && getToken() !== SUPA_KEY) {
+      api.createPost(currentUserId, p.city, p.type, p.content).then(function(){
         api.getPosts(p.city).then(function(data){
           if(Array.isArray(data) && data.length > 0) {
             var mapped = data.map(function(r){
@@ -1264,6 +1265,9 @@ function AuthLogin(props) {
       var uid = (res.user && res.user.id) || (res.session && res.session.user && res.session.user.id) || "";
       var refresh = res.refresh_token || (res.session && res.session.refresh_token) || "";
       window._supaToken = token;
+      console.log("LOGIN TOKEN:", token ? token.slice(0,20) : "EMPTY");
+      console.log("LOGIN UID:", uid);
+      try { localStorage.setItem("epale_session", JSON.stringify({city:"madrid",name:"",photo:null,token:token,uid:uid,refresh:refresh})); } catch(e){ console.log("LS ERROR:", e); }
       api.getProfile(uid).then(function(profiles) {
         var profile = Array.isArray(profiles) && profiles[0];
         setLoading(false);
