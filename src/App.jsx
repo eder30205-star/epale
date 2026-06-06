@@ -616,7 +616,7 @@ function Feed(props) {
     var newPost = {id:Date.now(),city:p.city,type:p.type,name:displayName,av:displayName,content:p.content,media:p.media,likes:0,comments:0,time:new Date().toISOString()};
     setActiveCity(p.city);
     setPosts(function(pp){ return [newPost].concat(pp); });
-    if(currentUserId && getToken() !== SUPA_KEY) {
+    if(currentUserId) {
       api.createPost(currentUserId, p.city, p.type, p.content, displayName).then(function(){
         api.getPosts(p.city).then(function(data){
           if(Array.isArray(data) && data.length > 0) {
