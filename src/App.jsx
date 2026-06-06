@@ -52,15 +52,15 @@ var api = {
     }).then(function(r){return r.json();});
   },
   getPosts: function(city) {
-    return fetch(SUPA_URL+"/rest/v1/posts?city=eq."+city+"&select=*,profiles(name,photo_url,username)&order=created_at.desc&limit=50", {
+    return fetch(SUPA_URL+"/rest/v1/posts?city=eq."+city+"&select=*&order=created_at.desc&limit=50", {
       headers:{"apikey":SUPA_KEY,"Authorization":"Bearer "+getToken()}
     }).then(function(r){return r.json();});
   },
-  createPost: function(userId, city, type, content) {
+  createPost: function(userId, city, type, content, name) {
     return fetch(SUPA_URL+"/rest/v1/posts", {
       method:"POST",
       headers:{"Content-Type":"application/json","apikey":SUPA_KEY,"Authorization":"Bearer "+getToken(),"Prefer":"return=representation"},
-      body:JSON.stringify({user_id:userId, city:city, type:type, content:content})
+      body:JSON.stringify({user_id:userId, city:city, type:type, content:content, name:name||"Anonimo"})
     }).then(function(r){return r.json();});
   },
   updateProfile: function(uid, name, city, username, photoUrl) {
@@ -471,9 +471,8 @@ function Feed(props) {
             id:p.id,
             city:p.city,
             type:p.type||"post",
-            name:(p.profiles&&p.profiles.name)||"Anonimo",
-            av:(p.profiles&&p.profiles.name)||"?",
-            photo:(p.profiles&&p.profiles.photo_url)||null,
+            name:p.name||"Anonimo",
+            av:p.name||"?",
             content:p.content,
             likes:p.likes||0,
             comments:p.comments||0,
@@ -533,7 +532,7 @@ function Feed(props) {
     var newPost = {id:Date.now(),city:p.city,type:p.type,name:displayName,av:displayName,content:p.content,media:p.media,likes:0,comments:0,time:new Date().toISOString()};
     setPosts(function(pp){ return [newPost].concat(pp); });
     if(currentUserId && getToken() !== SUPA_KEY) {
-      api.createPost(currentUserId, p.city, p.type, p.content).then(function(){
+      api.createPost(currentUserId, p.city, p.type, p.content, displayName).then(function(){
         api.getPosts(p.city).then(function(data){
           if(Array.isArray(data) && data.length > 0) {
             var mapped = data.map(function(r){
