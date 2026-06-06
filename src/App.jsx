@@ -1338,7 +1338,7 @@ function Configuracion(props) {
         <div style={{fontSize:18,fontFamily:"'Syne',sans-serif",color:C.text}}>Configuracion</div>
       </div>
       <div style={{paddingBottom:40}}>
-        {[{title:"CUENTA",items:[{label:"Nombre",value:userName,type:"info"},{label:"Correo",value:userEmail||(function(){ try{var d=JSON.parse(localStorage.getItem("epale_session")); return d&&d.email?d.email:"";} catch(e){return "";} })(),type:"info"},{label:"Ciudad",value:toFlag(CITY_FLAGS[userCity])+" "+cityObj.name,type:"info"},{label:"Cambiar contrasena",type:"action",onPress:function(){setSubPage("password");}}]},{title:"PREFERENCIAS",items:[{label:"Notificaciones",type:"toggle",val:notifOn,onToggle:function(){setNotifOn(function(v){return !v;});}},{label:"Modo oscuro",type:"toggle",val:darkMode,onToggle:function(){var v=!darkMode;setDarkMode(v);if(onSetDark)onSetDark(v);}},{label:"Idioma",value:currentLang==="en"?"English":"Espanol",type:"action",onPress:function(){setSubPage("lang");}}]},{title:"LEGAL",items:[{label:"Terminos de servicio",type:"action",onPress:function(){setSubPage("terminos");}},{label:"Politica de privacidad",type:"action",onPress:function(){setSubPage("privacidad");}},{label:"Version",value:"v1.0.0",type:"info"}]}].map(function(sec,si){
+        {[{title:"CUENTA",items:[{label:"Nombre",value:userName,type:"info"},{label:"Correo",value:(function(){ try{var d=JSON.parse(localStorage.getItem("epale_session")); if(d&&d.email) return d.email; if(d&&d.token){var payload=JSON.parse(atob(d.token.split(".")[1])); return payload.email||"";} return "";} catch(e){return "";} })(),type:"info"},{label:"Ciudad",value:toFlag(CITY_FLAGS[userCity])+" "+cityObj.name,type:"info"},{label:"Cambiar contrasena",type:"action",onPress:function(){setSubPage("password");}}]},{title:"PREFERENCIAS",items:[{label:"Notificaciones",type:"toggle",val:notifOn,onToggle:function(){setNotifOn(function(v){return !v;});}},{label:"Modo oscuro",type:"toggle",val:darkMode,onToggle:function(){var v=!darkMode;setDarkMode(v);if(onSetDark)onSetDark(v);}},{label:"Idioma",value:currentLang==="en"?"English":"Espanol",type:"action",onPress:function(){setSubPage("lang");}}]},{title:"LEGAL",items:[{label:"Terminos de servicio",type:"action",onPress:function(){setSubPage("terminos");}},{label:"Politica de privacidad",type:"action",onPress:function(){setSubPage("privacidad");}},{label:"Version",value:"v1.0.0",type:"info"}]}].map(function(sec,si){
           return (
             <div key={si} style={{marginTop:20}}>
               <div style={{fontSize:10,fontFamily:"'Inter',sans-serif",color:C.muted,letterSpacing:1,padding:"0 16px",marginBottom:6}}>{sec.title}</div>
@@ -1691,6 +1691,7 @@ function Auth(props) {
 export default function App() {
   var [dark,setDark]=useState(function(){ try{return localStorage.getItem("epale_dark")==="1";}catch(e){return false;} });
   var [lang,setLang]=useState(function(){ try{return localStorage.getItem("epale_lang")||"es";}catch(e){return "es";} });
+  C = dark ? DARK : LIGHT;
   var [screen,setScreen]=useState(function(){
     try { var s=localStorage.getItem("epale_session"); var d=s?JSON.parse(s):null; return d&&d.token&&d.token.length>10?"feed":"auth"; } catch(e){ return "auth"; }
   });
