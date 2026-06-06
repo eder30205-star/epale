@@ -313,13 +313,15 @@ const waInvite = function(cityId) {
 
 var formatTime = function(ts) {
   if(!ts) return "";
-  if(typeof ts === "string" && !ts.includes("T")) return ts;
-  var d = new Date(ts);
+  if(typeof ts === "string" && !ts.includes("T") && !ts.includes("-")) return ts;
+  var tsFixed = (typeof ts === "string" && ts.includes("T") && !ts.includes("Z") && !ts.includes("+")) ? ts+"Z" : ts;
+  var d = new Date(tsFixed);
   if(isNaN(d.getTime())) return ts;
   var now = new Date();
   var diff = Math.floor((now - d) / 1000);
+  if(diff < 0) diff = 0;
   if(diff < 60) return "ahora";
-  if(diff < 3600) return Math.floor(diff/60)+"m";
+  if(diff < 3600) return Math.floor(diff/60)+"min";
   if(diff < 86400) return Math.floor(diff/3600)+"h";
   if(diff < 604800) return Math.floor(diff/86400)+"d";
   return d.getDate()+"/"+(d.getMonth()+1)+"/"+d.getFullYear();
@@ -1039,13 +1041,7 @@ function FollowersList(props) {
 
 
 var NOTIF_SEED = [
-  { id:1, icon:ICONS.heart, iconBg:"#fdecea", text:"Carlos Mendez le dio like a tu post", time:"hace 2 min", read:false },
-  { id:2, icon:ICONS.comment, iconBg:"#e8f0fc", text:"Andreina Lopez comento: Que bueno esto!", time:"hace 15 min", read:false },
-  { id:3, icon:ICONS.heart, iconBg:"#fdecea", text:"3 personas mas le dieron like a tu post", time:"hace 1h", read:false },
-  { id:4, icon:ICONS.share, iconBg:"#e8f8ee", text:"Tu post fue compartido en WhatsApp 2 veces", time:"hace 2h", read:true },
-  { id:5, icon:ICONS.comment, iconBg:"#e8f0fc", text:"Jose Rodriguez comento: Epale que buena info!", time:"hace 3h", read:true },
-  { id:6, icon:ICONS.heart, iconBg:"#fdecea", text:"5 personas le dieron like a tu post", time:"hace 5h", read:true },
-  { id:7, icon:ICONS.flag_ve, iconBg:"#fffbea", text:"Bienvenido a Epale! Conecta con venezolanos en tu ciudad", time:"hace 1 dia", read:true },
+  { id:1, icon:ICONS.flag_ve, iconBg:"#fffbea", text:"Bienvenido a Epale! Conecta con venezolanos en tu pais", time:"ahora", read:false },
 ];
 
 function Notificaciones(props) {
@@ -1064,6 +1060,11 @@ function Notificaciones(props) {
       </div>
       {unread > 0 ? <div style={{padding:"8px 16px",background:"#fffbea",borderBottom:"1px solid "+C.border}}><span style={{fontSize:12,color:C.muted,fontFamily:"'Inter',sans-serif"}}>{unread} sin leer</span></div> : null}
       <div style={{paddingBottom:40}}>
+        {notifs.length===1 ? (
+          <div style={{background:"#fffbea",margin:"16px",borderRadius:14,padding:"14px 16px"}}>
+            <div style={{fontSize:13,color:C.muted,fontFamily:"'Inter',sans-serif",textAlign:"center",lineHeight:1.6}}>Las notificaciones de likes y comentarios apareceran aqui proximamente</div>
+          </div>
+        ) : null}
         {notifs.map(function(n){
           return (
             <div key={n.id} onClick={function(){markOne(n.id);}} style={{display:"flex",gap:14,padding:"14px 16px",background:n.read?C.bg:C.card,borderBottom:"1px solid "+C.border,cursor:"pointer"}}>
@@ -1091,7 +1092,7 @@ function Profile(props) {
   if(subScreen==="seguidores") return <FollowersList title="Seguidores" users={SAMPLE_USERS} following={following} onFollow={onFollow||function(){}} onClose={function(){setSubScreen(null);}}/>;
   if(subScreen==="siguiendo") return <FollowersList title="Siguiendo" users={SAMPLE_USERS.filter(function(u){return following.includes(u.name);})} following={following} onFollow={onFollow||function(){}} onClose={function(){setSubScreen(null);}}/>;
   if(subScreen==="notifs") return <Notificaciones onClose={function(){setSubScreen(null);}}/>;
-  if(subScreen==="config") return <Configuracion userCity={userCity} onClose={function(){setSubScreen(null);}} onLogout={onLogout} onSetDark={onSetDark} onSetLang={onSetLang} isDark={isDark} currentLang={currentLang}/>;
+  if(subScreen==="config") return <Configuracion userCity={userCity} onClose={function(){setSubScreen(null);}} onLogout={onLogout} onSetDark={onSetDark} onSetLang={onSetLang} isDark={isDark} currentLang={currentLang} userName={userName} userEmail={(function(){ try{var d=JSON.parse(localStorage.getItem("epale_session")); return d&&d.email?d.email:"";} catch(e){return "";} })()}/>;
   if(subScreen==="edit") return <EditProfile userCity={userCity} userPhoto={userPhoto} userName={userName} onPhotoChange={onPhotoChange} onClose={function(){setSubScreen(null);}}/>;
 
   return (
@@ -1160,9 +1161,9 @@ function Profile(props) {
 
 function EditProfile(props) {
   var userCity=props.userCity, onClose=props.onClose, onPhotoChange=props.onPhotoChange||function(){};
-  var [name,setName]=useState(props.userName||"Maria Fernanda");
-  var [username,setUsername]=useState("mariafernanda");
-  var [bio,setBio]=useState("Venezolano en "+getCity(userCity).name);
+  var [name,setName]=useState(props.userName||"");
+  var [username,setUsername]=useState(props.userName?props.userName.toLowerCase().replace(/\s/g,""):"");
+  var [bio,setBio]=useState(props.bio||"Venezolano en "+getCity(userCity).name);
   var [photo,setPhoto]=useState(props.userPhoto||null);
   var [saved,setSaved]=useState(false);
   var [loading,setLoading]=useState(false);
@@ -1250,7 +1251,7 @@ function EditProfile(props) {
 }
 
 function Configuracion(props) {
-  var userCity=props.userCity, onClose=props.onClose, onLogout=props.onLogout, onSetDark=props.onSetDark, onSetLang=props.onSetLang, isDark=props.isDark, currentLang=props.currentLang;
+  var userCity=props.userCity, onClose=props.onClose, onLogout=props.onLogout, onSetDark=props.onSetDark, onSetLang=props.onSetLang, isDark=props.isDark, currentLang=props.currentLang, userName=props.userName||"", userEmail=props.userEmail||"";
   var [notifOn,setNotifOn]=useState(true);
   var [darkMode,setDarkMode]=useState(isDark||false);
   var [subPage,setSubPage]=useState(null);
@@ -1337,7 +1338,7 @@ function Configuracion(props) {
         <div style={{fontSize:18,fontFamily:"'Syne',sans-serif",color:C.text}}>Configuracion</div>
       </div>
       <div style={{paddingBottom:40}}>
-        {[{title:"CUENTA",items:[{label:"Correo",value:"tu@correo.com",type:"info"},{label:"Ciudad",value:toFlag(CITY_FLAGS[userCity])+" "+cityObj.name,type:"info"},{label:"Cambiar contrasena",type:"action",onPress:function(){setSubPage("password");}}]},{title:"PREFERENCIAS",items:[{label:"Notificaciones",type:"toggle",val:notifOn,onToggle:function(){setNotifOn(function(v){return !v;});}},{label:"Modo oscuro",type:"toggle",val:darkMode,onToggle:function(){var v=!darkMode;setDarkMode(v);if(onSetDark)onSetDark(v);}},{label:"Idioma",value:currentLang==="en"?"English":"Espanol",type:"action",onPress:function(){setSubPage("lang");}}]},{title:"LEGAL",items:[{label:"Terminos de servicio",type:"action",onPress:function(){setSubPage("terminos");}},{label:"Politica de privacidad",type:"action",onPress:function(){setSubPage("privacidad");}},{label:"Version",value:"v1.0.0",type:"info"}]}].map(function(sec,si){
+        {[{title:"CUENTA",items:[{label:"Nombre",value:userName,type:"info"},{label:"Correo",value:userEmail||(function(){ try{var d=JSON.parse(localStorage.getItem("epale_session")); return d&&d.email?d.email:"";} catch(e){return "";} })(),type:"info"},{label:"Ciudad",value:toFlag(CITY_FLAGS[userCity])+" "+cityObj.name,type:"info"},{label:"Cambiar contrasena",type:"action",onPress:function(){setSubPage("password");}}]},{title:"PREFERENCIAS",items:[{label:"Notificaciones",type:"toggle",val:notifOn,onToggle:function(){setNotifOn(function(v){return !v;});}},{label:"Modo oscuro",type:"toggle",val:darkMode,onToggle:function(){var v=!darkMode;setDarkMode(v);if(onSetDark)onSetDark(v);}},{label:"Idioma",value:currentLang==="en"?"English":"Espanol",type:"action",onPress:function(){setSubPage("lang");}}]},{title:"LEGAL",items:[{label:"Terminos de servicio",type:"action",onPress:function(){setSubPage("terminos");}},{label:"Politica de privacidad",type:"action",onPress:function(){setSubPage("privacidad");}},{label:"Version",value:"v1.0.0",type:"info"}]}].map(function(sec,si){
           return (
             <div key={si} style={{marginTop:20}}>
               <div style={{fontSize:10,fontFamily:"'Inter',sans-serif",color:C.muted,letterSpacing:1,padding:"0 16px",marginBottom:6}}>{sec.title}</div>
@@ -1398,7 +1399,7 @@ function AuthLogin(props) {
         var city = profile ? profile.city : "madrid";
         var name = profile ? profile.name : "";
         var photo = profile ? profile.photo_url : null;
-        try { localStorage.setItem("epale_session", JSON.stringify({city:city,name:name,photo:photo,token:token,uid:uid,refresh:refresh})); } catch(e){}
+        try { localStorage.setItem("epale_session", JSON.stringify({city:city,name:name,photo:photo,token:token,uid:uid,refresh:refresh,email:res.user&&res.user.email||""})); } catch(e){}
         onDone(city, name, photo, token, uid);
       }).catch(function(){
         setLoading(false);
