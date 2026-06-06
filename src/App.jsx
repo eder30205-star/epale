@@ -937,9 +937,9 @@ function MisPublicaciones(props) {
             <div key={p.id} style={{background:C.card,borderBottom:"1px solid "+C.border,padding:"14px 16px"}}>
               <p style={{fontSize:14,lineHeight:1.6,color:C.text,fontFamily:"'Inter',sans-serif",marginBottom:10}}>{p.content}</p>
               <div style={{display:"flex",gap:14,fontSize:11,color:C.muted,fontFamily:"'Inter',sans-serif"}}>
-                <span style={{color:C.red}}> {p.likes}</span>
-                <span> {p.comments}</span>
-                <span>hace {p.time}</span>
+                <span style={{color:C.red}}>{ICONS.heart} {p.likes||0}</span>
+                <span>{ICONS.comment} {p.comments||0}</span>
+                <span>{formatTime(p.created_at||p.time)}</span>
               </div>
             </div>
           );
@@ -950,8 +950,22 @@ function MisPublicaciones(props) {
 }
 
 function Guardados(props) {
-  var saved=props.saved||[], allPosts=props.allPosts||[], onClose=props.onClose;
-  var savedPosts = allPosts.filter(function(p){ return saved.includes(p.id); });
+  var saved=props.saved||[], onClose=props.onClose;
+  var [savedPosts,setSavedPosts]=useState([]);
+  var [loading,setLoading]=useState(true);
+
+  useEffect(function(){
+    if(saved.length===0){ setLoading(false); return; }
+    var ids = saved.join(",");
+    fetch(SUPA_URL+"/rest/v1/posts?id=in.("+ids+")&select=*", {
+      headers:{"apikey":SUPA_KEY,"Authorization":"Bearer "+getToken()}
+    }).then(function(r){return r.json();}).then(function(data){
+      if(Array.isArray(data)) setSavedPosts(data);
+      setLoading(false);
+    }).catch(function(){ setLoading(false); });
+  }, []);
+
+  var allPosts = savedPosts.concat(SEED.filter(function(p){ return saved.includes(p.id); }));
   return (
     <div style={{position:"fixed",inset:0,zIndex:300,background:C.bg,maxWidth:480,margin:"0 auto",overflowY:"auto"}}>
       <Stripe/>
@@ -960,13 +974,15 @@ function Guardados(props) {
         <div style={{fontSize:18,fontFamily:"'Syne',sans-serif",color:C.text,fontWeight:700}}>Guardados</div>
       </div>
       <div style={{paddingBottom:40}}>
-        {savedPosts.length===0 ? (
+        {loading ? (
+          <div style={{textAlign:"center",padding:"60px 20px",color:C.muted,fontFamily:"'Inter',sans-serif"}}>Cargando...</div>
+        ) : allPosts.length===0 ? (
           <div style={{textAlign:"center",padding:"60px 20px"}}>
             <div style={{fontSize:48,marginBottom:12}}>{ICONS.heart}</div>
             <div style={{fontSize:16,fontFamily:"'Syne',sans-serif",color:C.text,marginBottom:8}}>No tienes posts guardados</div>
             <div style={{fontSize:13,color:C.muted,fontFamily:"'Inter',sans-serif"}}>Toca el icono guardar en cualquier post</div>
           </div>
-        ) : savedPosts.map(function(p,i){
+        ) : allPosts.map(function(p,i){
           return (
             <div key={p.id} style={{background:C.card,borderBottom:"1px solid "+C.border,padding:"14px 16px"}}>
               <div style={{display:"flex",gap:10,marginBottom:8}}>
