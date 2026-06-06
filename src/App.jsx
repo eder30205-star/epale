@@ -896,7 +896,7 @@ function Profile(props) {
   var cityObj = getCity(userCity);
 
   if(subScreen==="posts") return <MisPublicaciones posts={SEED} onClose={function(){setSubScreen(null);}}/>;
-  if(subScreen==="saved") return <Guardados saved={props.savedPosts||[]} allPosts={SEED} onClose={function(){setSubScreen(null);}}/>;
+  if(subScreen==="saved") return <Guardados saved={savedPosts} allPosts={SEED} onClose={function(){setSubScreen(null);}}/>;
   if(subScreen==="seguidores") return <FollowersList title="Seguidores" users={SAMPLE_USERS} following={following} onFollow={onFollow||function(){}} onClose={function(){setSubScreen(null);}}/>;
   if(subScreen==="siguiendo") return <FollowersList title="Siguiendo" users={SAMPLE_USERS.filter(function(u){return following.includes(u.name);})} following={following} onFollow={onFollow||function(){}} onClose={function(){setSubScreen(null);}}/>;
   if(subScreen==="notifs") return <Notificaciones onClose={function(){setSubScreen(null);}}/>;
