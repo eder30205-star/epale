@@ -83,7 +83,7 @@ var api = {
     }).then(function(r){return r.json();});
   },
   getPosts: function(city) {
-    return fetch(SUPA_URL+"/rest/v1/posts?city=eq."+city+"&select=*,likes(count)&order=created_at.desc&limit=50", {
+    return fetch(SUPA_URL+"/rest/v1/posts?city=eq."+city+"&select=*&order=created_at.desc&limit=50", {
       headers:{"apikey":SUPA_KEY,"Authorization":"Bearer "+getToken()}
     }).then(function(r){return r.json();});
   },
@@ -448,7 +448,7 @@ function PostCard(props) {
   var post=props.post, idx=props.idx, cityObj=props.cityObj, saved=props.saved, onSave=props.onSave, following=props.following||[], onFollow=props.onFollow, userName=props.userName||"", liked=props.liked||false, onLike=props.onLike||function(){};
   var [likeProcessing, setLikeProcessing] = useState(false);
   var [likedLocal,setLikedLocal]=useState(liked);
-  var [likes,setLikes]=useState(post.likes+(liked?1:0));
+  var [likes,setLikes]=useState(post.likes||0);
 
   useEffect(function(){
     setLikedLocal(liked);
@@ -641,7 +641,7 @@ function Feed(props) {
             name:p.name||"Anonimo",
             av:p.name||"?",
             content:p.content,
-            likes:(p.likes&&p.likes[0]&&p.likes[0].count)||p.likes_count||0,
+            likes:p.likes||0,
             comments:p.comments||0,
             time:p.created_at||"reciente"
           };
