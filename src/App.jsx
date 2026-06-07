@@ -620,8 +620,10 @@ function Feed(props) {
           };
         });
         setPosts(mapped.concat(SEED));
+      } else {
+        console.log("No posts from DB for city:", activeCity, "data:", JSON.stringify(data));
       }
-    }).catch(function(){});
+    }).catch(function(e){ console.log("Posts load error:", e); });
   }, [activeCity]);
 
   useEffect(function(){
