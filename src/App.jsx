@@ -164,6 +164,49 @@ var api = {
       headers:{"apikey":SUPA_KEY,"Authorization":"Bearer "+getToken()}
     }).then(function(r){return r.json();});
   },
+  getComments: function(postId) {
+    return fetch(SUPA_URL+"/rest/v1/comments?post_id=eq."+String(postId)+"&select=*&order=created_at.asc", {
+      headers:{"apikey":SUPA_KEY,"Authorization":"Bearer "+getToken()}
+    }).then(function(r){return r.json();});
+  },
+  addComment: function(postId, userId, userName, content) {
+    return fetch(SUPA_URL+"/rest/v1/comments", {
+      method:"POST",
+      headers:{"Content-Type":"application/json","apikey":SUPA_KEY,"Authorization":"Bearer "+getToken(),"Prefer":"return=representation"},
+      body:JSON.stringify({post_id:String(postId), user_id:userId, user_name:userName, content:content})
+    }).then(function(r){return r.json();});
+  },
+  getNotifications: function(userId) {
+    return fetch(SUPA_URL+"/rest/v1/notifications?user_id=eq."+userId+"&select=*&order=created_at.desc&limit=20", {
+      headers:{"apikey":SUPA_KEY,"Authorization":"Bearer "+getToken()}
+    }).then(function(r){return r.json();});
+  },
+  addNotification: function(userId, fromName, type, postId) {
+    return fetch(SUPA_URL+"/rest/v1/notifications", {
+      method:"POST",
+      headers:{"Content-Type":"application/json","apikey":SUPA_KEY,"Authorization":"Bearer "+getToken()},
+      body:JSON.stringify({user_id:userId, from_name:fromName, type:type, post_id:String(postId)})
+    }).then(function(r){return r.json();});
+  },
+  markNotifsRead: function(userId) {
+    return fetch(SUPA_URL+"/rest/v1/notifications?user_id=eq."+userId, {
+      method:"PATCH",
+      headers:{"Content-Type":"application/json","apikey":SUPA_KEY,"Authorization":"Bearer "+getToken()},
+      body:JSON.stringify({read:true})
+    }).then(function(r){return r.json();});
+  },
+  searchPosts: function(query) {
+    return fetch(SUPA_URL+"/rest/v1/posts?content=ilike.*"+encodeURIComponent(query)+"*&select=*&limit=30", {
+      headers:{"apikey":SUPA_KEY,"Authorization":"Bearer "+getToken()}
+    }).then(function(r){return r.json();});
+  },
+  changePassword: function(newPassword) {
+    return fetch(SUPA_URL+"/auth/v1/user", {
+      method:"PUT",
+      headers:{"Content-Type":"application/json","apikey":SUPA_KEY,"Authorization":"Bearer "+getToken()},
+      body:JSON.stringify({password:newPassword})
+    }).then(function(r){return r.json();});
+  },
   resetPassword: function(email) {
     return fetch(SUPA_URL+"/auth/v1/recover", {
       method:"POST",
@@ -396,7 +439,14 @@ function PostCard(props) {
   var t = TYPES[post.type] || TYPES.post;
 
   var sendComment = function() {
-    if(comment.trim()){ setComments(function(c){return c.concat([comment]);}); setComment(""); }
+    if(!comment.trim()) return;
+    var newComment = {id:Date.now(), post_id:String(post.id), user_name:userName, content:comment, created_at:new Date().toISOString()};
+    setComments(function(c){return c.concat([newComment]);});
+    setComment("");
+    var currentUserId = userId || (function(){ try{var d=JSON.parse(localStorage.getItem("epale_session")); return d&&d.uid?d.uid:"";}catch(e){return "";} })();
+    if(currentUserId) {
+      api.addComment(post.id, currentUserId, userName, comment).catch(function(){});
+    }
   };
 
   return (
@@ -507,12 +557,18 @@ function PostCard(props) {
       {open && !blocked ? (
         <div style={{borderTop:"1px solid "+C.border,padding:"10px 14px"}}>
           {comments.map(function(c,i){
+            var cName = typeof c === "string" ? userName : (c.user_name||"?");
+            var cText = typeof c === "string" ? c : c.content;
+            var cTime = typeof c === "object" ? formatTime(c.created_at) : "";
             return (
               <div key={i} style={{display:"flex",gap:8,marginBottom:8}}>
-                <Av t="Tu" i={0} s={26}/>
-                <div style={{background:"#fffbea",borderRadius:10,padding:"5px 10px",flex:1}}>
-                  <div style={{fontSize:10,fontWeight:700,color:C.yellow,fontFamily:"'Inter',sans-serif"}}>@tu</div>
-                  <div style={{fontSize:13,color:C.text,fontFamily:"'Inter',sans-serif"}}>{c}</div>
+                <Av t={cName} i={i} s={26}/>
+                <div style={{background:C.bg,borderRadius:10,padding:"5px 10px",flex:1,border:"1px solid "+C.border}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                    <div style={{fontSize:10,fontWeight:700,color:C.blue,fontFamily:"'Inter',sans-serif"}}>{"@"+cName.toLowerCase().replace(/\s/g,"")}</div>
+                    {cTime ? <div style={{fontSize:9,color:C.muted,fontFamily:"'Inter',sans-serif"}}>{cTime}</div> : null}
+                  </div>
+                  <div style={{fontSize:13,color:C.text,fontFamily:"'Inter',sans-serif"}}>{cText}</div>
                 </div>
               </div>
             );
@@ -671,7 +727,7 @@ function Feed(props) {
       <div style={{fontSize:15,fontFamily:"'Inter',sans-serif"}}>{feedTab==="following"?"Sigue a alguien para ver sus posts":"Se el primero en publicar"}</div>
     </div>
   ) : filtered.map(function(p,i){
-    return <PostCard key={p.id} post={p} idx={i} cityObj={cityObj} saved={savedPosts.includes(p.id)} onSave={toggleSave} following={following} onFollow={toggleFollow} userName={userName} liked={likedPosts.includes(String(p.id))} onLike={toggleLike}/>;
+    return <PostCard key={p.id} post={p} idx={i} cityObj={cityObj} saved={savedPosts.includes(p.id)} onSave={toggleSave} following={following} onFollow={toggleFollow} userName={userName} liked={likedPosts.includes(String(p.id))} onLike={toggleLike} userId={userId}/>;
   });
 
   var inviteBanner = (
@@ -922,12 +978,22 @@ function Composer(props) {
 
 
 function Search(props) {
-  var onClose=props.onClose, posts=props.posts||[];
+  var onClose=props.onClose;
   var [query,setQuery]=useState("");
-  var results = query.length > 1 ? posts.filter(function(p){
-    return p.content.toLowerCase().includes(query.toLowerCase()) ||
-           p.name.toLowerCase().includes(query.toLowerCase());
-  }) : [];
+  var [results,setResults]=useState([]);
+  var [loading,setLoading]=useState(false);
+
+  useEffect(function(){
+    if(query.length < 2){ setResults([]); return; }
+    setLoading(true);
+    var timer = setTimeout(function(){
+      api.searchPosts(query).then(function(data){
+        if(Array.isArray(data)) setResults(data);
+        setLoading(false);
+      }).catch(function(){ setLoading(false); });
+    }, 400);
+    return function(){ clearTimeout(timer); };
+  }, [query]);
 
   return (
     <div style={{position:"fixed",inset:0,zIndex:300,background:C.bg,maxWidth:480,margin:"0 auto",overflowY:"auto"}}>
@@ -937,7 +1003,9 @@ function Search(props) {
         <input autoFocus value={query} onChange={function(e){setQuery(e.target.value);}} placeholder="Buscar posts y personas..." style={{flex:1,padding:"10px 14px",background:C.bg,border:"1.5px solid "+C.border,borderRadius:100,fontFamily:"'Inter',sans-serif",fontSize:14,color:C.text,outline:"none"}}/>
       </div>
       <div style={{paddingBottom:40}}>
-        {query.length < 2 ? (
+        {loading ? (
+          <div style={{textAlign:"center",padding:"40px 20px",color:C.muted,fontFamily:"'Inter',sans-serif"}}>Buscando...</div>
+        ) : query.length < 2 ? (
           <div style={{textAlign:"center",padding:"60px 20px"}}>
             <div style={{fontSize:48,marginBottom:12}}>{ICONS.comment}</div>
             <div style={{fontSize:15,fontFamily:"'Syne',sans-serif",color:C.text,marginBottom:6}}>Busca en Epale</div>
@@ -1108,10 +1176,34 @@ var NOTIF_SEED = [
 ];
 
 function Notificaciones(props) {
-  var onClose=props.onClose;
+  var onClose=props.onClose, userId=props.userId||"";
   var [notifs,setNotifs]=useState(NOTIF_SEED);
+  var [loading,setLoading]=useState(true);
+
+  useEffect(function(){
+    if(userId) {
+      api.getNotifications(userId).then(function(data){
+        if(Array.isArray(data) && data.length > 0) {
+          var mapped = data.map(function(n){
+            var icon = n.type==="like" ? ICONS.heart : n.type==="comment" ? ICONS.comment : ICONS.flag_ve;
+            var bg = n.type==="like" ? "#fdecea" : n.type==="comment" ? "#e8f0fc" : "#fffbea";
+            var text = n.type==="like" ? n.from_name+" le dio like a tu post" : n.type==="comment" ? n.from_name+" comento en tu post" : n.from_name;
+            return {id:n.id, icon:icon, iconBg:bg, text:text, time:formatTime(n.created_at), read:n.read};
+          });
+          setNotifs(NOTIF_SEED.concat(mapped));
+        }
+        setLoading(false);
+      }).catch(function(){ setLoading(false); });
+    } else {
+      setLoading(false);
+    }
+  }, [userId]);
+
   var unread = notifs.filter(function(n){return !n.read;}).length;
-  var markAll = function(){ setNotifs(function(ns){return ns.map(function(n){return Object.assign({},n,{read:true});}); }); };
+  var markAll = function(){
+    setNotifs(function(ns){return ns.map(function(n){return Object.assign({},n,{read:true});});});
+    if(userId) api.markNotifsRead(userId).catch(function(){});
+  };
   var markOne = function(id){ setNotifs(function(ns){return ns.map(function(n){return n.id===id?Object.assign({},n,{read:true}):n;}); }); };
   return (
     <div style={{position:"fixed",inset:0,zIndex:300,background:C.bg,maxWidth:480,margin:"0 auto",overflowY:"auto"}}>
@@ -1154,7 +1246,7 @@ function Profile(props) {
   if(subScreen==="saved") return <Guardados saved={savedPosts} allPosts={SEED} onClose={function(){setSubScreen(null);}}/>;
   if(subScreen==="seguidores") return <FollowersList title="Seguidores" users={SAMPLE_USERS} following={following} onFollow={onFollow||function(){}} onClose={function(){setSubScreen(null);}}/>;
   if(subScreen==="siguiendo") return <FollowersList title=TR.following users={SAMPLE_USERS.filter(function(u){return following.includes(u.name);})} following={following} onFollow={onFollow||function(){}} onClose={function(){setSubScreen(null);}}/>;
-  if(subScreen==="notifs") return <Notificaciones onClose={function(){setSubScreen(null);}}/>;
+  if(subScreen==="notifs") return <Notificaciones onClose={function(){setSubScreen(null);}} userId={props.userId}/>;
   if(subScreen==="config") return <Configuracion userCity={userCity} onClose={function(){setSubScreen(null);}} onLogout={onLogout} onSetDark={onSetDark} onSetLang={onSetLang} isDark={isDark} currentLang={currentLang} userName={userName} userEmail={(function(){ try{var d=JSON.parse(localStorage.getItem("epale_session")); return d&&d.email?d.email:"";} catch(e){return "";} })()}/>;
   if(subScreen==="edit") return <EditProfile userCity={userCity} userPhoto={userPhoto} userName={userName} userBio={userBio} onPhotoChange={onPhotoChange} onBioChange={onBioChange} onClose={function(){setSubScreen(null);}}/>;
 
@@ -1316,6 +1408,47 @@ function EditProfile(props) {
   );
 }
 
+
+function PasswordChange(props) {
+  var onBack=props.onBack;
+  var [current,setCurrent]=useState("");
+  var [newPass,setNewPass]=useState("");
+  var [confirm,setConfirm]=useState("");
+  var [loading,setLoading]=useState(false);
+  var [msg,setMsg]=useState("");
+  var [error,setError]=useState("");
+
+  var save = function(){
+    if(!newPass||!confirm){setError("Completa todos los campos");return;}
+    if(newPass!==confirm){setError("Las contrasenas no coinciden");return;}
+    if(newPass.length<6){setError("Minimo 6 caracteres");return;}
+    setLoading(true); setError("");
+    api.changePassword(newPass).then(function(res){
+      setLoading(false);
+      if(res.error) setError(res.error.message||"Error al cambiar contrasena");
+      else { setMsg("Contrasena cambiada exitosamente"); setTimeout(onBack, 1500); }
+    }).catch(function(){ setError("Error de conexion"); setLoading(false); });
+  };
+
+  return (
+    <div style={{padding:"24px 20px"}}>
+      {msg ? <div style={{background:"#e8f8ee",border:"1px solid #30d158",borderRadius:12,padding:"12px 16px",marginBottom:16,fontSize:14,color:C.green,fontFamily:"'Inter',sans-serif",textAlign:"center"}}>{msg}</div> : null}
+      {error ? <div style={{background:"#3a1a1a",border:"1px solid "+C.red,borderRadius:12,padding:"12px 16px",marginBottom:16,fontSize:14,color:C.red,fontFamily:"'Inter',sans-serif"}}>{error}</div> : null}
+      {[["NUEVA CONTRASENA","Nueva contrasena",newPass,setNewPass],["CONFIRMAR","Repite la contrasena",confirm,setConfirm]].map(function(item,i){
+        return (
+          <div key={i} style={{marginBottom:16}}>
+            <div style={{fontSize:10,color:C.muted,fontFamily:"'Inter',sans-serif",marginBottom:6,letterSpacing:1}}>{item[0]}</div>
+            <input type="password" value={item[2]} onChange={function(e){item[3](e.target.value);}} placeholder={item[1]} style={{width:"100%",padding:"13px 16px",background:C.card,border:"1.5px solid "+(item[2]?C.blue:C.border),borderRadius:14,color:C.text,fontFamily:"'Inter',sans-serif",fontSize:15,outline:"none",boxSizing:"border-box"}}/>
+          </div>
+        );
+      })}
+      <button onClick={save} style={{width:"100%",padding:"14px",background:C.yellow,color:C.text,border:"none",borderRadius:100,cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:15,fontWeight:700}}>
+        {loading?"Guardando...":"Cambiar contrasena"}
+      </button>
+    </div>
+  );
+}
+
 function Configuracion(props) {
   var userCity=props.userCity, onClose=props.onClose, onLogout=props.onLogout, onSetDark=props.onSetDark, onSetLang=props.onSetLang, isDark=props.isDark, currentLang=props.currentLang, userName=props.userName||"", userEmail=props.userEmail||"";
   var [notifOn,setNotifOn]=useState(true);
@@ -1338,10 +1471,7 @@ function Configuracion(props) {
         <button onClick={function(){setSubPage(null);}} style={{background:C.bg,border:"none",borderRadius:9999,width:34,height:34,cursor:"pointer",color:C.blue,fontSize:18}}>{"<-"}</button>
         <div style={{fontSize:18,fontFamily:"'Syne',sans-serif",color:C.text}}>Cambiar contrasena</div>
       </div>
-      <div style={{padding:"24px 20px",textAlign:"center"}}>
-        <div style={{fontSize:48,marginBottom:12}}>{ICONS.key}</div>
-        <div style={{fontSize:15,color:C.muted,fontFamily:"'Inter',sans-serif"}}>Funcionalidad disponible cuando conectes Supabase</div>
-      </div>
+      <PasswordChange onBack={function(){setSubPage(null);}}/>
     </div>
   );
 
