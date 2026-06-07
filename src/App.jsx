@@ -558,7 +558,7 @@ function PostCard(props) {
           ) : null}
 
           <div style={{display:"flex",gap:6,marginBottom:10}}>
-            <button onClick={function(){ if(likeProcessing) return; setLikeProcessing(true); var newLiked=!likedLocal; setLikedLocal(newLiked); setLikes(function(l){return newLiked?Math.max(0,l+1):Math.max(0,l-1);}); onLike(post.id); setTimeout(function(){setLikeProcessing(false);},1000); }} style={{display:"flex",alignItems:"center",gap:5,padding:"6px 10px",background:likedLocal?"#fff0f0":C.bg,border:"1px solid "+(likedLocal?"#ffb3b3":C.border),borderRadius:100,cursor:likeProcessing?"not-allowed":"pointer",color:likedLocal?C.red:C.muted,fontFamily:"'Inter',sans-serif",fontSize:12,opacity:likeProcessing?0.7:1}}>
+            <button onClick={function(){ if(likeProcessing||!likedLoaded) return; setLikeProcessing(true); var newLiked=!likedLocal; setLikedLocal(newLiked); setLikes(function(l){return newLiked?Math.max(0,l+1):Math.max(0,l-1);}); onLike(post.id); setTimeout(function(){setLikeProcessing(false);},1000); }} style={{display:"flex",alignItems:"center",gap:5,padding:"6px 10px",background:likedLocal?"#fff0f0":C.bg,border:"1px solid "+(likedLocal?"#ffb3b3":C.border),borderRadius:100,cursor:(likeProcessing||!likedLoaded)?"not-allowed":"pointer",color:likedLocal?C.red:C.muted,fontFamily:"'Inter',sans-serif",fontSize:12,opacity:(likeProcessing||!likedLoaded)?0.5:1}}>
               {likedLocal?ICONS.like_on:ICONS.like_off} {likes.toLocaleString()}
             </button>
             <button onClick={function(){setOpen(function(o){return !o;});}} style={{display:"flex",alignItems:"center",gap:5,padding:"6px 10px",background:open?"#e8f0fc":C.bg,border:"1px solid "+(open?"#b3c8ff":C.border),borderRadius:100,cursor:"pointer",color:open?C.blue:C.muted,fontFamily:"'Inter',sans-serif",fontSize:12}}>
@@ -612,7 +612,7 @@ function PostCard(props) {
 }
 
 function Feed(props) {
-  var userCity=props.userCity, onProfile=props.onProfile, userPhoto=props.userPhoto, userName=props.userName||"Tu", lang=props.lang||"es", userBio=props.userBio||"";
+  var userCity=props.userCity, onProfile=props.onProfile, userPhoto=props.userPhoto, userName=props.userName||"Tu", lang=props.lang||"es", userBio=props.userBio||"", likedLoaded=props.likedLoaded||false;
   var TR = T[lang]||T.es;
   var userId=props.userId||null;
   var [filter,setFilter]=useState("all");
@@ -700,21 +700,25 @@ function Feed(props) {
     var displayName = userName || (function(){ try { var s=localStorage.getItem("epale_session"); var d=s?JSON.parse(s):null; return d&&d.name?d.name:"Tu"; } catch(e){ return "Tu"; } })();
     var currentUserId = userId || (function(){ try { var s=localStorage.getItem("epale_session"); var d=s?JSON.parse(s):null; return d&&d.uid?d.uid:""; } catch(e){ return ""; } })();
     var newPost = {id:Date.now(),city:p.city,type:p.type,name:displayName,av:displayName,content:p.content,media:p.media,likes:0,comments:0,time:new Date().toISOString()};
-    setActiveCity(p.city);
-    setPosts(function(pp){ return [newPost].concat(pp); });
     if(currentUserId) {
       api.createPost(currentUserId, p.city, p.type, p.content, displayName).then(function(){
-        setTimeout(function(){
-          api.getPosts(p.city).then(function(data){
-            if(Array.isArray(data) && data.length > 0) {
-              var mapped = data.map(function(r){
-                return {id:r.id, city:r.city, type:r.type||"post", name:r.name||displayName, av:r.name||displayName, content:r.content, likes:r.likes||0, comments:r.comments||0, time:r.created_at||"ahora"};
-              });
-              setPosts(mapped.concat(SEED));
-            }
-          }).catch(function(){});
-        }, 500);
-      }).catch(function(){});
+        api.getPosts(p.city).then(function(data){
+          var mapped = Array.isArray(data) && data.length > 0 ? data.map(function(r){
+            return {id:r.id, city:r.city, type:r.type||"post", name:r.name||displayName, av:r.name||displayName, content:r.content, likes:r.likes||0, comments:r.comments||0, time:r.created_at||"ahora"};
+          }) : [newPost];
+          setPosts(mapped.concat(SEED));
+          setActiveCity(p.city);
+        }).catch(function(){
+          setPosts(function(pp){ return [newPost].concat(pp); });
+          setActiveCity(p.city);
+        });
+      }).catch(function(){
+        setPosts(function(pp){ return [newPost].concat(pp); });
+        setActiveCity(p.city);
+      });
+    } else {
+      setPosts(function(pp){ return [newPost].concat(pp); });
+      setActiveCity(p.city);
     }
   };
 
@@ -759,7 +763,7 @@ function Feed(props) {
       <div style={{fontSize:15,fontFamily:"'Inter',sans-serif"}}>{feedTab==="following"?"Sigue a alguien para ver sus posts":"Se el primero en publicar"}</div>
     </div>
   ) : filtered.map(function(p,i){
-    return <PostCard key={p.id} post={p} idx={i} cityObj={cityObj} saved={savedPosts.includes(p.id)} onSave={toggleSave} following={following} onFollow={toggleFollow} userName={userName} liked={likedPosts.includes(String(p.id))} onLike={function(id){ toggleLike(id, p.user_id, p.name); }} userId={userId}/>;
+    return <PostCard key={p.id} post={p} idx={i} cityObj={cityObj} saved={savedPosts.includes(p.id)} onSave={toggleSave} following={following} onFollow={toggleFollow} userName={userName} liked={likedPosts.includes(String(p.id))} onLike={function(id){ toggleLike(id, p.user_id, p.name); }} userId={userId} likedLoaded={likedLoaded}/>;
   });
 
   var inviteBanner = (
@@ -1979,6 +1983,7 @@ export default function App() {
   var [following,setFollowing]=useState([]);
   var [savedPosts,setSavedPosts]=useState([]);
   var [likedPosts,setLikedPosts]=useState([]);
+  var [likedLoaded,setLikedLoaded]=useState(false);
   var [crashMsg,setCrashMsg]=useState("");
   var [activeTab,setActiveTab]=useState("feed");
   var [showSearch,setShowSearch]=useState(false);
@@ -2026,9 +2031,10 @@ export default function App() {
       api.getLikes(userId).then(function(data){
         if(Array.isArray(data)) {
           var ids = data.map(function(r){return r.post_id;}).filter(Boolean);
-          if(ids.length>0) setLikedPosts(ids);
+          setLikedPosts(ids);
         }
-      }).catch(function(){});
+        setLikedLoaded(true);
+      }).catch(function(){ setLikedLoaded(true); });
     }
   }, [userId]);
 
@@ -2147,7 +2153,7 @@ export default function App() {
     <div>
       {showProfile ? <Profile userCity={userCity} onLogout={handleLogout} onClose={function(){setShowProfile(false);}} onSetDark={setDarkSaved} onSetLang={setLangSaved} isDark={dark} currentLang={lang} following={following} onFollow={toggleFollow} userPhoto={userPhoto} userName={userName} onPhotoChange={setUserPhoto} userId={userId} savedPosts={savedPosts} likedPosts={likedPosts} userBio={userBio} onBioChange={setUserBio}/> : null}
       {showSearch ? <Search onClose={function(){setShowSearch(false);}} posts={[]} /> : null}
-      <Feed userCity={userCity} onProfile={function(){setShowProfile(true);}} following={following} onFollow={toggleFollow} userPhoto={userPhoto} userName={userName} userId={userId} savedPosts={savedPosts} onSave={toggleSave} likedPosts={likedPosts} onLike={toggleLike} lang={lang} userBio={userBio}/>
+      <Feed userCity={userCity} onProfile={function(){setShowProfile(true);}} following={following} onFollow={toggleFollow} userPhoto={userPhoto} userName={userName} userId={userId} savedPosts={savedPosts} onSave={toggleSave} likedPosts={likedPosts} onLike={toggleLike} lang={lang} userBio={userBio} likedLoaded={likedLoaded}/>
       <div style={{position:"fixed",bottom:0,left:0,right:0,height:60,background:C.card,borderTop:"1px solid "+C.border,display:"flex",alignItems:"center",justifyContent:"space-around",zIndex:90,maxWidth:768,margin:"0 auto",visibility:window.innerWidth>=768?"hidden":"visible"}}>
         {[
           {id:"feed",  icon:ICONS.fire,    label:"Inicio"},
