@@ -254,7 +254,7 @@ var api = {
 };
 
 const LIGHT = { bg:"#f5f5f7", card:"#ffffff", border:"#e8e8ed", yellow:"#ffcc00", blue:"#0066ff", red:"#ff2d2d", text:"#1a1a1a", muted:"#86868b", green:"#1a7a3c", wa:"#25D366" };
-const DARK  = { bg:"#0d0d12", card:"#18181f", border:"#28283a", yellow:"#ffd60a", blue:"#60a5fa", red:"#f87171", text:"#f1f1f6", muted:"#94949e", green:"#4ade80", wa:"#25D366" };
+const DARK  = { bg:"#0d0d12", card:"#18181f", border:"#2a2a38", yellow:"#ffd60a", blue:"#60a5fa", red:"#f87171", text:"#ffffff", muted:"#a0a0b0", green:"#4ade80", wa:"#25D366" };
 
 var T = {
   es: {
@@ -460,6 +460,7 @@ function Stripe() {
 
 function PostCard(props) {
   var post=props.post, idx=props.idx, cityObj=props.cityObj, saved=props.saved, onSave=props.onSave, following=props.following||[], onFollow=props.onFollow, userName=props.userName||"", liked=props.liked||false, onLike=props.onLike||function(){};
+  var [likeProcessing, setLikeProcessing] = useState(false);
   var [likedLocal,setLikedLocal]=useState(liked);
   var [likes,setLikes]=useState(post.likes+(liked?1:0));
 
@@ -570,7 +571,7 @@ function PostCard(props) {
           ) : null}
 
           <div style={{display:"flex",gap:6,marginBottom:10}}>
-            <button onClick={function(){var newLiked=!likedLocal; setLikedLocal(newLiked); setLikes(function(l){return newLiked?Math.max(0,l+1):Math.max(0,l-1);}); onLike(post.id);}} style={{display:"flex",alignItems:"center",gap:5,padding:"6px 10px",background:likedLocal?"#fff0f0":C.bg,border:"1px solid "+(likedLocal?"#ffb3b3":C.border),borderRadius:100,cursor:"pointer",color:likedLocal?C.red:C.muted,fontFamily:"'Inter',sans-serif",fontSize:12}}>
+            <button onClick={function(){ if(likeProcessing) return; setLikeProcessing(true); var newLiked=!likedLocal; setLikedLocal(newLiked); setLikes(function(l){return newLiked?Math.max(0,l+1):Math.max(0,l-1);}); onLike(post.id); setTimeout(function(){setLikeProcessing(false);},1000); }} style={{display:"flex",alignItems:"center",gap:5,padding:"6px 10px",background:likedLocal?"#fff0f0":C.bg,border:"1px solid "+(likedLocal?"#ffb3b3":C.border),borderRadius:100,cursor:likeProcessing?"not-allowed":"pointer",color:likedLocal?C.red:C.muted,fontFamily:"'Inter',sans-serif",fontSize:12,opacity:likeProcessing?0.7:1}}>
               {likedLocal?ICONS.like_on:ICONS.like_off} {likes.toLocaleString()}
             </button>
             <button onClick={function(){setOpen(function(o){return !o;});}} style={{display:"flex",alignItems:"center",gap:5,padding:"6px 10px",background:open?"#e8f0fc":C.bg,border:"1px solid "+(open?"#b3c8ff":C.border),borderRadius:100,cursor:"pointer",color:open?C.blue:C.muted,fontFamily:"'Inter',sans-serif",fontSize:12}}>
