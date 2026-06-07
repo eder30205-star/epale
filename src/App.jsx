@@ -24,26 +24,26 @@ var getToken = function(){
     var d = s ? JSON.parse(s) : null;
     if(d && d.token && d.token.length > 10) {
       window._supaToken = d.token;
-      // Check if token is expired and refresh it
-      try {
-        var payload = JSON.parse(atob(d.token.split(".")[1]));
-        var expiry = payload.exp * 1000;
-        var now = Date.now();
-        if(expiry - now < 300000 && d.refresh) {
-          fetch(SUPA_URL+"/auth/v1/token?grant_type=refresh_token", {
-            method:"POST",
-            headers:{"Content-Type":"application/json","apikey":SUPA_KEY},
-            body:JSON.stringify({refresh_token:d.refresh})
-          }).then(function(r){return r.json();}).then(function(res){
-            if(res.access_token) {
-              window._supaToken = res.access_token;
-              d.token = res.access_token;
-              if(res.refresh_token) d.refresh = res.refresh_token;
-              localStorage.setItem("epale_session", JSON.stringify(d));
-            }
-          }).catch(function(){});
-        }
-      } catch(e){}
+      if(d.refresh) {
+        try {
+          var payload = JSON.parse(atob(d.token.split(".")[1]));
+          var needsRefresh = (payload.exp * 1000) - Date.now() < 600000;
+          if(needsRefresh) {
+            fetch(SUPA_URL+"/auth/v1/token?grant_type=refresh_token", {
+              method:"POST",
+              headers:{"Content-Type":"application/json","apikey":SUPA_KEY},
+              body:JSON.stringify({refresh_token:d.refresh})
+            }).then(function(r){return r.json();}).then(function(res){
+              if(res.access_token) {
+                window._supaToken = res.access_token;
+                d.token = res.access_token;
+                if(res.refresh_token) d.refresh = res.refresh_token;
+                localStorage.setItem("epale_session", JSON.stringify(d));
+              }
+            }).catch(function(){});
+          }
+        } catch(e){}
+      }
     }
   } catch(e){}
 })();
