@@ -83,7 +83,7 @@ var api = {
     }).then(function(r){return r.json();});
   },
   getPosts: function(city) {
-    return fetch(SUPA_URL+"/rest/v1/posts?city=eq."+city+"&select=*&order=created_at.desc&limit=50", {
+    return fetch(SUPA_URL+"/rest/v1/posts?city=eq."+city+"&select=*,likes(count)&order=created_at.desc&limit=50", {
       headers:{"apikey":SUPA_KEY,"Authorization":"Bearer "+getToken()}
     }).then(function(r){return r.json();});
   },
@@ -168,27 +168,13 @@ var api = {
       method:"POST",
       headers:{"Content-Type":"application/json","apikey":SUPA_KEY,"Authorization":"Bearer "+getToken(),"Prefer":"resolution=merge-duplicates"},
       body:JSON.stringify({user_id:uid, post_id:String(postId)})
-    }).then(function(r){
-      fetch(SUPA_URL+"/rest/v1/rpc/increment_likes", {
-        method:"POST",
-        headers:{"Content-Type":"application/json","apikey":SUPA_KEY,"Authorization":"Bearer "+getToken()},
-        body:JSON.stringify({post_id:String(postId)})
-      }).catch(function(){});
-      return r.json();
-    });
+    }).then(function(r){return r.json();});
   },
   unlikePost: function(uid, postId) {
     return fetch(SUPA_URL+"/rest/v1/likes?user_id=eq."+uid+"&post_id=eq."+String(postId), {
       method:"DELETE",
       headers:{"apikey":SUPA_KEY,"Authorization":"Bearer "+getToken()}
-    }).then(function(r){
-      fetch(SUPA_URL+"/rest/v1/rpc/decrement_likes", {
-        method:"POST",
-        headers:{"Content-Type":"application/json","apikey":SUPA_KEY,"Authorization":"Bearer "+getToken()},
-        body:JSON.stringify({post_id:String(postId)})
-      }).catch(function(){});
-      return r.json();
-    });
+    }).then(function(r){return r.json();});
   },
   getUserPosts: function(uid) {
     return fetch(SUPA_URL+"/rest/v1/posts?user_id=eq."+uid+"&select=*&order=created_at.desc", {
@@ -655,7 +641,7 @@ function Feed(props) {
             name:p.name||"Anonimo",
             av:p.name||"?",
             content:p.content,
-            likes:p.likes||0,
+            likes:(p.likes&&p.likes[0]&&p.likes[0].count)||p.likes_count||0,
             comments:p.comments||0,
             time:p.created_at||"reciente"
           };
@@ -1574,10 +1560,40 @@ function Configuracion(props) {
       <div style={{display:"flex",height:4}}><div style={{flex:1,background:C.yellow}}/><div style={{flex:1,background:C.blue}}/><div style={{flex:1,background:C.red}}/></div>
       <div style={{position:"sticky",top:0,background:C.card,borderBottom:"1px solid "+C.border,padding:"14px 20px",display:"flex",alignItems:"center",gap:14}}>
         <button onClick={onClose} style={{background:C.bg,border:"none",borderRadius:9999,width:34,height:34,cursor:"pointer",color:C.blue,fontSize:18}}>{"<-"}</button>
-        <div style={{fontSize:18,fontFamily:"'Syne',sans-serif",color:C.text}}>Configuracion</div>
+        <div style={{fontSize:18,fontFamily:"'Syne',sans-serif",color:C.text}}>{currentLang==="en"?"Settings":"Configuracion"}</div>
       </div>
+
+      <div style={{background:C.card,margin:"16px",borderRadius:16,border:"1px solid "+C.border,padding:"20px",display:"flex",gap:16,alignItems:"center"}}>
+        <Av t={props.userName||"?"} i={0} s={64} photo={props.userPhoto}/>
+        <div style={{flex:1,minWidth:0}}>
+          <div style={{fontSize:18,fontFamily:"'Syne',sans-serif",color:C.text,fontWeight:700}}>{props.userName||""}</div>
+          <div style={{fontSize:12,color:C.blue,fontFamily:"'Inter',sans-serif",marginTop:2}}>{"@"+(props.userName||"").toLowerCase().replace(/\s/g,"")}</div>
+          {props.userBio ? <div style={{fontSize:12,color:C.muted,fontFamily:"'Inter',sans-serif",marginTop:4,lineHeight:1.4}}>{props.userBio}</div> : null}
+          <div style={{fontSize:11,color:C.muted,fontFamily:"'Inter',sans-serif",marginTop:4}}>{(function(){ try{var d=JSON.parse(localStorage.getItem("epale_session")); if(d&&d.email) return d.email; if(d&&d.token){var payload=JSON.parse(atob(d.token.split(".")[1])); return payload.email||"";} return "";} catch(e){return "";} })()}</div>
+        </div>
+      </div>
+
       <div style={{paddingBottom:40}}>
-        {[{title:currentLang==="en"?"ACCOUNT":"CUENTA",items:[{label:currentLang==="en"?"Name":"Nombre",value:userName,type:"info"},{label:currentLang==="en"?"Email":"Correo",value:(function(){ try{var d=JSON.parse(localStorage.getItem("epale_session")); if(d&&d.email) return d.email; if(d&&d.token){var payload=JSON.parse(atob(d.token.split(".")[1])); return payload.email||"";} return "";} catch(e){return "";} })(),type:"info"},{label:currentLang==="en"?"Country":"Pais",value:toFlag(CITY_FLAGS[userCity])+" "+cityObj.name,type:"info"},{label:currentLang==="en"?"Change password":"Cambiar contrasena",type:"action",onPress:function(){setSubPage("password");}}]},{title:currentLang==="en"?"PREFERENCES":"PREFERENCIAS",items:[{label:currentLang==="en"?"Notifications":"Notificaciones",type:"toggle",val:notifOn,onToggle:function(){setNotifOn(function(v){return !v;});}},{label:currentLang==="en"?"Dark mode":"Modo oscuro",type:"toggle",val:darkMode,onToggle:function(){var v=!darkMode;setDarkMode(v);if(onSetDark)onSetDark(v);}},{label:currentLang==="en"?"Language":"Idioma",value:currentLang==="en"?"English":"Espanol",type:"action",onPress:function(){setSubPage("lang");}}]},{title:"LEGAL",items:[{label:currentLang==="en"?"Terms of service":"Terminos de servicio",type:"action",onPress:function(){setSubPage("terminos");}},{label:currentLang==="en"?"Privacy policy":"Politica de privacidad",type:"action",onPress:function(){setSubPage("privacidad");}},{label:"Version",value:"v1.0.0",type:"info"}]}].map(function(sec,si){
+        {[{title:currentLang==="en"?"ACCOUNT":"CUENTA",items:[
+          {label:currentLang==="en"?"Country":"Pais",value:toFlag(CITY_FLAGS[userCity])+" "+cityObj.name,type:"info"},
+          {label:currentLang==="en"?"Change password":"Cambiar contrasena",type:"action",onPress:function(){setSubPage("password");}},
+          {label:currentLang==="en"?"Delete account":"Eliminar cuenta",type:"danger",onPress:function(){
+            if(window.confirm(currentLang==="en"?"Are you sure? This cannot be undone.":"Seguro que quieres eliminar tu cuenta? Esta accion no se puede deshacer.")) {
+              fetch(SUPA_URL+"/auth/v1/user",{method:"DELETE",headers:{"apikey":SUPA_KEY,"Authorization":"Bearer "+getToken()}}).then(function(){
+                try{localStorage.removeItem("epale_session");}catch(e){}
+                window._supaToken=null; onLogout();
+              }).catch(function(){ alert("Error al eliminar cuenta"); });
+            }
+          }}
+        ]},{title:currentLang==="en"?"PREFERENCES":"PREFERENCIAS",items:[
+          {label:currentLang==="en"?"Notifications":"Notificaciones",type:"toggle",val:notifOn,onToggle:function(){setNotifOn(function(v){return !v;});}},
+          {label:currentLang==="en"?"Dark mode":"Modo oscuro",type:"toggle",val:darkMode,onToggle:function(){var v=!darkMode;setDarkMode(v);if(onSetDark)onSetDark(v);}},
+          {label:currentLang==="en"?"Language":"Idioma",value:currentLang==="en"?"English":"Espanol",type:"action",onPress:function(){setSubPage("lang");}}
+        ]},{title:"LEGAL",items:[
+          {label:currentLang==="en"?"Terms of service":"Terminos de servicio",type:"action",onPress:function(){setSubPage("terminos");}},
+          {label:currentLang==="en"?"Privacy policy":"Politica de privacidad",type:"action",onPress:function(){setSubPage("privacidad");}},
+          {label:"Version",value:"v1.0.0",type:"info"}
+        ]}].map(function(sec,si){
           return (
             <div key={si} style={{marginTop:20}}>
               <div style={{fontSize:10,fontFamily:"'Inter',sans-serif",color:C.muted,letterSpacing:1,padding:"0 16px",marginBottom:6}}>{sec.title}</div>
