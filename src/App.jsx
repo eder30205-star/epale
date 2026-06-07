@@ -704,14 +704,16 @@ function Feed(props) {
     setPosts(function(pp){ return [newPost].concat(pp); });
     if(currentUserId) {
       api.createPost(currentUserId, p.city, p.type, p.content, displayName).then(function(){
-        api.getPosts(p.city).then(function(data){
-          if(Array.isArray(data) && data.length > 0) {
-            var mapped = data.map(function(r){
-              return {id:r.id, city:r.city, type:r.type||"post", name:(r.profiles&&r.profiles.name)||displayName, av:(r.profiles&&r.profiles.name)||displayName, content:r.content, likes:r.likes||0, comments:r.comments||0, time:r.created_at||"ahora"};
-            });
-            setPosts(mapped.concat(SEED));
-          }
-        }).catch(function(){});
+        setTimeout(function(){
+          api.getPosts(p.city).then(function(data){
+            if(Array.isArray(data) && data.length > 0) {
+              var mapped = data.map(function(r){
+                return {id:r.id, city:r.city, type:r.type||"post", name:r.name||displayName, av:r.name||displayName, content:r.content, likes:r.likes||0, comments:r.comments||0, time:r.created_at||"ahora"};
+              });
+              setPosts(mapped.concat(SEED));
+            }
+          }).catch(function(){});
+        }, 500);
       }).catch(function(){});
     }
   };
