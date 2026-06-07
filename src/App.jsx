@@ -227,7 +227,8 @@ var api = {
     }).then(function(r){return r.json();});
   },
   searchPosts: function(query) {
-    return fetch(SUPA_URL+"/rest/v1/posts?content=ilike.*"+encodeURIComponent(query)+"*&select=*&limit=30", {
+    var q = encodeURIComponent(query);
+    return fetch(SUPA_URL+"/rest/v1/posts?or=(content.ilike.*"+q+"*,name.ilike.*"+q+"*)&select=*&order=created_at.desc&limit=30", {
       headers:{"apikey":SUPA_KEY,"Authorization":"Bearer "+getToken()}
     }).then(function(r){return r.json();});
   },
@@ -253,7 +254,7 @@ var api = {
 };
 
 const LIGHT = { bg:"#f5f5f7", card:"#ffffff", border:"#e8e8ed", yellow:"#ffcc00", blue:"#0066ff", red:"#ff2d2d", text:"#1a1a1a", muted:"#86868b", green:"#1a7a3c", wa:"#25D366" };
-const DARK  = { bg:"#111118", card:"#1c1c28", border:"#2e2e40", yellow:"#ffd60a", blue:"#5eb5ff", red:"#ff6b6b", text:"#f0f0fa", muted:"#9090a8", green:"#30d158", wa:"#25D366" };
+const DARK  = { bg:"#0d0d12", card:"#18181f", border:"#28283a", yellow:"#ffd60a", blue:"#60a5fa", red:"#f87171", text:"#f1f1f6", muted:"#94949e", green:"#4ade80", wa:"#25D366" };
 
 var T = {
   es: {
@@ -444,7 +445,12 @@ var formatTime = function(ts) {
 function Av(props) {
   var t=props.t||"?", i=props.i||0, s=props.s||40, photo=props.photo;
   var letter = t ? t[0].toUpperCase() : "?";
-  if(photo) return <div style={{width:s,height:s,borderRadius:9999,overflow:"hidden",flexShrink:0,border:"2px solid #fff"}}><img src={photo} alt="av" style={{width:"100%",height:"100%",objectFit:"cover"}}/></div>;
+  if(photo && photo.length > 5) return (
+    <div style={{width:s,height:s,borderRadius:9999,overflow:"hidden",flexShrink:0,border:"2px solid "+C.border}}>
+      <img src={photo} alt="av" style={{width:"100%",height:"100%",objectFit:"cover"}}
+        onError={function(e){ e.target.style.display="none"; }}/>
+    </div>
+  );
   return <div style={{width:s,height:s,borderRadius:9999,background:GR[i%GR.length],display:"flex",alignItems:"center",justifyContent:"center",fontSize:s*0.38,fontWeight:700,color:"#fff",flexShrink:0,fontFamily:"'Syne',sans-serif"}}>{letter}</div>;
 }
 
@@ -477,6 +483,9 @@ function PostCard(props) {
     var currentUserId = userId || (function(){ try{var d=JSON.parse(localStorage.getItem("epale_session")); return d&&d.uid?d.uid:"";}catch(e){return "";} })();
     if(currentUserId) {
       api.addComment(post.id, currentUserId, userName, comment).catch(function(){});
+      if(post.user_id && post.user_id !== currentUserId) {
+        api.addNotification(post.user_id, userName||"Alguien", "comment", post.id).catch(function(){});
+      }
     }
   };
 
@@ -725,11 +734,11 @@ function Feed(props) {
   var [dollarPar, setDollarPar] = useState("38.20");
   useEffect(function(){
     api.getDollarRate().then(function(data){
-      if(data && data.monitors) {
-        var bcv = data.monitors.usd && data.monitors.usd.price;
-        var par = data.monitors.usdparalelobancarios && data.monitors.usdparalelobancarios.price;
-        if(bcv) setDollarBCV(parseFloat(bcv).toFixed(2));
-        if(par) setDollarPar(parseFloat(par).toFixed(2));
+      if(Array.isArray(data)) {
+        data.forEach(function(d){
+          if(d.fuente==="BCV"||d.nombre==="Oficial") setDollarBCV(parseFloat(d.promedio||d.price||36.84).toFixed(2));
+          if(d.fuente==="Paralelo"||d.nombre==="Paralelo") setDollarPar(parseFloat(d.promedio||d.price||38.20).toFixed(2));
+        });
       }
     }).catch(function(){});
   }, []);
@@ -760,7 +769,7 @@ function Feed(props) {
       <div style={{fontSize:15,fontFamily:"'Inter',sans-serif"}}>{feedTab==="following"?"Sigue a alguien para ver sus posts":"Se el primero en publicar"}</div>
     </div>
   ) : filtered.map(function(p,i){
-    return <PostCard key={p.id} post={p} idx={i} cityObj={cityObj} saved={savedPosts.includes(p.id)} onSave={toggleSave} following={following} onFollow={toggleFollow} userName={userName} liked={likedPosts.includes(String(p.id))} onLike={toggleLike} userId={userId}/>;
+    return <PostCard key={p.id} post={p} idx={i} cityObj={cityObj} saved={savedPosts.includes(p.id)} onSave={toggleSave} following={following} onFollow={toggleFollow} userName={userName} liked={likedPosts.includes(String(p.id))} onLike={function(id){ toggleLike(id, p.user_id, p.name); }} userId={userId}/>;
   });
 
   var inviteBanner = (
@@ -1639,7 +1648,7 @@ function AuthLogin(props) {
     });
   };
   return (
-    <div style={{flex:1,padding:"22px 20px 32px"}}>
+    <div style={{flex:1,padding:"22px 20px 32px",background:C.bg}}>
       <div style={{fontSize:20,fontFamily:"'Syne',sans-serif",color:C.text,marginBottom:4,fontWeight:700}}>Bienvenido de vuelta</div>
       <div style={{fontSize:13,color:C.muted,fontFamily:"'Inter',sans-serif",marginBottom:22}}>Entra para conectarte con tu gente</div>
       <div style={{marginBottom:14}}>
@@ -1655,7 +1664,7 @@ function AuthLogin(props) {
       </div>
       <div style={{textAlign:"right",marginBottom:20}}><button onClick={function(){ var em=email; if(!em){setError("Ingresa tu correo primero");return;} api.resetPassword(em).then(function(){setError("Correo de recuperacion enviado!");}).catch(function(){setError("Error al enviar correo");}); }} style={{background:"none",border:"none",cursor:"pointer",color:"#0066ff",fontFamily:"'Inter',sans-serif",fontSize:11}}>Olvidaste tu contrasena?</button></div>
       {error ? <div style={{background:"#3a1a1a",border:"1px solid #ff6b6b",borderRadius:10,padding:"9px 13px",marginBottom:13,fontSize:13,color:"#ff2d2d",fontFamily:"'Inter',sans-serif"}}>{error}</div> : null}
-      <button onClick={go} style={{width:"100%",padding:"14px",background:"#ffcc00",color:"#1a1a1a",border:"none",borderRadius:100,cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:14,fontWeight:700}}>{loading?"Entrando...":"Entrar"}</button>
+      <button onClick={go} style={{width:"100%",padding:"14px",background:"#ffcc00",color:C.text,border:"none",borderRadius:100,cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:14,fontWeight:700}}>{loading?"Entrando...":"Entrar"}</button>
     </div>
   );
 }
@@ -1672,7 +1681,7 @@ function AuthStep1(props) {
     onNext();
   };
   return (
-    <div style={{flex:1,padding:"22px 20px 32px"}}>
+    <div style={{flex:1,padding:"22px 20px 32px",background:C.bg}}>
       <div style={{fontSize:20,fontFamily:"'Syne',sans-serif",color:C.text,marginBottom:16,fontWeight:700}}>Crea tu cuenta</div>
       <div style={{marginBottom:14}}>
         <div style={{fontSize:10,fontFamily:"'Inter',sans-serif",color:C.muted,marginBottom:7,letterSpacing:1}}>CORREO</div>
@@ -1696,7 +1705,7 @@ function AuthStep1(props) {
         <input value={password2} onChange={function(e){setPassword2(e.target.value);}} type="password" placeholder="Repite tu contrasena" style={{width:"100%",padding:"13px 16px",background:C.card,border:"1.5px solid "+(password2?(password2===password?"#1a7a3c":"#ff2d2d"):"#e8e8ed"),borderRadius:12,color:C.text,fontFamily:"'Inter',sans-serif",fontSize:15,outline:"none",boxSizing:"border-box"}}/>
       </div>
       {error ? <div style={{background:"#3a1a1a",border:"1px solid #ff6b6b",borderRadius:10,padding:"9px 13px",marginBottom:13,fontSize:13,color:"#ff2d2d",fontFamily:"'Inter',sans-serif"}}>{error}</div> : null}
-      <button onClick={next} style={{width:"100%",padding:"14px",background:"#ffcc00",color:"#1a1a1a",border:"none",borderRadius:100,cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:14,fontWeight:700}}>Siguiente</button>
+      <button onClick={next} style={{width:"100%",padding:"14px",background:"#ffcc00",color:C.text,border:"none",borderRadius:100,cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:14,fontWeight:700}}>Siguiente</button>
     </div>
   );
 }
@@ -1709,7 +1718,7 @@ function AuthStep2(props) {
     onNext();
   };
   return (
-    <div style={{flex:1,padding:"22px 20px 32px"}}>
+    <div style={{flex:1,padding:"22px 20px 32px",background:C.bg}}>
       <div style={{fontSize:20,fontFamily:"'Syne',sans-serif",color:C.text,marginBottom:16,fontWeight:700}}>Tu perfil</div>
       <div style={{marginBottom:14}}>
         <div style={{fontSize:10,fontFamily:"'Inter',sans-serif",color:C.muted,marginBottom:7,letterSpacing:1}}>NOMBRE</div>
@@ -1721,8 +1730,8 @@ function AuthStep2(props) {
       </div>
       {error ? <div style={{background:"#3a1a1a",border:"1px solid #ff6b6b",borderRadius:10,padding:"9px 13px",marginBottom:13,fontSize:13,color:"#ff2d2d",fontFamily:"'Inter',sans-serif"}}>{error}</div> : null}
       <div style={{display:"flex",gap:10}}>
-        <button onClick={onBack} style={{flex:1,padding:"13px",background:"#fff",border:"1.5px solid #e8e8ed",borderRadius:100,cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:13,color:"#86868b"}}>Atras</button>
-        <button onClick={next} style={{flex:2,padding:"13px",background:"#ffcc00",color:"#1a1a1a",border:"none",borderRadius:100,cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:14,fontWeight:700}}>Siguiente</button>
+        <button onClick={onBack} style={{flex:1,padding:"13px",background:"#fff",border:"1.5px solid #e8e8ed",borderRadius:100,cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:13,color:C.muted}}>Atras</button>
+        <button onClick={next} style={{flex:2,padding:"13px",background:"#ffcc00",color:C.text,border:"none",borderRadius:100,cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:14,fontWeight:700}}>Siguiente</button>
       </div>
     </div>
   );
@@ -1737,13 +1746,13 @@ function AuthStep3(props) {
     onNext();
   };
   return (
-    <div style={{flex:1,padding:"22px 20px 32px",overflowY:"auto"}}>
+    <div style={{flex:1,padding:"22px 20px 32px",background:C.bg,overflowY:"auto"}}>
       <div style={{fontSize:20,fontFamily:"'Syne',sans-serif",color:C.text,marginBottom:4,fontWeight:700}}>Tu ciudad</div>
       <div style={{fontSize:13,color:C.muted,fontFamily:"'Inter',sans-serif",marginBottom:16}}>Tu feed se organiza por ciudad</div>
       <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:16}}>
         {CITIES.map(function(c){
           return (
-            <button key={c.id} onClick={function(){setChosenCity(c.id);}} style={{display:"flex",alignItems:"center",gap:14,padding:"12px 16px",background:chosenCity===c.id?"#2a2a10":C.card,border:"2px solid "+(chosenCity===c.id?C.yellow:C.border),borderRadius:12,cursor:"pointer",textAlign:"left"}}>
+            <button key={c.id} onClick={function(){setChosenCity(c.id);}} style={{display:"flex",alignItems:"center",gap:14,padding:"12px 16px",background:chosenCity===c.id?(dark?"#2a2010":"#fffbea"):C.card,border:"2px solid "+(chosenCity===c.id?C.yellow:C.border),borderRadius:12,cursor:"pointer",textAlign:"left"}}>
               <span style={{fontSize:24}}>{toFlag(CITY_FLAGS[c.id])}</span>
               <div style={{flex:1}}>
                 <div style={{fontSize:15,fontFamily:"'Syne',sans-serif",color:C.text}}>{c.name}</div>
@@ -1760,7 +1769,7 @@ function AuthStep3(props) {
       </div>
       {error ? <div style={{background:"#3a1a1a",border:"1px solid #ff6b6b",borderRadius:10,padding:"9px 13px",marginBottom:13,fontSize:13,color:"#ff2d2d",fontFamily:"'Inter',sans-serif"}}>{error}</div> : null}
       <div style={{display:"flex",gap:10}}>
-        <button onClick={onBack} style={{flex:1,padding:"13px",background:"#fff",border:"1.5px solid #e8e8ed",borderRadius:100,cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:13,color:"#86868b"}}>Atras</button>
+        <button onClick={onBack} style={{flex:1,padding:"13px",background:"#fff",border:"1.5px solid #e8e8ed",borderRadius:100,cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:13,color:C.muted}}>Atras</button>
         <button onClick={next} disabled={!chosenCity||!agreed} style={{flex:2,padding:"13px",background:chosenCity&&agreed?"#ffcc00":"#e8e8ed",color:chosenCity&&agreed?"#1a1a1a":"#86868b",border:"none",borderRadius:100,cursor:chosenCity&&agreed?"pointer":"not-allowed",fontFamily:"'Inter',sans-serif",fontSize:14,fontWeight:700}}>Siguiente</button>
       </div>
     </div>
@@ -1834,7 +1843,7 @@ function AuthStep4(props) {
   );
 
   return (
-    <div style={{flex:1,padding:"22px 20px 32px",textAlign:"center"}}>
+    <div style={{flex:1,padding:"22px 20px 32px",background:C.bg,textAlign:"center"}}>
       <div style={{fontSize:52,marginBottom:10}}>{ICONS.email}</div>
       <div style={{fontSize:20,fontFamily:"'Syne',sans-serif",color:C.text,marginBottom:6,fontWeight:700}}>Casi listo!</div>
       <div style={{fontSize:13,color:C.muted,fontFamily:"'Inter',sans-serif",marginBottom:20}}>Agrega tu foto y crea tu cuenta</div>
@@ -1854,7 +1863,7 @@ function AuthStep4(props) {
         <div style={{fontSize:13,color:"#0066ff",fontFamily:"'Inter',sans-serif",fontWeight:700,marginTop:2}}>{email}</div>
       </div>
       {error ? <div style={{background:"#3a1a1a",border:"1px solid #ff6b6b",borderRadius:10,padding:"9px 13px",marginBottom:13,fontSize:13,color:"#ff2d2d",fontFamily:"'Inter',sans-serif"}}>{error}</div> : null}
-      <button onClick={finish} style={{width:"100%",padding:"14px",background:"#ffcc00",color:"#1a1a1a",border:"none",borderRadius:100,cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:14,fontWeight:700,marginBottom:12}}>
+      <button onClick={finish} style={{width:"100%",padding:"14px",background:"#ffcc00",color:C.text,border:"none",borderRadius:100,cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:14,fontWeight:700,marginBottom:12}}>
         {loading?"Creando cuenta...":"Crear cuenta y verificar correo"}
       </button>
       <button onClick={onBack} style={{background:"none",border:"none",cursor:"pointer",color:"#0066ff",fontFamily:"'Inter',sans-serif",fontSize:11}}>Volver</button>
@@ -1902,9 +1911,9 @@ function Auth(props) {
     <div style={{minHeight:"100vh",background:C.bg,display:"flex",flexDirection:"column",maxWidth:480,margin:"0 auto"}}>
       <AuthHero mode={mode} step={step}/>
       {mode==="login"||step===1 ? (
-        <div style={{display:"flex",margin:"18px 20px 0",background:"#fff",borderRadius:100,padding:4,border:"1px solid #e8e8ed"}}>
+        <div style={{display:"flex",margin:"18px 20px 0",background:C.bg,borderRadius:100,padding:4,border:"1px solid "+C.border}}>
           {["login","register"].map(function(m){
-            return <button key={m} onClick={function(){setMode(m);setStep(1);}} style={{flex:1,padding:"10px 0",borderRadius:100,border:"none",cursor:"pointer",background:mode===m?"#fff":"transparent",color:mode===m?"#1a1a1a":"#86868b",fontFamily:"'Inter',sans-serif",fontSize:13,fontWeight:mode===m?700:400,boxShadow:mode===m?"0 1px 6px rgba(0,0,0,0.1)":"none"}}>{m==="login"?"Iniciar sesion":"Crear cuenta"}</button>;
+            return <button key={m} onClick={function(){setMode(m);setStep(1);}} style={{flex:1,padding:"10px 0",borderRadius:100,border:"none",cursor:"pointer",background:mode===m?C.card:"transparent",color:mode===m?C.text:C.muted,fontFamily:"'Inter',sans-serif",fontSize:13,fontWeight:mode===m?700:400,boxShadow:mode===m?"0 1px 6px rgba(0,0,0,0.1)":"none"}}>{m==="login"?"Iniciar sesion":"Crear cuenta"}</button>;
           })}
         </div>
       ) : null}
@@ -2025,13 +2034,19 @@ export default function App() {
     }
   }, []);
 
-  var toggleLike = function(postId){
+  var toggleLike = function(postId, postOwnerId, postOwnerName){
     setLikedPosts(function(s){
       var isLiked = s.includes(String(postId));
       var currentUid = userId || (function(){ try { var d=JSON.parse(localStorage.getItem("epale_session")); return d&&d.uid?d.uid:""; } catch(e){ return ""; } })();
       if(currentUid) {
-        if(isLiked) api.unlikePost(currentUid, postId).catch(function(){});
-        else api.likePost(currentUid, postId).catch(function(){});
+        if(isLiked) {
+          api.unlikePost(currentUid, postId).catch(function(){});
+        } else {
+          api.likePost(currentUid, postId).catch(function(){});
+          if(postOwnerId && postOwnerId !== currentUid) {
+            api.addNotification(postOwnerId, userName||"Alguien", "like", postId).catch(function(){});
+          }
+        }
       }
       return isLiked ? s.filter(function(x){return x!==String(postId);}) : [].concat(s,[String(postId)]);
     });
