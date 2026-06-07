@@ -1290,7 +1290,7 @@ function Profile(props) {
   if(subScreen==="seguidores") return <FollowersList title="Seguidores" users={SAMPLE_USERS} following={following} onFollow={onFollow||function(){}} onClose={function(){setSubScreen(null);}}/>;
   if(subScreen==="siguiendo") return <FollowersList title=TR.following users={SAMPLE_USERS.filter(function(u){return following.includes(u.name);})} following={following} onFollow={onFollow||function(){}} onClose={function(){setSubScreen(null);}}/>;
   if(subScreen==="notifs") return <Notificaciones onClose={function(){setSubScreen(null);}} userId={props.userId}/>;
-  if(subScreen==="config") return <Configuracion userCity={userCity} onClose={function(){setSubScreen(null);}} onLogout={onLogout} onSetDark={onSetDark} onSetLang={onSetLang} isDark={isDark} currentLang={currentLang} userName={userName} userEmail={(function(){ try{var d=JSON.parse(localStorage.getItem("epale_session")); return d&&d.email?d.email:"";} catch(e){return "";} })()}/>;
+  if(subScreen==="config") return <Configuracion userCity={userCity} onClose={function(){setSubScreen(null);}} onLogout={onLogout} onSetDark={onSetDark} onSetLang={onSetLang} isDark={isDark} currentLang={currentLang} userName={userName} userPhoto={userPhoto} userBio={userBio}/>;
   if(subScreen==="edit") return <EditProfile userCity={userCity} userPhoto={userPhoto} userName={userName} userBio={userBio} onPhotoChange={onPhotoChange} onBioChange={onBioChange} onClose={function(){setSubScreen(null);}}/>;
 
   return (
@@ -1585,10 +1585,11 @@ function Configuracion(props) {
                 {sec.items.map(function(item,ii){
                   return (
                     <div key={ii} onClick={item.onPress||function(){}} style={{display:"flex",alignItems:"center",gap:14,padding:"14px 16px",borderBottom:ii<sec.items.length-1?"1px solid "+C.border:"none",cursor:item.type==="action"?"pointer":"default"}}>
-                      <span style={{fontSize:14,color:C.text,fontFamily:"'Inter',sans-serif",flex:1,fontWeight:500}}>{item.label}</span>
+                      <span style={{fontSize:14,color:item.type==="danger"?C.red:C.text,fontFamily:"'Inter',sans-serif",flex:1,fontWeight:500}}>{item.label}</span>
                       {item.type==="toggle" ? <Toggle on={item.val} onToggle={item.onToggle}/> : null}
                       {item.type==="info" ? <span style={{fontSize:13,color:C.muted,fontFamily:"'Inter',sans-serif"}}>{item.value}</span> : null}
                       {item.type==="action" ? <span style={{color:C.muted,fontSize:18}}>{">"}</span> : null}
+                      {item.type==="danger" ? <span style={{color:C.red,fontSize:18}}>{">"}</span> : null}
                     </div>
                   );
                 })}
