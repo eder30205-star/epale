@@ -2053,8 +2053,9 @@ export default function App() {
   }, []);
 
   var toggleLike = function(postId, postOwnerId, postOwnerName){
+    var pid = String(postId);
     setLikedPosts(function(s){
-      var isLiked = s.includes(String(postId));
+      var isLiked = s.includes(pid);
       var currentUid = userId || (function(){ try { var d=JSON.parse(localStorage.getItem("epale_session")); return d&&d.uid?d.uid:""; } catch(e){ return ""; } })();
       if(currentUid) {
         if(isLiked) {
@@ -2066,7 +2067,7 @@ export default function App() {
           }
         }
       }
-      return isLiked ? s.filter(function(x){return x!==String(postId);}) : [].concat(s,[String(postId)]);
+      return isLiked ? s.filter(function(x){return x!==pid;}) : [].concat(s,[pid]);
     });
   };
 
