@@ -233,7 +233,7 @@ var api = {
     }).then(function(r){return r.json();});
   },
   getDollarRate: function() {
-    return fetch("https://pydolarve.org/api/v1/dollar?page=bcv", {
+    return fetch("https://ve.dolarapi.com/v1/dolares", {
       headers:{"Accept":"application/json"}
     }).then(function(r){return r.json();}).catch(function(){ return null; });
   }
@@ -452,6 +452,7 @@ function PostCard(props) {
 
   useEffect(function(){
     setLikedLocal(liked);
+    // Don't adjust count - DB already reflects the like
   }, [liked]);
   var [open,setOpen]=useState(false);
   var [comment,setComment]=useState("");
@@ -500,7 +501,7 @@ function PostCard(props) {
                   <button onClick={function(){setShowMenu(function(m){return !m;});}} style={{background:"none",border:"none",cursor:"pointer",color:C.muted,fontSize:18,padding:"0 4px"}}>...</button>
                 </div>
               </div>
-              <div style={{fontSize:11,color:C.blue,fontFamily:"'Inter',sans-serif",fontWeight:600,marginTop:1}}>{cityObj ? cityObj.flag : ""} {cityObj ? cityObj.name : ""} <span style={{color:C.muted,fontWeight:400}}>- {formatTime(post.time||post.created_at)}</span></div>
+              <div style={{fontSize:11,color:C.blue,fontFamily:"'Inter',sans-serif",fontWeight:600,marginTop:1}}>{cityObj ? cityObj.flag : ""} {cityObj ? cityObj.name : ""}<span style={{color:C.muted,fontWeight:400}}> - {formatTime(post.time||post.created_at)}</span></div>
             </div>
           </div>
 
@@ -1098,9 +1099,11 @@ function MisPublicaciones(props) {
           return (
             <div key={p.id} style={{background:C.card,borderBottom:"1px solid "+C.border,padding:"14px 16px"}}>
               <p style={{fontSize:14,lineHeight:1.6,color:C.text,fontFamily:"'Inter',sans-serif",marginBottom:10}}>{p.content}</p>
-              <div style={{display:"flex",gap:14,fontSize:11,color:C.muted,fontFamily:"'Inter',sans-serif"}}>
+              <div style={{display:"flex",gap:12,fontSize:11,color:C.muted,fontFamily:"'Inter',sans-serif",alignItems:"center"}}>
                 <span style={{color:C.red}}>{ICONS.heart} {p.likes||0}</span>
+                <span style={{color:C.muted}}>{"."} </span>
                 <span>{ICONS.comment} {p.comments||0}</span>
+                <span style={{color:C.muted}}>{"."} </span>
                 <span>{formatTime(p.created_at||p.time)}</span>
               </div>
             </div>
@@ -1479,7 +1482,7 @@ function PasswordChange(props) {
 }
 
 function Configuracion(props) {
-  var userCity=props.userCity, onClose=props.onClose, onLogout=props.onLogout, onSetDark=props.onSetDark, onSetLang=props.onSetLang, isDark=props.isDark, currentLang=props.currentLang, userName=props.userName||"", userEmail=props.userEmail||"";
+  var userCity=props.userCity, onClose=props.onClose, onLogout=props.onLogout, onSetDark=props.onSetDark, onSetLang=props.onSetLang, isDark=props.isDark, currentLang=props.currentLang, userName=props.userName||"", userPhoto=props.userPhoto||null, userBio=props.userBio||"";
   var [notifOn,setNotifOn]=useState(true);
   var [darkMode,setDarkMode]=useState(isDark||false);
   var [subPage,setSubPage]=useState(null);
@@ -1979,24 +1982,29 @@ export default function App() {
   var [showSearch,setShowSearch]=useState(false);
 
   useEffect(function(){
-    try {
-      var s = localStorage.getItem("epale_session");
-      var d = s ? JSON.parse(s) : null;
-      if(d && d.refresh) {
-        fetch(SUPA_URL+"/auth/v1/token?grant_type=refresh_token", {
-          method:"POST",
-          headers:{"Content-Type":"application/json","apikey":SUPA_KEY},
-          body:JSON.stringify({refresh_token:d.refresh})
-        }).then(function(r){return r.json();}).then(function(res){
-          if(res.access_token) {
-            window._supaToken = res.access_token;
-            d.token = res.access_token;
-            if(res.refresh_token) d.refresh = res.refresh_token;
-            localStorage.setItem("epale_session", JSON.stringify(d));
-          }
-        }).catch(function(){});
-      }
-    } catch(e){}
+    var doRefresh = function(){
+      try {
+        var s = localStorage.getItem("epale_session");
+        var d = s ? JSON.parse(s) : null;
+        if(d && d.refresh) {
+          fetch(SUPA_URL+"/auth/v1/token?grant_type=refresh_token", {
+            method:"POST",
+            headers:{"Content-Type":"application/json","apikey":SUPA_KEY},
+            body:JSON.stringify({refresh_token:d.refresh})
+          }).then(function(r){return r.json();}).then(function(res){
+            if(res.access_token) {
+              window._supaToken = res.access_token;
+              d.token = res.access_token;
+              if(res.refresh_token) d.refresh = res.refresh_token;
+              localStorage.setItem("epale_session", JSON.stringify(d));
+            }
+          }).catch(function(){});
+        }
+      } catch(e){}
+    };
+    doRefresh();
+    var interval = setInterval(doRefresh, 1800000);
+    return function(){ clearInterval(interval); };
   }, []);
 
   useEffect(function(){
