@@ -17,6 +17,17 @@ var getToken = function(){
   return SUPA_KEY;
 };
 
+// Restore token immediately on load
+(function(){
+  try {
+    var s = localStorage.getItem("epale_session");
+    var d = s ? JSON.parse(s) : null;
+    if(d && d.token && d.token.length > 10) {
+      window._supaToken = d.token;
+    }
+  } catch(e){}
+})();
+
 var api = {
   signUp: function(email, password, name, city, username) {
     return fetch(SUPA_URL+"/auth/v1/signup", {
