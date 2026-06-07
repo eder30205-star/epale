@@ -700,25 +700,10 @@ function Feed(props) {
     var displayName = userName || (function(){ try { var s=localStorage.getItem("epale_session"); var d=s?JSON.parse(s):null; return d&&d.name?d.name:"Tu"; } catch(e){ return "Tu"; } })();
     var currentUserId = userId || (function(){ try { var s=localStorage.getItem("epale_session"); var d=s?JSON.parse(s):null; return d&&d.uid?d.uid:""; } catch(e){ return ""; } })();
     var newPost = {id:Date.now(),city:p.city,type:p.type,name:displayName,av:displayName,content:p.content,media:p.media,likes:0,comments:0,time:new Date().toISOString()};
+    setActiveCity(p.city);
+    setPosts(function(pp){ return [newPost].concat(pp); });
     if(currentUserId) {
-      api.createPost(currentUserId, p.city, p.type, p.content, displayName).then(function(){
-        api.getPosts(p.city).then(function(data){
-          var mapped = Array.isArray(data) && data.length > 0 ? data.map(function(r){
-            return {id:r.id, city:r.city, type:r.type||"post", name:r.name||displayName, av:r.name||displayName, content:r.content, likes:r.likes||0, comments:r.comments||0, time:r.created_at||"ahora"};
-          }) : [newPost];
-          setPosts(mapped.concat(SEED));
-          setActiveCity(p.city);
-        }).catch(function(){
-          setPosts(function(pp){ return [newPost].concat(pp); });
-          setActiveCity(p.city);
-        });
-      }).catch(function(){
-        setPosts(function(pp){ return [newPost].concat(pp); });
-        setActiveCity(p.city);
-      });
-    } else {
-      setPosts(function(pp){ return [newPost].concat(pp); });
-      setActiveCity(p.city);
+      api.createPost(currentUserId, p.city, p.type, p.content, displayName).catch(function(){});
     }
   };
 
