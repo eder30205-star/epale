@@ -1291,7 +1291,7 @@ function Profile(props) {
   if(subScreen==="posts") return <MisPublicaciones userId={props.userId} userName={userName} onClose={function(){setSubScreen(null);}}/>;
   if(subScreen==="saved") return <Guardados saved={savedPosts} allPosts={SEED} onClose={function(){setSubScreen(null);}}/>;
   if(subScreen==="seguidores") return <FollowersList title="Seguidores" users={SAMPLE_USERS} following={following} onFollow={onFollow||function(){}} onClose={function(){setSubScreen(null);}}/>;
-  if(subScreen==="siguiendo") return <FollowersList title="Siguiendo" users={following.map(function(n){ return {name:n, av:n, city:userCity, bio:""}; })} following={following} onFollow={onFollow||function(){}} onClose={function(){setSubScreen(null);}}/>;
+  if(subScreen==="siguiendo") return <FollowersList title=TR.following users={SAMPLE_USERS.filter(function(u){return following.includes(u.name);})} following={following} onFollow={onFollow||function(){}} onClose={function(){setSubScreen(null);}}/>;
   if(subScreen==="notifs") return <Notificaciones onClose={function(){setSubScreen(null);}} userId={props.userId}/>;
   if(subScreen==="config") return <Configuracion userCity={userCity} onClose={function(){setSubScreen(null);}} onLogout={onLogout} onSetDark={onSetDark} onSetLang={onSetLang} isDark={isDark} currentLang={currentLang} userName={userName} userPhoto={userPhoto} userBio={userBio}/>;
   if(subScreen==="edit") return <EditProfile userCity={userCity} userPhoto={userPhoto} userName={userName} userBio={userBio} onPhotoChange={onPhotoChange} onBioChange={onBioChange} onClose={function(){setSubScreen(null);}}/>;
