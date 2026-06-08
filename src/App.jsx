@@ -465,13 +465,12 @@ function Stripe() {
 function PostCard(props) {
   var post=props.post, idx=props.idx, cityObj=props.cityObj, saved=props.saved, onSave=props.onSave, following=props.following||[], onFollow=props.onFollow, userName=props.userName||"", liked=props.liked||false, onLike=props.onLike||function(){};
   var [likeProcessing, setLikeProcessing] = useState(false);
-  var [likedLocal,setLikedLocal]=useState(liked);
+  var [likedLocal,setLikedLocal]=useState(false);
   var [likes,setLikes]=useState(post.likes||0);
 
   useEffect(function(){
-    setLikedLocal(liked);
-    // Don't adjust count - DB already reflects the like
-  }, [liked]);
+    if(likedLoaded) setLikedLocal(liked);
+  }, [liked, likedLoaded]);
   var [open,setOpen]=useState(false);
   var [comment,setComment]=useState("");
   var [comments,setComments]=useState([]);
