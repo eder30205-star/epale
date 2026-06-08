@@ -389,27 +389,22 @@ const SEED = [
   { id:19, city:"santiago", type:"post",    name:"Raul Jimenez",     av:"RJ", content:"Hoy me dieron la ciudadania chilena. Llore. No porque deje de ser venezolano, sino porque despues de tanto sacrificio alguien dice: bienvenido.", likes:5678, comments:1234, time:"2h" },
   { id:20, city:"lima",     type:"post",    name:"Rafael Mora",      av:"RM", content:"Tres anos en Lima. La ciudad que mas me ha retado y mas me ha hecho crecer. Los peruanos en el fondo son bien buenos.", likes:445,  comments:123, time:"7 min" },
   { id:21, city:"lima",     type:"post",    name:"Simon Pacheco",    av:"SP", content:"Cinco palabras para los venezolanos en Lima: ustedes ya son peruanos tambien. Esta ciudad los adopto.", likes:2345, comments:567, time:"5h" },
-  // PORTUGAL
   { id:80, city:"portugal", type:"post",    name:"Carlos Vidal",     av:"CV", content:"Lisboa me recibio con los brazos abiertos. Los portugueses tienen algo especial, una calidez que me recuerda a Venezuela. Ya van 2 anos aqui.", likes:345, comments:89, time:"1h" },
   { id:81, city:"portugal", type:"job",     name:"Tech Lisboa",      av:"TL", content:"Empresa de tecnologia en Lisboa busca desarrolladores venezolanos. React, Python. Visa patrocinada. Excelente ambiente.", likes:67,  comments:34, time:"3h" },
-  // ITALIA
   { id:82, city:"italia",   type:"post",    name:"Gabriela Funes",   av:"GF", content:"Roma es una ciudad que te cambia para siempre. Llege sin saber italiano y hoy trabajo en un restaurante del centro historico.", likes:456, comments:123, time:"2h" },
   { id:83, city:"italia",   type:"service", name:"Abog. Milano",     av:"AM", content:"Abogado venezolano en Milan. Permisos de residencia, ciudadania italiana por descendencia. Consulta gratuita.", likes:89,  comments:45, time:"4h" },
-  // CANADA
   { id:84, city:"canada",   type:"post",    name:"Pedro Montoya",    av:"PM", content:"Toronto en invierno es otro nivel de frio. Pero la calidad de vida, las oportunidades y la seguridad hacen que valga cada grado bajo cero.", likes:567, comments:145, time:"1h" },
   { id:85, city:"canada",   type:"job",     name:"Canada VE Jobs",   av:"CJ", content:"Buscamos venezolanos con experiencia en construccion para trabajar en Calgary. Visa de trabajo disponible. Salario muy competitivo.", likes:123, comments:67, time:"2h" },
-  // EVENTOS
   { id:90, city:"madrid",   type:"evento",  name:"Epale Madrid",     av:"EM", content:"Gran Rumba Venezolana este sabado en Usera! Cachapas, caraotas, pepitos y musica venezolana de los 2000. Entrada libre. 8pm en adelante.", likes:234,  comments:89, time:"1h" },
   { id:91, city:"miami",    type:"evento",  name:"Venezuela Miami",  av:"VM", content:"Festival Venezuela en Miami este domingo en Doral. Gastronomia, cultura, musica en vivo. Traigan a la familia. Entrada gratuita.", likes:567,  comments:145, time:"2h" },
   { id:92, city:"bogota",   type:"evento",  name:"VE Bogota",        av:"VB", content:"Encuentro de venezolanos en Bogota este fin de semana. Arepas, empanadas y mucha nostalgia. Todos bienvenidos en el Parque El Virrey.", likes:389,  comments:112, time:"3h" },
   { id:93, city:"santiago", type:"evento",  name:"Vzla Santiago",    av:"VS", content:"Noche venezolana en Santiago! Este viernes en Barrio Italia. DJ, comida tipica y concurso de joropo. No se lo pierdan.", likes:445,  comments:134, time:"4h" },
   { id:94, city:"buenos",   type:"evento",  name:"VE Buenos Aires",  av:"VA", content:"Primer festival venezolano en Buenos Aires. Palermo, sabado 3pm. Gaita, salsa, comida y mucho pabillon criollo.", likes:678,  comments:201, time:"5h" },
-  // CARACAS
   { id:22, city:"caracas",  type:"post",    name:"Luis Miguel",      av:"LM", content:"Buenos dias desde Caracas. El Avila amanecio despejado hoy. Para los que estan lejos: la ciudad sigue siendo bella aunque este herida.", likes:8901, comments:2345, time:"2 min" },
   { id:23, city:"caracas",  type:"post",    name:"Gabriela Castro",  av:"GC", content:"Hoy hubo luz todo el dia en mi barrio. Eso en Caracas es noticia. A veces la felicidad es corriente electrica continua.", likes:12345,comments:3456, time:"48 min" },
   { id:24, city:"caracas",  type:"post",    name:"Profesora Ana",    av:"PA", content:"Doy clases en escuela publica de Petare. 28 alumnos, ningun libro, tres meses sin sueldo. Sigo yendo porque alguien tiene que ir.", likes:34567,comments:8901, time:"3h" },
-  { id:25, city:"miami",  type:"post",    name:"Maria Garcia",     av:"MG", content:"Orlando tiene algo especial para los venezolanos. La comunidad aqui es muy unida y siempre hay alguien que te ayuda cuando llegas.", likes:234,  comments:67, time:"15 min" },
-  { id:26, city:"miami",  type:"job",     name:"Empresa VE-FL",    av:"EV", content:"Buscamos repartidores en Orlando area. Horario flexible, pago semanal. Venezolanos bienvenidos, no requiere experiencia.", likes:45,   comments:23, time:"1h" },
+  { id:25, city:"miami",    type:"post",    name:"Maria Garcia",     av:"MG", content:"Orlando tiene algo especial para los venezolanos. La comunidad aqui es muy unida y siempre hay alguien que te ayuda cuando llegas.", likes:234,  comments:67, time:"15 min" },
+  { id:26, city:"miami",    type:"job",     name:"Empresa VE-FL",    av:"EV", content:"Buscamos repartidores en Orlando area. Horario flexible, pago semanal. Venezolanos bienvenidos, no requiere experiencia.", likes:45,   comments:23, time:"1h" },
 ];
 
 const SAMPLE_USERS = [
@@ -428,7 +423,6 @@ const waInvite = function(cityId) {
   var txt = "Epale pana! Estoy en Epale, la red de venezolanos en " + cityId + ". Unete: https://epaleapp.online/" + cityId;
   return "https://wa.me/?text=" + encodeURIComponent(txt);
 };
-
 
 var formatTime = function(ts) {
   if(!ts) return "";
@@ -464,9 +458,11 @@ function Stripe() {
 
 function PostCard(props) {
   var post=props.post, idx=props.idx, cityObj=props.cityObj, saved=props.saved, onSave=props.onSave, following=props.following||[], onFollow=props.onFollow, userName=props.userName||"", liked=props.liked||false, onLike=props.onLike||function(){};
+  var likedLoaded=props.likedLoaded||false;
   var [likeProcessing, setLikeProcessing] = useState(false);
   var [likedLocal,setLikedLocal]=useState(false);
   var [likes,setLikes]=useState(post.likes||0);
+  var TR = T["es"];
 
   useEffect(function(){
     if(likedLoaded) setLikedLocal(liked);
@@ -485,7 +481,7 @@ function PostCard(props) {
     var newComment = {id:Date.now(), post_id:String(post.id), user_name:userName, content:comment, created_at:new Date().toISOString()};
     setComments(function(c){return c.concat([newComment]);});
     setComment("");
-    var currentUserId = userId || (function(){ try{var d=JSON.parse(localStorage.getItem("epale_session")); return d&&d.uid?d.uid:"";}catch(e){return "";} })();
+    var currentUserId = props.userId || (function(){ try{var d=JSON.parse(localStorage.getItem("epale_session")); return d&&d.uid?d.uid:"";}catch(e){return "";} })();
     if(currentUserId) {
       api.addComment(post.id, currentUserId, userName, comment).catch(function(){});
       if(post.user_id && post.user_id !== currentUserId) {
@@ -644,7 +640,6 @@ function Feed(props) {
   var [feedTab,setFeedTab]=useState("forYou");
   var following=props.following||[];
   var toggleFollow=props.onFollow||function(){};
-  var [copiedRef,setCopiedRef]=useState(false);
   var [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   useEffect(function(){
@@ -665,8 +660,6 @@ function Feed(props) {
           };
         });
         setPosts(mapped.concat(SEED));
-      } else {
-        console.log("No posts from DB for city:", activeCity, "data:", JSON.stringify(data));
       }
     }).catch(function(e){ console.log("Posts load error:", e); });
   }, [activeCity]);
@@ -726,8 +719,6 @@ function Feed(props) {
     });
     setActiveCity(p.city==="all" ? CITIES[0].id : p.city);
   };
-
-  var handleCopy = function(){ if(navigator.clipboard) navigator.clipboard.writeText(refLink); setCopiedRef(true); setTimeout(function(){setCopiedRef(false);},2000); };
 
   var [dollarBCV, setDollarBCV] = useState("36.84");
   var [dollarPar, setDollarPar] = useState("38.20");
@@ -971,7 +962,7 @@ function Composer(props) {
           </div>
           {showCityPicker ? (
             <div style={{background:C.bg,borderRadius:14,border:"1px solid "+C.border,padding:"8px",marginBottom:12,display:"flex",flexWrap:"wrap",gap:6}}>
-              <button onClick={function(){setSelectedCity("all");setShowCityPicker(false);}} style={{padding:"5px 10px",borderRadius:100,border:"1.5px solid "+(selectedCity==="all"?C.yellow:C.border),background:selectedCity==="all"?C.yellow:C.card,color:selectedCity==="all"?C.text:C.text,fontFamily:"'Inter',sans-serif",fontSize:11,fontWeight:700,cursor:"pointer"}}>
+              <button onClick={function(){setSelectedCity("all");setShowCityPicker(false);}} style={{padding:"5px 10px",borderRadius:100,border:"1.5px solid "+(selectedCity==="all"?C.yellow:C.border),background:selectedCity==="all"?C.yellow:C.card,color:C.text,fontFamily:"'Inter',sans-serif",fontSize:11,fontWeight:700,cursor:"pointer"}}>
                 {"Todos los paises"}
               </button>
               {CITIES.map(function(c){
@@ -1019,7 +1010,6 @@ function Composer(props) {
     </div>
   );
 }
-
 
 function Search(props) {
   var onClose=props.onClose;
@@ -1182,6 +1172,7 @@ function Guardados(props) {
 
 function FollowersList(props) {
   var title=props.title, users=props.users, following=props.following||[], onFollow=props.onFollow, onClose=props.onClose;
+  var TR = T["es"];
   return (
     <div style={{position:"fixed",inset:0,zIndex:300,background:C.bg,maxWidth:480,margin:"0 auto",overflowY:"auto"}}>
       <div style={{display:"flex",height:4}}><div style={{flex:1,background:C.yellow}}/><div style={{flex:1,background:C.blue}}/><div style={{flex:1,background:C.red}}/></div>
@@ -1199,14 +1190,14 @@ function FollowersList(props) {
         ) : users.map(function(u,i){
           return (
             <div key={i} style={{display:"flex",alignItems:"center",gap:14,padding:"14px 16px",borderBottom:"1px solid "+C.border,background:C.card}}>
-              <Av t={u.av} i={i} s={48}/>
+              <Av t={u.av||u.name} i={i} s={48}/>
               <div style={{flex:1}}>
                 <div style={{fontWeight:700,fontSize:15,fontFamily:"'Syne',sans-serif",color:C.text}}>{u.name}</div>
-                <div style={{fontSize:11,color:C.blue,fontFamily:"'Inter',sans-serif",marginTop:1}}>{toFlag(CITY_FLAGS[u.city])} {getCity(u.city).name}</div>
+                <div style={{fontSize:11,color:C.blue,fontFamily:"'Inter',sans-serif",marginTop:1}}>{u.city ? toFlag(CITY_FLAGS[u.city])+" "+getCity(u.city).name : ""}</div>
                 <div style={{fontSize:12,color:C.muted,fontFamily:"'Inter',sans-serif",marginTop:2}}>{u.bio}</div>
               </div>
               <button onClick={function(){onFollow(u.name);}} style={{padding:"7px 16px",borderRadius:100,border:"1.5px solid "+(following.includes(u.name)?C.border:C.blue),background:"transparent",color:following.includes(u.name)?C.muted:C.blue,fontFamily:"'Inter',sans-serif",fontSize:12,fontWeight:700,cursor:"pointer",flexShrink:0}}>
-                {following.includes(u.name)?TR.following:TR.seguir}
+                {following.includes(u.name)?TR.siguiendo:TR.seguir}
               </button>
             </div>
           );
@@ -1215,7 +1206,6 @@ function FollowersList(props) {
     </div>
   );
 }
-
 
 var NOTIF_SEED = [
   { id:1, icon:ICONS.flag_ve, iconBg:"", text:"Bienvenido a Epale! Conecta con venezolanos en tu pais", time:"ahora", read:false },
@@ -1232,7 +1222,7 @@ function Notificaciones(props) {
         if(Array.isArray(data) && data.length > 0) {
           var mapped = data.map(function(n){
             var icon = n.type==="like" ? ICONS.heart : n.type==="comment" ? ICONS.comment : ICONS.flag_ve;
-            var bg = n.type==="like" ? C.card : n.type==="comment" ? C.card : C.card;
+            var bg = C.card;
             var text = n.type==="like" ? n.from_name+" le dio like a tu post" : n.type==="comment" ? n.from_name+" comento en tu post" : n.from_name;
             return {id:n.id, icon:icon, iconBg:bg, text:text, time:formatTime(n.created_at), read:n.read};
           });
@@ -1285,13 +1275,14 @@ function Notificaciones(props) {
 
 function Profile(props) {
   var userCity=props.userCity, onLogout=props.onLogout, onClose=props.onClose, onSetDark=props.onSetDark, onSetLang=props.onSetLang, isDark=props.isDark, currentLang=props.currentLang, following=props.following||[], onFollow=props.onFollow, userPhoto=props.userPhoto||null, userName=props.userName||"Tu", onPhotoChange=props.onPhotoChange||function(){}, savedPosts=props.savedPosts||[], userBio=props.userBio||"", onBioChange=props.onBioChange||function(){};
+  var TR = T[currentLang]||T.es;
   var [subScreen,setSubScreen]=useState(null);
   var cityObj = getCity(userCity);
 
   if(subScreen==="posts") return <MisPublicaciones userId={props.userId} userName={userName} onClose={function(){setSubScreen(null);}}/>;
   if(subScreen==="saved") return <Guardados saved={savedPosts} allPosts={SEED} onClose={function(){setSubScreen(null);}}/>;
   if(subScreen==="seguidores") return <FollowersList title="Seguidores" users={SAMPLE_USERS} following={following} onFollow={onFollow||function(){}} onClose={function(){setSubScreen(null);}}/>;
-  if(subScreen==="siguiendo") return <FollowersList title=TR.following users={SAMPLE_USERS.filter(function(u){return following.includes(u.name);})} following={following} onFollow={onFollow||function(){}} onClose={function(){setSubScreen(null);}}/>;
+  if(subScreen==="siguiendo") return <FollowersList title="Siguiendo" users={following.map(function(n){ return {name:n, av:n, city:userCity, bio:""}; })} following={following} onFollow={onFollow||function(){}} onClose={function(){setSubScreen(null);}}/>;
   if(subScreen==="notifs") return <Notificaciones onClose={function(){setSubScreen(null);}} userId={props.userId}/>;
   if(subScreen==="config") return <Configuracion userCity={userCity} onClose={function(){setSubScreen(null);}} onLogout={onLogout} onSetDark={onSetDark} onSetLang={onSetLang} isDark={isDark} currentLang={currentLang} userName={userName} userPhoto={userPhoto} userBio={userBio}/>;
   if(subScreen==="edit") return <EditProfile userCity={userCity} userPhoto={userPhoto} userName={userName} userBio={userBio} onPhotoChange={onPhotoChange} onBioChange={onBioChange} onClose={function(){setSubScreen(null);}}/>;
@@ -1316,7 +1307,7 @@ function Profile(props) {
             <button onClick={function(){setSubScreen("edit");}} style={{padding:"7px 16px",background:C.blue,border:"none",borderRadius:100,color:"#fff",cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:11,fontWeight:700}}>Editar perfil</button>
           </div>
           <div style={{display:"flex",marginTop:16,borderTop:"1px solid "+C.border,paddingTop:14}}>
-            {[{val:0,label:"Posts",color:C.blue,action:null},{val:SAMPLE_USERS.length,label:"Seguidores",color:C.yellow,action:function(){setSubScreen("seguidores");}},{val:following.length,label:TR.following,color:C.red,action:function(){setSubScreen("siguiendo");}}].map(function(s,i){
+            {[{val:0,label:"Posts",color:C.blue,action:null},{val:SAMPLE_USERS.length,label:"Seguidores",color:C.yellow,action:function(){setSubScreen("seguidores");}},{val:following.length,label:TR.siguiendo,color:C.red,action:function(){setSubScreen("siguiendo");}}].map(function(s,i){
               return (
                 <div key={s.label} onClick={s.action} style={{flex:1,textAlign:"center",borderRight:i<2?"1px solid "+C.border:"none",cursor:s.action?"pointer":"default",padding:"4px 0"}}>
                   <div style={{fontSize:22,fontWeight:800,fontFamily:"'Syne',sans-serif",color:s.color}}>{s.val}</div>
@@ -1363,6 +1354,7 @@ function Profile(props) {
 
 function EditProfile(props) {
   var userCity=props.userCity, onClose=props.onClose, onPhotoChange=props.onPhotoChange||function(){}, onBioChange=props.onBioChange||function(){};
+  var TR = T["es"];
   var [name,setName]=useState(props.userName||"");
   var [username,setUsername]=useState(props.userName?props.userName.toLowerCase().replace(/\s/g,""):"");
   var [bio,setBio]=useState(props.userBio||"Venezolano en "+getCity(userCity).name);
@@ -1453,7 +1445,6 @@ function EditProfile(props) {
     </div>
   );
 }
-
 
 function PasswordChange(props) {
   var onBack=props.onBack;
@@ -1637,8 +1628,6 @@ function Configuracion(props) {
     </div>
   );
 }
-
-
 
 var sStr = function(p){ var s=0; if(p.length>=6)s++; if(p.length>=10)s++; if(/[A-Z]/.test(p))s++; if(/[0-9]/.test(p))s++; return s; };
 var STR_COLORS = ["","#ff2d2d","#ff2d2d","#ffcc00","#1a7a3c","#1a7a3c"];
@@ -1854,23 +1843,13 @@ function AuthStep4(props) {
     <div style={{flex:1,padding:"40px 20px",textAlign:"center"}}>
       <div style={{fontSize:64,marginBottom:16}}>{ICONS.email}</div>
       <div style={{fontSize:22,fontFamily:"'Syne',sans-serif",color:C.text,marginBottom:10,fontWeight:700}}>Revisa tu correo</div>
-      <div style={{fontSize:14,color:C.muted,fontFamily:"'Inter',sans-serif",marginBottom:8,lineHeight:1.6}}>
-        Enviamos un enlace de confirmacion a
-      </div>
+      <div style={{fontSize:14,color:C.muted,fontFamily:"'Inter',sans-serif",marginBottom:8,lineHeight:1.6}}>Enviamos un enlace de confirmacion a</div>
       <div style={{fontSize:15,color:"#0066ff",fontFamily:"'Inter',sans-serif",fontWeight:700,marginBottom:24}}>{email}</div>
       <div style={{background:C.card,borderRadius:14,padding:"14px 18px",marginBottom:24,textAlign:"left"}}>
-        <div style={{fontSize:13,color:C.muted,fontFamily:"'Inter',sans-serif",lineHeight:1.6}}>
-          1. Abre tu correo electronico
-        </div>
-        <div style={{fontSize:13,color:C.muted,fontFamily:"'Inter',sans-serif",lineHeight:1.6}}>
-          2. Busca el correo de Epale
-        </div>
-        <div style={{fontSize:13,color:C.muted,fontFamily:"'Inter',sans-serif",lineHeight:1.6}}>
-          3. Haz clic en el enlace de confirmacion
-        </div>
-        <div style={{fontSize:13,color:C.muted,fontFamily:"'Inter',sans-serif",lineHeight:1.6}}>
-          4. Vuelve aqui e inicia sesion
-        </div>
+        <div style={{fontSize:13,color:C.muted,fontFamily:"'Inter',sans-serif",lineHeight:1.6}}>1. Abre tu correo electronico</div>
+        <div style={{fontSize:13,color:C.muted,fontFamily:"'Inter',sans-serif",lineHeight:1.6}}>2. Busca el correo de Epale</div>
+        <div style={{fontSize:13,color:C.muted,fontFamily:"'Inter',sans-serif",lineHeight:1.6}}>3. Haz clic en el enlace de confirmacion</div>
+        <div style={{fontSize:13,color:C.muted,fontFamily:"'Inter',sans-serif",lineHeight:1.6}}>4. Vuelve aqui e inicia sesion</div>
       </div>
       <button onClick={function(){onBack();}} style={{background:"none",border:"none",cursor:"pointer",color:"#0066ff",fontFamily:"'Inter',sans-serif",fontSize:13}}>Volver al inicio</button>
     </div>
@@ -1982,6 +1961,9 @@ export default function App() {
   });
   var [userPhoto,setUserPhoto]=useState(function(){
     try { var s=localStorage.getItem("epale_session"); var d=s?JSON.parse(s):null; return d&&d.photo?d.photo:null; } catch(e){ return null; }
+  });
+  var [userBio,setUserBio]=useState(function(){
+    try { var s=localStorage.getItem("epale_session"); var d=s?JSON.parse(s):null; return d&&d.bio?d.bio:""; } catch(e){ return ""; }
   });
   var [userId,setUserId]=useState(function(){
     try {
