@@ -1,8 +1,29 @@
 import { useState, useEffect } from "react";
 import React from "react";
+import { createClient } from "@supabase/supabase-js";
 
 const SUPA_URL = "https://zkydbsymcnnbepvmbchr.supabase.co";
 const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpreWRic3ltY25uYmVwdm1iY2hyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyNjExNjksImV4cCI6MjA5NTgzNzE2OX0.bIiUt752AROIfQkQTHqN7r9OrjRTzxmwNQLDw0WVVS4";
+
+const supabase = createClient(SUPA_URL, SUPA_KEY, {
+  auth: {
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: true,
+    storage: window.localStorage
+  }
+});
+
+var getToken = function(){
+  var session = supabase.auth.session ? supabase.auth.session() : null;
+  if(session && session.access_token) return session.access_token;
+  try {
+    var s = localStorage.getItem("epale_session");
+    var d = s ? JSON.parse(s) : null;
+    if(d && d.token && d.token.length > 10) return d.token;
+  } catch(e){}
+  return SUPA_KEY;
+};
 
 var getToken = function(){
   if(window._supaToken && window._supaToken.length > 10) return window._supaToken;
@@ -50,25 +71,22 @@ var getToken = function(){
 
 var api = {
   signUp: function(email, password, name, city, username) {
-    return fetch(SUPA_URL+"/auth/v1/signup", {
-      method:"POST",
-      headers:{"Content-Type":"application/json","apikey":SUPA_KEY},
-      body:JSON.stringify({email:email, password:password, data:{name:name, city:city, username:username}})
-    }).then(function(r){return r.json();}).then(function(res){
-      if(res.access_token || (res.session && res.session.access_token)) return res;
-      return fetch(SUPA_URL+"/auth/v1/token?grant_type=password", {
-        method:"POST",
-        headers:{"Content-Type":"application/json","apikey":SUPA_KEY},
-        body:JSON.stringify({email:email, password:password})
-      }).then(function(r){return r.json();});
+    return supabase.auth.signUp({email:email, password:password, options:{data:{name:name, city:city, username:username}}}).then(function(res){
+      return res.data || res;
     });
   },
   signIn: function(email, password) {
-    return fetch(SUPA_URL+"/auth/v1/token?grant_type=password", {
-      method:"POST",
-      headers:{"Content-Type":"application/json","apikey":SUPA_KEY},
-      body:JSON.stringify({email:email, password:password})
-    }).then(function(r){return r.json();});
+    return supabase.auth.signInWithPassword({email:email, password:password}).then(function(res){
+      return res.data || res;
+    });
+  },
+  signOut: function() {
+    return supabase.auth.signOut();
+  },
+  getSession: function() {
+    return supabase.auth.getSession().then(function(res){
+      return res.data ? res.data.session : null;
+    });
   },
   upsertProfile: function(id, name, city, username) {
     return fetch(SUPA_URL+"/rest/v1/profiles", {
@@ -699,12 +717,15 @@ function Feed(props) {
   var addPost = function(p){
     var displayName = userName || (function(){ try { var s=localStorage.getItem("epale_session"); var d=s?JSON.parse(s):null; return d&&d.name?d.name:"Tu"; } catch(e){ return "Tu"; } })();
     var currentUserId = userId || (function(){ try { var s=localStorage.getItem("epale_session"); var d=s?JSON.parse(s):null; return d&&d.uid?d.uid:""; } catch(e){ return ""; } })();
-    var newPost = {id:Date.now(),city:p.city,type:p.type,name:displayName,av:displayName,content:p.content,media:p.media,likes:0,comments:0,time:new Date().toISOString()};
-    setActiveCity(p.city);
-    setPosts(function(pp){ return [newPost].concat(pp); });
-    if(currentUserId) {
-      api.createPost(currentUserId, p.city, p.type, p.content, displayName).catch(function(){});
-    }
+    var citiesToPost = p.city==="all" ? CITIES.map(function(c){return c.id;}) : [p.city];
+    citiesToPost.forEach(function(cityId){
+      var newPost = {id:Date.now()+Math.random(),city:cityId,type:p.type,name:displayName,av:displayName,content:p.content,media:p.media,likes:0,comments:0,time:new Date().toISOString()};
+      setPosts(function(pp){ return [newPost].concat(pp); });
+      if(currentUserId) {
+        api.createPost(currentUserId, cityId, p.type, p.content, displayName).catch(function(){});
+      }
+    });
+    setActiveCity(p.city==="all" ? CITIES[0].id : p.city);
   };
 
   var handleCopy = function(){ if(navigator.clipboard) navigator.clipboard.writeText(refLink); setCopiedRef(true); setTimeout(function(){setCopiedRef(false);},2000); };
@@ -944,13 +965,16 @@ function Composer(props) {
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
             <span style={{fontSize:15,fontFamily:"'Syne',sans-serif",color:C.text,fontWeight:700}}>Nueva publicacion</span>
             <button onClick={function(){setShowCityPicker(function(v){return !v;});}} style={{background:C.bg,border:"1.5px solid "+C.border,borderRadius:100,padding:"5px 12px",cursor:"pointer",display:"flex",alignItems:"center",gap:6}}>
-              <span style={{fontSize:14}}>{toFlag(CITY_FLAGS[selectedCity])}</span>
-              <span style={{fontSize:12,color:C.blue,fontFamily:"'Inter',sans-serif",fontWeight:700}}>{selectedCityObj.name}</span>
+              <span style={{fontSize:14}}>{selectedCity==="all"?"🌎":toFlag(CITY_FLAGS[selectedCity])}</span>
+              <span style={{fontSize:12,color:C.blue,fontFamily:"'Inter',sans-serif",fontWeight:700}}>{selectedCity==="all"?"Todos los paises":selectedCityObj.name}</span>
               <span style={{fontSize:10,color:C.muted}}>{"v"}</span>
             </button>
           </div>
           {showCityPicker ? (
             <div style={{background:C.bg,borderRadius:14,border:"1px solid "+C.border,padding:"8px",marginBottom:12,display:"flex",flexWrap:"wrap",gap:6}}>
+              <button onClick={function(){setSelectedCity("all");setShowCityPicker(false);}} style={{padding:"5px 10px",borderRadius:100,border:"1.5px solid "+(selectedCity==="all"?C.yellow:C.border),background:selectedCity==="all"?C.yellow:C.card,color:selectedCity==="all"?C.text:C.text,fontFamily:"'Inter',sans-serif",fontSize:11,fontWeight:700,cursor:"pointer"}}>
+                {"Todos los paises"}
+              </button>
               {CITIES.map(function(c){
                 return (
                   <button key={c.id} onClick={function(){setSelectedCity(c.id);setShowCityPicker(false);}} style={{padding:"5px 10px",borderRadius:100,border:"1.5px solid "+(selectedCity===c.id?C.blue:C.border),background:selectedCity===c.id?C.blue:C.card,color:selectedCity===c.id?"#fff":C.text,fontFamily:"'Inter',sans-serif",fontSize:11,fontWeight:600,cursor:"pointer",display:"flex",alignItems:"center",gap:4}}>
@@ -1632,24 +1656,23 @@ function AuthLogin(props) {
     if(!email||!password){setError("Completa todos los campos");return;}
     setLoading(true); setError("");
     api.signIn(email, password).then(function(res) {
-      if(res.error || res.error_description) {
-        setError(res.error_description || "Correo o contrasena incorrectos");
+      var session = res.session || res;
+      if(!session || !session.access_token) {
+        setError("Correo o contrasena incorrectos");
         setLoading(false); return;
       }
-      var token = res.access_token || (res.session && res.session.access_token) || "";
-      var uid = (res.user && res.user.id) || (res.session && res.session.user && res.session.user.id) || "";
-      var refresh = res.refresh_token || (res.session && res.session.refresh_token) || "";
+      var token = session.access_token || "";
+      var uid = (session.user && session.user.id) || "";
+      var refresh = session.refresh_token || "";
+      var email2 = (session.user && session.user.email) || "";
       window._supaToken = token;
-      console.log("LOGIN TOKEN:", token ? token.slice(0,20) : "EMPTY");
-      console.log("LOGIN UID:", uid);
-      try { localStorage.setItem("epale_session", JSON.stringify({city:"madrid",name:"",photo:null,token:token,uid:uid,refresh:refresh})); } catch(e){ console.log("LS ERROR:", e); }
       api.getProfile(uid).then(function(profiles) {
         var profile = Array.isArray(profiles) && profiles[0];
         setLoading(false);
         var city = profile ? profile.city : "madrid";
         var name = profile ? profile.name : "";
         var photo = profile ? profile.photo_url : null;
-        try { localStorage.setItem("epale_session", JSON.stringify({city:city,name:name,photo:photo,token:token,uid:uid,refresh:refresh,email:res.user&&res.user.email||"",bio:profile?profile.bio||"":""})); } catch(e){}
+        try { localStorage.setItem("epale_session", JSON.stringify({city:city,name:name,photo:photo,token:token,uid:uid,refresh:refresh,email:email2,bio:profile?profile.bio||"":""})); } catch(e){}
         onDone(city, name, photo, token, uid);
       }).catch(function(){
         setLoading(false);
@@ -1996,7 +2019,26 @@ export default function App() {
     };
     doRefresh();
     var interval = setInterval(doRefresh, 1800000);
-    return function(){ clearInterval(interval); };
+
+    var authListener = supabase.auth.onAuthStateChange(function(event, session){
+      if(session && session.access_token) {
+        window._supaToken = session.access_token;
+        try {
+          var s = localStorage.getItem("epale_session");
+          var d = s ? JSON.parse(s) : {};
+          d.token = session.access_token;
+          if(session.refresh_token) d.refresh = session.refresh_token;
+          localStorage.setItem("epale_session", JSON.stringify(d));
+        } catch(e){}
+      }
+    });
+
+    return function(){
+      clearInterval(interval);
+      if(authListener && authListener.data && authListener.data.subscription) {
+        authListener.data.subscription.unsubscribe();
+      }
+    };
   }, []);
 
   useEffect(function(){
