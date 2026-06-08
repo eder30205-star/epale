@@ -582,7 +582,7 @@ function PostCard(props) {
             <button onClick={function(){setOpen(function(o){return !o;});}} style={{display:"flex",alignItems:"center",gap:5,padding:"6px 10px",background:open?"#e8f0fc":C.bg,border:"1px solid "+(open?"#b3c8ff":C.border),borderRadius:100,cursor:"pointer",color:open?C.blue:C.muted,fontFamily:"'Inter',sans-serif",fontSize:12}}>
                {ICONS.comment} {(post.comments+comments.length).toLocaleString()}
             </button>
-            <button onClick={function(){if(onSave) onSave(post.id);}} style={{display:"flex",alignItems:"center",gap:5,padding:"6px 10px",background:saved?"#fffbea":C.bg,border:"1px solid "+(saved?"#ffe066":C.border),borderRadius:100,cursor:"pointer",color:saved?C.yellow:C.muted,fontFamily:"'Inter',sans-serif",fontSize:12,marginLeft:"auto"}}>
+            <button onClick={function(){if(onSave) onSave(post.id);}} style={{display:"flex",alignItems:"center",gap:5,padding:"6px 10px",background:saved?C.card:C.bg,border:"1px solid "+(saved?C.yellow:C.border),borderRadius:100,cursor:"pointer",color:saved?C.yellow:C.muted,fontFamily:"'Inter',sans-serif",fontSize:12,marginLeft:"auto"}}>
                {saved?TR.guardado:TR.guardar}
             </button>
           </div>
@@ -965,7 +965,7 @@ function Composer(props) {
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
             <span style={{fontSize:15,fontFamily:"'Syne',sans-serif",color:C.text,fontWeight:700}}>Nueva publicacion</span>
             <button onClick={function(){setShowCityPicker(function(v){return !v;});}} style={{background:C.bg,border:"1.5px solid "+C.border,borderRadius:100,padding:"5px 12px",cursor:"pointer",display:"flex",alignItems:"center",gap:6}}>
-              <span style={{fontSize:14}}>{selectedCity==="all"?"🌎":toFlag(CITY_FLAGS[selectedCity])}</span>
+              <span style={{fontSize:14}}>{selectedCity==="all"?ICONS.group:toFlag(CITY_FLAGS[selectedCity])}</span>
               <span style={{fontSize:12,color:C.blue,fontFamily:"'Inter',sans-serif",fontWeight:700}}>{selectedCity==="all"?"Todos los paises":selectedCityObj.name}</span>
               <span style={{fontSize:10,color:C.muted}}>{"v"}</span>
             </button>
@@ -1219,7 +1219,7 @@ function FollowersList(props) {
 
 
 var NOTIF_SEED = [
-  { id:1, icon:ICONS.flag_ve, iconBg:"#fffbea", text:"Bienvenido a Epale! Conecta con venezolanos en tu pais", time:"ahora", read:false },
+  { id:1, icon:ICONS.flag_ve, iconBg:"", text:"Bienvenido a Epale! Conecta con venezolanos en tu pais", time:"ahora", read:false },
 ];
 
 function Notificaciones(props) {
@@ -1233,7 +1233,7 @@ function Notificaciones(props) {
         if(Array.isArray(data) && data.length > 0) {
           var mapped = data.map(function(n){
             var icon = n.type==="like" ? ICONS.heart : n.type==="comment" ? ICONS.comment : ICONS.flag_ve;
-            var bg = n.type==="like" ? "#fdecea" : n.type==="comment" ? "#e8f0fc" : "#fffbea";
+            var bg = n.type==="like" ? C.card : n.type==="comment" ? C.card : C.card;
             var text = n.type==="like" ? n.from_name+" le dio like a tu post" : n.type==="comment" ? n.from_name+" comento en tu post" : n.from_name;
             return {id:n.id, icon:icon, iconBg:bg, text:text, time:formatTime(n.created_at), read:n.read};
           });
@@ -1260,10 +1260,10 @@ function Notificaciones(props) {
         <div style={{fontSize:18,fontFamily:"'Syne',sans-serif",color:C.text,fontWeight:700,flex:1}}>Notificaciones</div>
         {unread > 0 ? <button onClick={markAll} style={{background:"none",border:"none",cursor:"pointer",color:C.blue,fontFamily:"'Inter',sans-serif",fontSize:11,fontWeight:600}}>Marcar todas</button> : null}
       </div>
-      {unread > 0 ? <div style={{padding:"8px 16px",background:"#fffbea",borderBottom:"1px solid "+C.border}}><span style={{fontSize:12,color:C.muted,fontFamily:"'Inter',sans-serif"}}>{unread} sin leer</span></div> : null}
+      {unread > 0 ? <div style={{padding:"8px 16px",background:C.card,borderBottom:"1px solid "+C.border}}><span style={{fontSize:12,color:C.muted,fontFamily:"'Inter',sans-serif"}}>{unread} sin leer</span></div> : null}
       <div style={{paddingBottom:40}}>
         {notifs.length===1 ? (
-          <div style={{background:"#fffbea",margin:"16px",borderRadius:14,padding:"14px 16px"}}>
+          <div style={{background:C.card,margin:"16px",borderRadius:14,padding:"14px 16px"}}>
             <div style={{fontSize:13,color:C.muted,fontFamily:"'Inter',sans-serif",textAlign:"center",lineHeight:1.6}}>Las notificaciones de likes y comentarios apareceran aqui proximamente</div>
           </div>
         ) : null}
@@ -1480,7 +1480,7 @@ function PasswordChange(props) {
   return (
     <div style={{padding:"24px 20px"}}>
       {msg ? <div style={{background:"#e8f8ee",border:"1px solid #30d158",borderRadius:12,padding:"12px 16px",marginBottom:16,fontSize:14,color:C.green,fontFamily:"'Inter',sans-serif",textAlign:"center"}}>{msg}</div> : null}
-      {error ? <div style={{background:"#3a1a1a",border:"1px solid "+C.red,borderRadius:12,padding:"12px 16px",marginBottom:16,fontSize:14,color:C.red,fontFamily:"'Inter',sans-serif"}}>{error}</div> : null}
+      {error ? <div style={{background:C.card,border:"1px solid "+C.red,borderRadius:12,padding:"12px 16px",marginBottom:16,fontSize:14,color:C.red,fontFamily:"'Inter',sans-serif"}}>{error}</div> : null}
       {[["NUEVA CONTRASENA","Nueva contrasena",newPass,setNewPass],["CONFIRMAR","Repite la contrasena",confirm,setConfirm]].map(function(item,i){
         return (
           <div key={i} style={{marginBottom:16}}>
@@ -1562,7 +1562,7 @@ function Configuracion(props) {
       <div style={{padding:"20px 16px"}}>
         {[{id:"es",flag:"VE",name:"Espanol"},{id:"en",flag:"",name:"English"}].map(function(l){
           return (
-            <button key={l.id} onClick={function(){if(onSetLang) onSetLang(l.id); setSubPage(null);}} style={{width:"100%",display:"flex",alignItems:"center",gap:14,padding:"16px",background:currentLang===l.id?"#fffbea":C.card,border:"2px solid "+(currentLang===l.id?C.yellow:C.border),borderRadius:14,cursor:"pointer",textAlign:"left",marginBottom:10}}>
+            <button key={l.id} onClick={function(){if(onSetLang) onSetLang(l.id); setSubPage(null);}} style={{width:"100%",display:"flex",alignItems:"center",gap:14,padding:"16px",background:currentLang===l.id?C.bg:C.card,border:"2px solid "+(currentLang===l.id?C.yellow:C.border),borderRadius:14,cursor:"pointer",textAlign:"left",marginBottom:10}}>
               <span style={{fontSize:28}}>{l.flag}</span>
               <span style={{fontSize:16,fontFamily:"'Syne',sans-serif",color:C.text,fontWeight:700,flex:1}}>{l.name}</span>
               {currentLang===l.id ? <div style={{width:22,height:22,borderRadius:9999,background:C.yellow,display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontWeight:700}}>{ICONS.check}</div> : null}
@@ -1787,7 +1787,7 @@ function AuthStep3(props) {
       <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:16}}>
         {CITIES.map(function(c){
           return (
-            <button key={c.id} onClick={function(){setChosenCity(c.id);}} style={{display:"flex",alignItems:"center",gap:14,padding:"12px 16px",background:chosenCity===c.id?(dark?"#2a2010":"#fffbea"):C.card,border:"2px solid "+(chosenCity===c.id?C.yellow:C.border),borderRadius:12,cursor:"pointer",textAlign:"left"}}>
+            <button key={c.id} onClick={function(){setChosenCity(c.id);}} style={{display:"flex",alignItems:"center",gap:14,padding:"12px 16px",background:chosenCity===c.id?C.bg:C.card,border:"2px solid "+(chosenCity===c.id?C.yellow:C.border),borderRadius:12,cursor:"pointer",textAlign:"left"}}>
               <span style={{fontSize:24}}>{toFlag(CITY_FLAGS[c.id])}</span>
               <div style={{flex:1}}>
                 <div style={{fontSize:15,fontFamily:"'Syne',sans-serif",color:C.text}}>{c.name}</div>
@@ -1859,7 +1859,7 @@ function AuthStep4(props) {
         Enviamos un enlace de confirmacion a
       </div>
       <div style={{fontSize:15,color:"#0066ff",fontFamily:"'Inter',sans-serif",fontWeight:700,marginBottom:24}}>{email}</div>
-      <div style={{background:"#fffbea",borderRadius:14,padding:"14px 18px",marginBottom:24,textAlign:"left"}}>
+      <div style={{background:C.card,borderRadius:14,padding:"14px 18px",marginBottom:24,textAlign:"left"}}>
         <div style={{fontSize:13,color:C.muted,fontFamily:"'Inter',sans-serif",lineHeight:1.6}}>
           1. Abre tu correo electronico
         </div>
@@ -1893,7 +1893,7 @@ function AuthStep4(props) {
         </div>
         <div style={{fontSize:12,color:C.muted,fontFamily:"'Inter',sans-serif"}}>Opcional - puedes agregar foto despues</div>
       </div>
-      <div style={{background:"#fffbea",borderRadius:12,padding:"10px 14px",marginBottom:18,textAlign:"left"}}>
+      <div style={{background:C.card,borderRadius:12,padding:"10px 14px",marginBottom:18,textAlign:"left"}}>
         <div style={{fontSize:12,color:C.muted,fontFamily:"'Inter',sans-serif"}}>Se enviara un correo de confirmacion a:</div>
         <div style={{fontSize:13,color:"#0066ff",fontFamily:"'Inter',sans-serif",fontWeight:700,marginTop:2}}>{email}</div>
       </div>
