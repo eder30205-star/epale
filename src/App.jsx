@@ -14,13 +14,24 @@ const supabase = createClient(SUPA_URL, SUPA_KEY, {
   }
 });
 
+// Token managed by Supabase SDK - always use this
 var getToken = function(){
-  var session = supabase.auth.session ? supabase.auth.session() : null;
-  if(session && session.access_token) return session.access_token;
+  if(window._supaToken && window._supaToken.length > 10) return window._supaToken;
   try {
-    var s = localStorage.getItem("epale_session");
-    var d = s ? JSON.parse(s) : null;
-    if(d && d.token && d.token.length > 10) return d.token;
+    var s = localStorage.getItem("sb-zkydbsymcnnbepvmbchr-auth-token");
+    if(s) {
+      var d = JSON.parse(s);
+      if(d && d.access_token) {
+        window._supaToken = d.access_token;
+        return d.access_token;
+      }
+    }
+    var s2 = localStorage.getItem("epale_session");
+    var d2 = s2 ? JSON.parse(s2) : null;
+    if(d2 && d2.token && d2.token.length > 10) {
+      window._supaToken = d2.token;
+      return d2.token;
+    }
   } catch(e){}
   return SUPA_KEY;
 };
@@ -38,33 +49,22 @@ var getToken = function(){
   return SUPA_KEY;
 };
 
-// Restore token immediately on load
+// Restore token on load - check SDK storage first
 (function(){
   try {
-    var s = localStorage.getItem("epale_session");
-    var d = s ? JSON.parse(s) : null;
-    if(d && d.token && d.token.length > 10) {
-      window._supaToken = d.token;
-      if(d.refresh) {
-        try {
-          var payload = JSON.parse(atob(d.token.split(".")[1]));
-          var needsRefresh = (payload.exp * 1000) - Date.now() < 600000;
-          if(needsRefresh) {
-            fetch(SUPA_URL+"/auth/v1/token?grant_type=refresh_token", {
-              method:"POST",
-              headers:{"Content-Type":"application/json","apikey":SUPA_KEY},
-              body:JSON.stringify({refresh_token:d.refresh})
-            }).then(function(r){return r.json();}).then(function(res){
-              if(res.access_token) {
-                window._supaToken = res.access_token;
-                d.token = res.access_token;
-                if(res.refresh_token) d.refresh = res.refresh_token;
-                localStorage.setItem("epale_session", JSON.stringify(d));
-              }
-            }).catch(function(){});
-          }
-        } catch(e){}
+    var sdkKey = "sb-zkydbsymcnnbepvmbchr-auth-token";
+    var s = localStorage.getItem(sdkKey);
+    if(s) {
+      var d = JSON.parse(s);
+      if(d && d.access_token && d.access_token.length > 10) {
+        window._supaToken = d.access_token;
+        return;
       }
+    }
+    var s2 = localStorage.getItem("epale_session");
+    var d2 = s2 ? JSON.parse(s2) : null;
+    if(d2 && d2.token && d2.token.length > 10) {
+      window._supaToken = d2.token;
     }
   } catch(e){}
 })();
@@ -1966,7 +1966,14 @@ export default function App() {
   var [lang,setLang]=useState(function(){ try{return localStorage.getItem("epale_lang")||"es";}catch(e){return "es";} });
   C = dark ? DARK : LIGHT;
   var [screen,setScreen]=useState(function(){
-    try { var s=localStorage.getItem("epale_session"); var d=s?JSON.parse(s):null; return d&&d.token&&d.token.length>10?"feed":"auth"; } catch(e){ return "auth"; }
+    try {
+      var sdkKey = "sb-zkydbsymcnnbepvmbchr-auth-token";
+      var s = localStorage.getItem(sdkKey);
+      if(s) { var d=JSON.parse(s); if(d&&d.access_token) return "feed"; }
+      var s2 = localStorage.getItem("epale_session");
+      var d2 = s2?JSON.parse(s2):null;
+      return d2&&d2.token&&d2.token.length>10?"feed":"auth";
+    } catch(e){ return "auth"; }
   });
   var [userCity,setUserCity]=useState(function(){
     try { var s=localStorage.getItem("epale_session"); var d=s?JSON.parse(s):null; return d&&d.city?d.city:"madrid"; } catch(e){ return "madrid"; }
@@ -2030,6 +2037,8 @@ export default function App() {
           if(session.refresh_token) d.refresh = session.refresh_token;
           localStorage.setItem("epale_session", JSON.stringify(d));
         } catch(e){}
+      } else if(event === "SIGNED_OUT") {
+        window._supaToken = null;
       }
     });
 
