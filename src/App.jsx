@@ -10,6 +10,20 @@ const supabase = createClient(SUPA_URL, SUPA_KEY, {
 });
 
 var _onAuthExpired = null;
+var _tokenReady = false;
+var _tokenReadyCallbacks = [];
+
+var onTokenReady = function(cb) {
+  if(_tokenReady) { cb(); return; }
+  _tokenReadyCallbacks.push(cb);
+};
+
+var resolveTokenReady = function() {
+  if(_tokenReady) return;
+  _tokenReady = true;
+  _tokenReadyCallbacks.forEach(function(cb){ try{ cb(); }catch(e){} });
+  _tokenReadyCallbacks = [];
+};
 
 var getToken = function(){
   if(window._supaToken && window._supaToken.length > 10) return window._supaToken;
@@ -28,15 +42,23 @@ var fetchAuth = function(url, opts) {
   });
 };
 
-(function(){
-  try {
-    var s = localStorage.getItem("sb-zkydbsymcnnbepvmbchr-auth-token");
-    if(s) { var d = JSON.parse(s); if(d && d.access_token && d.access_token.length > 10) { window._supaToken = d.access_token; return; } }
-    var s2 = localStorage.getItem("epale_session");
-    var d2 = s2 ? JSON.parse(s2) : null;
-    if(d2 && d2.token && d2.token.length > 10) { window._supaToken = d2.token; }
-  } catch(e){}
-})();
+// On startup, ask Supabase SDK for the current session (it auto-refreshes if needed)
+supabase.auth.getSession().then(function(res) {
+  var session = res.data && res.data.session;
+  if(session && session.access_token) {
+    window._supaToken = session.access_token;
+    try {
+      var s = localStorage.getItem("epale_session");
+      var d = s ? JSON.parse(s) : {};
+      d.token = session.access_token;
+      if(session.refresh_token) d.refresh = session.refresh_token;
+      localStorage.setItem("epale_session", JSON.stringify(d));
+    } catch(e){}
+  }
+  resolveTokenReady();
+}).catch(function() {
+  resolveTokenReady();
+});
 
 var api = {
   signUp: function(email, password, name, city, username) { return supabase.auth.signUp({email:email,password:password,options:{data:{name:name,city:city,username:username}}}).then(function(res){ return res.data||res; }); },
@@ -507,11 +529,15 @@ export default function App() {
   },[]);
 
   useEffect(function(){
-    if(userId&&window._supaToken){
+    if(!userId) return;
+    onTokenReady(function(){
+      if(!window._supaToken || window._supaToken === SUPA_KEY) {
+        setSessionExpired(true); setLikedLoaded(true); return;
+      }
       api.getFollowing(userId).then(function(data){ if(Array.isArray(data)){ var names=data.map(function(r){return r.following_name;}).filter(Boolean); if(names.length>0) setFollowing(names); } }).catch(function(){});
       api.getSaved(userId).then(function(data){ if(Array.isArray(data)){ var ids=data.map(function(r){return r.post_id;}).filter(Boolean); if(ids.length>0) setSavedPosts(ids); } }).catch(function(){});
       api.getLikes(userId).then(function(data){ if(Array.isArray(data)){ var ids=data.map(function(r){return r.post_id;}).filter(Boolean); setLikedPosts(ids); } setLikedLoaded(true); }).catch(function(){ setLikedLoaded(true); });
-    }
+    });
   },[userId]);
 
   useEffect(function(){
