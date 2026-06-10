@@ -177,10 +177,19 @@ function PostCard(props) {
   var [likeProcessing,setLikeProcessing]=useState(false);
   var [likedLocal,setLikedLocal]=useState(false);
   var [likes,setLikes]=useState(post.likes||0);
-  useEffect(function(){ setLikedLocal(liked); },[liked]);
+  var syncedRef=React.useRef(false);
+  useEffect(function(){
+    // Sync liked state from parent once after likedPosts loads
+    // Don't touch likes count here — post.likes from DB already reflects reality
+    if(!syncedRef.current) {
+      syncedRef.current=true;
+      setLikedLocal(liked);
+    }
+  },[liked]);
   var [open,setOpen]=useState(false);
   var [comment,setComment]=useState("");
   var [comments,setComments]=useState([]);
+  var commentInputRef=React.useRef(null);
   var [showMenu,setShowMenu]=useState(false);
   var [blocked,setBlocked]=useState(false);
   var [showFlag,setShowFlag]=useState(false);
@@ -249,12 +258,29 @@ function PostCard(props) {
       )}
       {open&&!blocked?(<div style={{borderTop:"1px solid "+C.border,padding:"10px 14px"}}>
         {comments.map(function(c,i){
-          var cName=typeof c==="string"?userName:(c.user_name||"?"); var cText=typeof c==="string"?c:c.content; var cTime=typeof c==="object"?formatTime(c.created_at):"";
-          return (<div key={i} style={{display:"flex",gap:8,marginBottom:8}}><Av t={cName} i={i} s={26}/><div style={{background:C.bg,borderRadius:10,padding:"5px 10px",flex:1,border:"1px solid "+C.border}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div style={{fontSize:10,fontWeight:700,color:C.blue,fontFamily:"'Inter',sans-serif"}}>{"@"+cName.toLowerCase().replace(/\s/g,"")}</div>{cTime?<div style={{fontSize:9,color:C.muted,fontFamily:"'Inter',sans-serif"}}>{cTime}</div>:null}</div><div style={{fontSize:13,color:C.text,fontFamily:"'Inter',sans-serif"}}>{cText}</div></div></div>);
+          var cName=typeof c==="string"?userName:(c.user_name||"?");
+          var cText=typeof c==="string"?c:c.content;
+          var cTime=typeof c==="object"?formatTime(c.created_at):"";
+          var isReply=cText&&cText.startsWith("@");
+          return (
+            <div key={i} style={{display:"flex",gap:8,marginBottom:8,marginLeft:isReply?28:0}}>
+              <Av t={cName} i={i} s={isReply?22:26}/>
+              <div style={{background:C.bg,borderRadius:10,padding:"5px 10px",flex:1,border:"1px solid "+C.border}}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                  <div style={{fontSize:10,fontWeight:700,color:C.blue,fontFamily:"'Inter',sans-serif"}}>{"@"+cName.toLowerCase().replace(/\s/g,"")}</div>
+                  <div style={{display:"flex",alignItems:"center",gap:6}}>
+                    {cTime?<span style={{fontSize:9,color:C.muted,fontFamily:"'Inter',sans-serif"}}>{cTime}</span>:null}
+                    <button onClick={function(){ var handle="@"+cName.toLowerCase().replace(/\s/g,"")+" "; setComment(handle); setTimeout(function(){ if(commentInputRef.current){ commentInputRef.current.focus(); commentInputRef.current.setSelectionRange(handle.length,handle.length); } },50); }} style={{background:"none",border:"none",cursor:"pointer",color:C.blue,fontFamily:"'Inter',sans-serif",fontSize:10,padding:0,fontWeight:600}}>↩ Responder</button>
+                  </div>
+                </div>
+                <div style={{fontSize:13,color:C.text,fontFamily:"'Inter',sans-serif",marginTop:2}}>{cText}</div>
+              </div>
+            </div>
+          );
         })}
-        <div style={{display:"flex",gap:8}}>
-          <input value={comment} onChange={function(e){setComment(e.target.value);}} onKeyDown={function(e){if(e.key==="Enter") sendComment();}} placeholder="Comenta..." style={{flex:1,padding:"8px 12px",background:C.bg,border:"1px solid "+C.border,borderRadius:20,fontFamily:"'Inter',sans-serif",fontSize:13,color:C.text,outline:"none"}}/>
-          <button onClick={sendComment} style={{background:C.blue,border:"none",borderRadius:9999,width:34,height:34,cursor:"pointer",color:"#fff",fontSize:14,display:"flex",alignItems:"center",justifyContent:"center"}}>^</button>
+        <div style={{display:"flex",gap:8,alignItems:"center",marginTop:4}}>
+          <input ref={commentInputRef} value={comment} onChange={function(e){setComment(e.target.value);}} onKeyDown={function(e){if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendComment();}}} placeholder="Comenta..." style={{flex:1,padding:"8px 12px",background:C.bg,border:"1px solid "+(comment.startsWith("@")?C.blue:C.border),borderRadius:20,fontFamily:"'Inter',sans-serif",fontSize:13,color:C.text,outline:"none"}}/>
+          <button onClick={sendComment} style={{background:C.blue,border:"none",borderRadius:9999,width:34,height:34,cursor:"pointer",color:"#fff",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>&#8593;</button>
         </div>
       </div>):null}
     </div>
@@ -270,7 +296,22 @@ function Feed(props) {
   var toggleLike=props.onLike||function(){}; var toggleSave=props.onSave||function(){};
   var [feedTab,setFeedTab]=useState("forYou"); var following=props.following||[]; var toggleFollow=props.onFollow||function(){};
   var [isMobile,setIsMobile]=useState(window.innerWidth<768);
-  useEffect(function(){ setPosts(SEED); api.getPosts(activeCity).then(function(data){ if(Array.isArray(data)&&data.length>0){ var mapped=data.map(function(p){ return {id:p.id,city:p.city,type:p.type||"post",name:p.name||"Anonimo",av:p.name||"?",content:p.content,likes:p.likes||0,comments:p.comments||0,time:p.created_at||"reciente"}; }); setPosts(mapped.concat(SEED)); } }).catch(function(){}); },[activeCity]);
+  useEffect(function(){
+    // Keep local posts, reset DB+SEED portion
+    setPosts(function(current){
+      return current.filter(function(p){ return p._local; }).concat(SEED);
+    });
+    api.getPosts(activeCity).then(function(data){
+      if(Array.isArray(data)&&data.length>0){
+        var mapped=data.map(function(p){ return {id:p.id,city:p.city,type:p.type||"post",name:p.name||"Anonimo",av:p.name||"?",content:p.content,likes:p.likes||0,comments:p.comments||0,time:p.created_at||"reciente"}; });
+        setPosts(function(current){
+          var localPosts=current.filter(function(p){ return p._local; });
+          var seedFiltered=SEED.filter(function(s){ return !mapped.find(function(m){return String(m.id)===String(s.id);}); });
+          return localPosts.concat(mapped).concat(seedFiltered);
+        });
+      }
+    }).catch(function(){});
+  },[activeCity]);
   useEffect(function(){ var handler=function(){ setIsMobile(window.innerWidth<768); }; window.addEventListener("resize",handler); return function(){ window.removeEventListener("resize",handler); }; },[]);
   var cityObj=getCity(activeCity);
   var cityButtons=CITIES.map(function(c){ return (<button key={c.id} onClick={function(){setActiveCity(c.id);}} style={{padding:"5px 12px",borderRadius:100,border:"1.5px solid "+(activeCity===c.id?C.blue:C.border),background:activeCity===c.id?C.blue:C.card,color:activeCity===c.id?"#fff":C.muted,fontFamily:"'Inter',sans-serif",fontSize:10,fontWeight:700,cursor:"pointer",whiteSpace:"nowrap",flexShrink:0}}>{toFlag(CITY_FLAGS[c.id])} {c.name}</button>); });
@@ -280,7 +321,7 @@ function Feed(props) {
   var cityFiltered=allFiltered.filter(function(p){ return p.city===activeCity; });
   var followFiltered=allFiltered.filter(function(p){ return following.includes(p.name); });
   var filtered=feedTab==="following"?followFiltered:cityFiltered;
-  var addPost=function(p){ var displayName=userName||"Tu"; var currentUserId=userId||""; var citiesToPost=p.city==="all"?CITIES.map(function(c){return c.id;}):[p.city]; citiesToPost.forEach(function(cityId){ var newPost={id:Date.now()+Math.random(),city:cityId,type:p.type,name:displayName,av:displayName,content:p.content,media:p.media,likes:0,comments:0,time:new Date().toISOString()}; setPosts(function(pp){ return [newPost].concat(pp); }); if(currentUserId) api.createPost(currentUserId,cityId,p.type,p.content,displayName).catch(function(){}); }); setActiveCity(p.city==="all"?CITIES[0].id:p.city); };
+  var addPost=function(p){ var displayName=userName||"Tu"; var currentUserId=userId||""; var citiesToPost=p.city==="all"?CITIES.map(function(c){return c.id;}):[p.city]; var newPostId=String(Date.now()); citiesToPost.forEach(function(cityId){ var newPost={id:newPostId,city:cityId,type:p.type,name:displayName,av:displayName,content:p.content,media:p.media,likes:0,comments:0,time:new Date().toISOString(),_local:true}; setPosts(function(pp){ return [newPost].concat(pp); }); if(currentUserId) api.createPost(currentUserId,cityId,p.type,p.content,displayName).catch(function(){}); }); };
   var [dollarBCV,setDollarBCV]=useState("36.84"); var [dollarPar,setDollarPar]=useState("38.20");
   useEffect(function(){ api.getDollarRate().then(function(data){ if(Array.isArray(data)){ data.forEach(function(d){ if(d.fuente==="BCV"||d.nombre==="Oficial") setDollarBCV(parseFloat(d.promedio||d.price||36.84).toFixed(2)); if(d.fuente==="Paralelo"||d.nombre==="Paralelo") setDollarPar(parseFloat(d.promedio||d.price||38.20).toFixed(2)); }); } }).catch(function(){}); },[]);
   var dollarWidget=(<div style={{background:C.card,borderRadius:14,border:"1px solid "+C.border,overflow:"hidden",marginBottom:16}}><div style={{background:"#0d0d0d",padding:"9px 14px",display:"flex",alignItems:"center",gap:10}}><span style={{fontSize:16}}>{ICONS.dollar}</span><div style={{flex:1,display:"flex",gap:12,alignItems:"center",flexWrap:"wrap"}}><span style={{fontFamily:"'Inter',sans-serif",fontSize:11,color:"rgba(255,255,255,0.5)"}}>BCV <strong style={{fontSize:14,color:"#ffcc00"}}>{"Bs "+dollarBCV}</strong></span><span style={{fontFamily:"'Inter',sans-serif",fontSize:11,color:"rgba(255,255,255,0.5)"}}>Paralelo <strong style={{fontSize:14,color:"#7defa0"}}>{"Bs "+dollarPar}</strong></span></div><span style={{fontSize:10,color:"rgba(255,255,255,0.3)",fontFamily:"'Inter',sans-serif"}}>hoy</span></div>{filtered[0]?(<div style={{padding:"8px 14px",display:"flex",gap:8,alignItems:"center"}}><span style={{fontSize:14}}>{ICONS.fire}</span><span style={{fontSize:11,color:C.muted,fontFamily:"'Inter',sans-serif"}}>Trending:</span><span style={{fontSize:12,color:C.text,fontFamily:"'Inter',sans-serif",fontWeight:600,flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{filtered[0].content.slice(0,80)}...</span></div>):null}</div>);
