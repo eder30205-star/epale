@@ -99,6 +99,14 @@ var api = {
   },
   getPostsByName: function(name) {
     return fetch(SUPA_URL+"/rest/v1/posts?name=eq."+encodeURIComponent(name)+"&select=*&order=created_at.desc&limit=30",{headers:{"apikey":SUPA_KEY}}).then(function(r){return r.json();});
+  },
+  searchProfiles: function(query) {
+    var q=encodeURIComponent(query);
+    return fetch(SUPA_URL+"/rest/v1/profiles?or=(name.ilike.*"+q+"*,username.ilike.*"+q+"*)&select=*&limit=20",{headers:{"apikey":SUPA_KEY,"Authorization":"Bearer "+getToken()}}).then(function(r){return r.json();});
+  },
+  getTopProfiles: function(city) {
+    var url=city?SUPA_URL+"/rest/v1/profiles?city=eq."+city+"&select=*&limit=10":SUPA_URL+"/rest/v1/profiles?select=*&limit=10";
+    return fetch(url,{headers:{"apikey":SUPA_KEY,"Authorization":"Bearer "+getToken()}}).then(function(r){return r.json();});
   }
 };
 
@@ -177,6 +185,37 @@ function SessionExpiredBanner(props) {
   );
 }
 
+
+function Skeleton(props) {
+  var w=props.w||"100%", h=props.h||14, r=props.r||8, mb=props.mb||0;
+  return <div style={{width:w,height:h,borderRadius:r,background:"linear-gradient(90deg,"+C.border+" 25%,"+C.bg+" 50%,"+C.border+" 75%)",backgroundSize:"200% 100%",animation:"epale-shimmer 1.4s infinite",marginBottom:mb}}/>;
+}
+
+function PostSkeleton() {
+  return (
+    <div style={{background:C.card,borderBottom:"1px solid "+C.border,padding:"14px 14px 12px"}}>
+      <style>{"
+        @keyframes epale-shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+      "}</style>
+      <div style={{display:"flex",gap:12,marginBottom:12}}>
+        <div style={{width:42,height:42,borderRadius:9999,background:C.border,flexShrink:0}}/>
+        <div style={{flex:1}}>
+          <Skeleton w="40%" h={14} r={6} mb={6}/>
+          <Skeleton w="25%" h={10} r={6}/>
+        </div>
+      </div>
+      <Skeleton w="100%" h={13} r={6} mb={6}/>
+      <Skeleton w="90%" h={13} r={6} mb={6}/>
+      <Skeleton w="60%" h={13} r={6} mb={12}/>
+      <div style={{display:"flex",gap:8}}>
+        <Skeleton w={70} h={36} r={100}/>
+        <Skeleton w={70} h={36} r={100}/>
+        <Skeleton w={80} h={36} r={100}/>
+      </div>
+    </div>
+  );
+}
+
 function PostCard(props) {
   var post=props.post,idx=props.idx,cityObj=props.cityObj,saved=props.saved,onSave=props.onSave,following=props.following||[],onFollow=props.onFollow,userName=props.userName||"",liked=props.liked||false,onLike=props.onLike||function(){},likedLoaded=props.likedLoaded||false;
   var TR=T[props.lang||"es"]||T.es;
@@ -217,7 +256,7 @@ function PostCard(props) {
             <Av t={post.av} i={idx} s={42}/>
             <div style={{flex:1}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                <span onClick={function(){ if(props.onOpenProfile) props.onOpenProfile(post.name); }} style={{fontWeight:700,fontSize:15,fontFamily:"'Syne',sans-serif",color:C.text,cursor:"pointer"}}>{post.name}</span>
+                <span onClick={function(){ if(props.onOpenProfile) props.onOpenProfile(post.name); }} style={{fontWeight:700,fontSize:15,fontFamily:"'Syne',sans-serif",color:C.text,cursor:"pointer",display:"inline-flex",alignItems:"center",gap:4}}>{post.name}{isVerified(post.name)?<span style={{fontSize:13,color:C.blue}} title="Cuenta verificada">✓</span>:null}</span>
                 <div style={{display:"flex",alignItems:"center",gap:8}}>
                   {post.name!=="Tu"&&post.name!==userName&&onFollow?(<button onClick={function(){onFollow(post.name);}} style={{padding:"8px 14px",minHeight:36,borderRadius:100,border:"1.5px solid "+(following.includes(post.name)?C.border:C.blue),background:"transparent",color:following.includes(post.name)?C.muted:C.blue,fontFamily:"'Inter',sans-serif",fontSize:12,fontWeight:700,cursor:"pointer"}}>{following.includes(post.name)?TR.siguiendo:TR.seguir}</button>):null}
                   <button onClick={function(){setShowMenu(function(m){return !m;});}} style={{background:"none",border:"none",cursor:"pointer",color:C.muted,fontSize:20,padding:"4px 10px",minWidth:44,minHeight:44,display:"flex",alignItems:"center",justifyContent:"center"}}>...</button>
@@ -518,7 +557,9 @@ function Feed(props) {
     document.addEventListener("epale:openComposer",handler);
     return function(){ document.removeEventListener("epale:openComposer",handler); };
   },[]);
+  var [postsLoading,setPostsLoading]=useState(false);
   useEffect(function(){
+    setPostsLoading(true);
     // Keep local posts, reset DB+SEED portion
     setPosts(function(current){
       return current.filter(function(p){ return p._local; }).concat(SEED);
@@ -532,7 +573,8 @@ function Feed(props) {
           return localPosts.concat(mapped).concat(seedFiltered);
         });
       }
-    }).catch(function(){});
+      setPostsLoading(false);
+    }).catch(function(){ setPostsLoading(false); });
 
     // Real-time subscription: new posts appear instantly
     var channel=supabase.channel("posts:"+activeCity)
@@ -564,12 +606,29 @@ function Feed(props) {
   var [dollarBCV,setDollarBCV]=useState("36.84"); var [dollarPar,setDollarPar]=useState("38.20");
   useEffect(function(){ api.getDollarRate().then(function(data){ if(Array.isArray(data)){ data.forEach(function(d){ if(d.fuente==="BCV"||d.nombre==="Oficial") setDollarBCV(parseFloat(d.promedio||d.price||36.84).toFixed(2)); if(d.fuente==="Paralelo"||d.nombre==="Paralelo") setDollarPar(parseFloat(d.promedio||d.price||38.20).toFixed(2)); }); } }).catch(function(){}); },[]);
   var dollarWidget=(<div style={{background:C.card,borderRadius:14,border:"1px solid "+C.border,overflow:"hidden",marginBottom:16}}><div style={{background:"#0d0d0d",padding:"9px 14px",display:"flex",alignItems:"center",gap:10}}><span style={{fontSize:16}}>{ICONS.dollar}</span><div style={{flex:1,display:"flex",gap:12,alignItems:"center",flexWrap:"wrap"}}><span style={{fontFamily:"'Inter',sans-serif",fontSize:11,color:"rgba(255,255,255,0.5)"}}>BCV <strong style={{fontSize:14,color:"#ffcc00"}}>{"Bs "+dollarBCV}</strong></span><span style={{fontFamily:"'Inter',sans-serif",fontSize:11,color:"rgba(255,255,255,0.5)"}}>Paralelo <strong style={{fontSize:14,color:"#7defa0"}}>{"Bs "+dollarPar}</strong></span></div><span style={{fontSize:10,color:"rgba(255,255,255,0.3)",fontFamily:"'Inter',sans-serif"}}>hoy</span></div>{filtered[0]?(<div style={{padding:"8px 14px",display:"flex",gap:8,alignItems:"center"}}><span style={{fontSize:14}}>{ICONS.fire}</span><span style={{fontSize:11,color:C.muted,fontFamily:"'Inter',sans-serif"}}>Trending:</span><span style={{fontSize:12,color:C.text,fontFamily:"'Inter',sans-serif",fontWeight:600,flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{filtered[0].content.slice(0,80)}...</span></div>):null}</div>);
-  var postsList=filtered.length===0?(<div style={{textAlign:"center",padding:"60px 20px",color:C.muted}}><div style={{fontSize:40,marginBottom:12}}>{feedTab==="following"?"(siguiendo)":"(feed)"}</div><div style={{fontSize:15,fontFamily:"'Inter',sans-serif"}}>{feedTab==="following"?"Sigue a alguien para ver sus posts":"Se el primero en publicar"}</div></div>):filtered.map(function(p,i){ return <PostCard key={p.id} post={p} idx={i} cityObj={cityObj} saved={savedPosts.includes(p.id)} onSave={toggleSave} following={following} onFollow={toggleFollow} userName={userName} liked={likedPosts.includes(String(p.id))} onLike={function(id){ toggleLike(id,p.user_id,p.name); }} userId={userId} likedLoaded={likedLoaded} onOpenProfile={props.onOpenProfile} lang={lang}/>; });
+  var postsList=postsLoading?[1,2,3,4].map(function(i){return <PostSkeleton key={i}/>;})
+    :filtered.length===0?(
+      feedTab==="following"?(
+        <div style={{textAlign:"center",padding:"60px 20px"}}>
+          <div style={{fontSize:48,marginBottom:12}}>👥</div>
+          <div style={{fontSize:17,fontFamily:"'Syne',sans-serif",color:C.text,marginBottom:8}}>Tu feed esta vacio</div>
+          <div style={{fontSize:14,color:C.muted,fontFamily:"'Inter',sans-serif",marginBottom:20,lineHeight:1.6}}>Sigue a personas para ver sus posts aqui</div>
+          <button onClick={function(){setFeedTab("forYou");}} style={{padding:"12px 24px",background:C.yellow,border:"none",borderRadius:100,cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:14,fontWeight:700,color:"#1a1a1a"}}>Ver posts populares</button>
+        </div>
+      ):(
+        <div style={{textAlign:"center",padding:"60px 20px"}}>
+          <div style={{fontSize:48,marginBottom:12}}>{toFlag(CITY_FLAGS[activeCity])}</div>
+          <div style={{fontSize:17,fontFamily:"'Syne',sans-serif",color:C.text,marginBottom:8}}>Sin posts aun</div>
+          <div style={{fontSize:14,color:C.muted,fontFamily:"'Inter',sans-serif",marginBottom:20}}>Se el primero en publicar en {getCity(activeCity).name}</div>
+          <button onClick={function(){setShowComposer(true);}} style={{padding:"12px 24px",background:C.yellow,border:"none",borderRadius:100,cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:14,fontWeight:700,color:"#1a1a1a"}}>+ Publicar ahora</button>
+        </div>
+      )
+    ):filtered.map(function(p,i){ return <PostCard key={p.id} post={p} idx={i} cityObj={cityObj} saved={savedPosts.includes(p.id)} onSave={toggleSave} following={following} onFollow={toggleFollow} userName={userName} liked={likedPosts.includes(String(p.id))} onLike={function(id){ toggleLike(id,p.user_id,p.name); }} userId={userId} likedLoaded={likedLoaded} onOpenProfile={props.onOpenProfile} lang={lang}/>; });
   var inviteBanner=(<a href={waInvite(activeCity)} target="_blank" rel="noreferrer" style={{textDecoration:"none",display:"block",marginBottom:16}} onClick={function(){setInviteCount(function(c){return Math.min(c+1,3);});}}><div style={{background:C.wa,borderRadius:16,padding:"16px"}}><div style={{fontSize:13,fontWeight:700,color:"#fff",fontFamily:"'Inter',sans-serif",marginBottom:4}}>Invita venezolanos a {cityObj.name}</div><div style={{fontSize:11,color:"rgba(255,255,255,0.8)",fontFamily:"'Inter',sans-serif",marginBottom:10}}>{inviteCount>=3?"Meta cumplida!":inviteCount===0?TR.invitaTusP:inviteCount+" de 3 invitados"}</div><div style={{display:"flex",gap:6,marginBottom:10}}>{[0,1,2].map(function(j){ return <div key={j} style={{flex:1,height:4,borderRadius:2,background:j<inviteCount?"#fff":"rgba(255,255,255,0.3)"}}/>; })}</div><div style={{background:"rgba(255,255,255,0.2)",borderRadius:10,padding:"8px 12px",textAlign:"center",color:"#fff",fontFamily:"'Inter',sans-serif",fontSize:12,fontWeight:700}}>Invitar por WhatsApp</div></div></a>);
   var header=(<div style={{position:"sticky",top:0,zIndex:100,background:C.card,backdropFilter:"blur(20px)",boxShadow:"0 1px 0 rgba(0,0,0,0.1)"}}><div style={{display:"flex",height:4}}><div style={{flex:1,background:C.yellow}}/><div style={{flex:1,background:C.blue}}/><div style={{flex:1,background:C.red}}/></div>{isMobile?(<div><div style={{padding:"10px 16px 6px",display:"flex",alignItems:"center",justifyContent:"space-between"}}><div style={{fontSize:24,fontFamily:"'Syne',sans-serif",letterSpacing:-1,fontWeight:800}}><span style={{color:C.yellow}}>E</span><span style={{color:C.blue}}>pa</span><span style={{color:C.red}}>le</span></div><div style={{display:"flex",gap:20}}>{tabButtons}</div><button onClick={onProfile} style={{background:"none",border:"none",cursor:"pointer"}}><Av t={userName} i={0} s={34} photo={userPhoto}/></button></div><div style={{display:"flex",gap:6,padding:"0 12px 8px",overflowX:"auto",WebkitOverflowScrolling:"touch",scrollbarWidth:"none",msOverflowStyle:"none"}}>{cityButtons}</div><div style={{display:"flex",gap:6,padding:"0 12px 8px",overflowX:"auto",borderTop:"1px solid "+C.border}}><button onClick={function(){setFilter("all");}} style={{padding:"5px 14px",borderRadius:100,border:"1.5px solid "+(filter==="all"?C.blue:C.border),background:filter==="all"?C.blue:C.card,color:filter==="all"?"#fff":C.muted,fontFamily:"'Inter',sans-serif",fontSize:10,fontWeight:700,cursor:"pointer",whiteSpace:"nowrap",flexShrink:0}}>Todos</button>{typeButtons}</div></div>):(<div><div style={{maxWidth:1200,margin:"0 auto",padding:"8px 20px 0",display:"flex",alignItems:"center",gap:20}}><div style={{fontSize:26,fontFamily:"'Syne',sans-serif",letterSpacing:-1,fontWeight:800,minWidth:120}}><span style={{color:C.yellow}}>E</span><span style={{color:C.blue}}>pa</span><span style={{color:C.red}}>le</span></div><div style={{flex:1,display:"flex",justifyContent:"center",gap:28}}>{tabButtons}</div><div style={{minWidth:120,display:"flex",justifyContent:"flex-end"}}><button onClick={onProfile} style={{background:"none",border:"none",cursor:"pointer"}}><Av t={userName} i={0} s={34} photo={userPhoto}/></button></div></div><div style={{maxWidth:1200,margin:"0 auto",padding:"6px 20px 8px",display:"flex",gap:6,overflowX:"auto"}}>{cityButtons}</div><div style={{maxWidth:1200,margin:"0 auto",padding:"0 20px 8px",display:"flex",gap:6,overflowX:"auto",borderTop:"1px solid "+C.border}}><button onClick={function(){setFilter("all");}} style={{padding:"5px 14px",borderRadius:100,border:"1.5px solid "+(filter==="all"?C.blue:C.border),background:filter==="all"?C.blue:C.card,color:filter==="all"?"#fff":C.muted,fontFamily:"'Inter',sans-serif",fontSize:10,fontWeight:700,cursor:"pointer",whiteSpace:"nowrap",flexShrink:0}}>Todos</button>{typeButtons}</div></div>)}</div>);
   if(isMobile){ return (<div style={{minHeight:"100vh",background:C.bg}}>
     {openCity?<CountryFeed cityId={openCity} onClose={function(){setOpenCity(null);}} savedPosts={savedPosts} onSave={toggleSave} likedPosts={likedPosts} onLike={toggleLike} following={following} onFollow={toggleFollow} userName={userName} userId={userId} lang={lang} onOpenProfile={props.onOpenProfile}/>:null}
-    {showComposer?<Composer cityObj={cityObj} onPost={addPost} onClose={function(){setShowComposer(false);}}/>:null}{header}<div style={{paddingBottom:"calc(80px + env(safe-area-inset-bottom))"}}><div style={{margin:"10px 14px 0"}}>{dollarWidget}</div><div style={{marginTop:4}}>{postsList}</div><div style={{margin:"10px 14px 20px"}}>{inviteBanner}</div></div><button onClick={function(){setShowComposer(true);}} style={{position:"fixed",bottom:80,right:24,width:52,height:52,borderRadius:26,background:C.yellow,border:"none",cursor:"pointer",fontSize:30,boxShadow:"0 4px 18px rgba(255,204,0,0.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:150,lineHeight:1}}>{ICONS.pencil}</button></div>); }
+    {showComposer?<Composer cityObj={cityObj} onPost={addPost} onClose={function(){setShowComposer(false);}}/>:null}{header}<div style={{paddingBottom:"calc(80px + env(safe-area-inset-bottom))"}}><div style={{margin:"10px 14px 0"}}>{dollarWidget}</div><div style={{marginTop:4}}>{postsList}</div><div style={{margin:"10px 14px 20px"}}>{inviteBanner}</div></div></div>); }
   return (<div style={{minHeight:"100vh",background:C.bg}}>
     {openCity?<CountryFeed cityId={openCity} onClose={function(){setOpenCity(null);}} savedPosts={savedPosts} onSave={toggleSave} likedPosts={likedPosts} onLike={toggleLike} following={following} onFollow={toggleFollow} userName={userName} userId={userId} lang={lang} onOpenProfile={props.onOpenProfile}/>:null}
     {showComposer?<Composer cityObj={cityObj} onPost={addPost} onClose={function(){setShowComposer(false);}}/>:null}{header}<button onClick={function(){setShowComposer(true);}} style={{position:"fixed",bottom:32,right:32,width:56,height:56,borderRadius:28,background:C.yellow,border:"none",cursor:"pointer",fontSize:28,boxShadow:"0 4px 18px rgba(255,204,0,0.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:150,lineHeight:1}}>{ICONS.pencil}</button><div style={{maxWidth:1200,margin:"0 auto",padding:"20px",display:"flex",gap:24,alignItems:"flex-start"}}><div style={{width:240,flexShrink:0,position:"sticky",top:170}}><div style={{background:C.card,borderRadius:16,border:"1px solid "+C.border,overflow:"hidden",marginBottom:16}}><div style={{background:"linear-gradient(135deg,#ffcc00,#0066ff)",height:60}}/><div style={{padding:"0 16px 16px",marginTop:-28}}><Av t={userName} i={0} s={52} photo={userPhoto}/><div style={{marginTop:8,fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:16,color:C.text}}>{userName}</div><div style={{fontSize:12,color:C.muted,fontFamily:"'Inter',sans-serif",marginBottom:4}}>{"@"+userName.toLowerCase().replace(" ","")}</div>{userBio?<div style={{fontSize:11,color:C.muted,fontFamily:"'Inter',sans-serif",marginBottom:12,lineHeight:1.4}}>{userBio}</div>:<div style={{marginBottom:12}}/>}<button onClick={onProfile} style={{width:"100%",padding:"8px",background:C.yellow,border:"none",borderRadius:10,cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:12,fontWeight:700,color:C.text}}>Ver perfil</button></div></div><button onClick={function(){setShowComposer(true);}} style={{width:"100%",padding:"12px",background:C.yellow,border:"none",borderRadius:12,cursor:"pointer",fontFamily:"'Syne',sans-serif",fontSize:14,fontWeight:700,color:C.text,marginBottom:16}}>+ Publicar</button><div style={{background:C.card,borderRadius:16,border:"1px solid "+C.border,padding:"14px 16px"}}><div style={{fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:13,color:C.text,marginBottom:12}}>Proximos eventos</div>{SEED.filter(function(p){ return p.type==="evento"&&p.city===activeCity; }).slice(0,3).map(function(ev,i){ return (<div key={ev.id} onClick={function(){setFilter("evento");}} style={{display:"flex",gap:10,marginBottom:12,cursor:"pointer",padding:"8px 10px",borderRadius:10,background:C.bg}}><div style={{width:36,height:36,borderRadius:10,background:"#7b2d8b",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,flexShrink:0}}>{ICONS.bell}</div><div style={{flex:1,minWidth:0}}><div style={{fontSize:12,fontWeight:700,color:C.text,fontFamily:"'Inter',sans-serif",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{ev.name}</div><div style={{fontSize:11,color:C.muted,fontFamily:"'Inter',sans-serif",marginTop:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{ev.content.slice(0,45)}...</div></div></div>); })}{SEED.filter(function(p){ return p.type==="evento"&&p.city===activeCity; }).length===0?(<div style={{textAlign:"center",padding:"10px 0"}}><div style={{fontSize:11,color:C.muted,fontFamily:"'Inter',sans-serif"}}>No hay eventos en este pais aun</div><button onClick={function(){setShowComposer(true);}} style={{marginTop:8,padding:"6px 14px",background:C.yellow,border:"none",borderRadius:100,cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:11,fontWeight:700,color:C.text}}>Crear evento</button></div>):null}</div></div><div style={{flex:1,minWidth:0}}>{dollarWidget}{postsList}</div><div style={{width:280,flexShrink:0,position:"sticky",top:170}}>{inviteBanner}<div style={{background:C.card,borderRadius:16,border:"1px solid "+C.border,padding:"14px 16px",marginBottom:16}}><div style={{fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:13,color:C.text,marginBottom:12}}>Venezolanos en {cityObj.name}</div>{SEED.filter(function(p){return p.city===activeCity;}).slice(0,4).map(function(p,i){ return (<div key={p.id} style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}><Av t={p.av} i={i} s={36}/><div style={{flex:1}}><div style={{fontSize:13,fontWeight:600,color:C.text,fontFamily:"'Inter',sans-serif"}}>{p.name}</div><div style={{fontSize:11,color:C.muted,fontFamily:"'Inter',sans-serif"}}>{p.type}</div></div></div>); })}</div><div style={{background:C.card,borderRadius:16,border:"1px solid "+C.border,padding:"14px 16px"}}><div style={{fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:13,color:C.text,marginBottom:10}}>Epale</div><div style={{fontSize:11,color:C.muted,fontFamily:"'Inter',sans-serif",lineHeight:1.6}}>La red social de los venezolanos en el mundo. Conecta, comparte y crece con tu gente.</div><div style={{marginTop:10,display:"flex",gap:8,flexWrap:"wrap"}}>{["Terminos","Privacidad","Contacto"].map(function(t){ return <span key={t} style={{fontSize:10,color:C.muted,fontFamily:"'Inter',sans-serif",cursor:"pointer",textDecoration:"underline"}}>{t}</span>; })}</div></div></div></div></div>);
@@ -587,9 +646,116 @@ function Composer(props) {
 }
 
 function Search(props) {
-  var onClose=props.onClose; var [query,setQuery]=useState(""); var [results,setResults]=useState([]); var [loading,setLoading]=useState(false);
-  useEffect(function(){ if(query.length<2){ setResults([]); return; } setLoading(true); var timer=setTimeout(function(){ api.searchPosts(query).then(function(data){ if(Array.isArray(data)) setResults(data); setLoading(false); }).catch(function(){ setLoading(false); }); },400); return function(){ clearTimeout(timer); }; },[query]);
-  return (<div style={{position:"fixed",inset:0,zIndex:300,background:C.bg,maxWidth:480,margin:"0 auto",overflowY:"auto"}}><div style={{display:"flex",height:4}}><div style={{flex:1,background:C.yellow}}/><div style={{flex:1,background:C.blue}}/><div style={{flex:1,background:C.red}}/></div><div style={{position:"sticky",top:0,background:C.card,borderBottom:"1px solid "+C.border,padding:"12px 16px",display:"flex",gap:10,alignItems:"center"}}><button onClick={onClose} style={{background:"none",border:"none",cursor:"pointer",color:C.blue,fontSize:18,flexShrink:0}}>{"<-"}</button><input autoFocus value={query} onChange={function(e){setQuery(e.target.value);}} placeholder="Buscar posts y personas..." style={{flex:1,padding:"10px 14px",background:C.bg,border:"1.5px solid "+C.border,borderRadius:100,fontFamily:"'Inter',sans-serif",fontSize:14,color:C.text,outline:"none"}}/></div><div style={{paddingBottom:40}}>{loading?(<div style={{textAlign:"center",padding:"40px 20px",color:C.muted,fontFamily:"'Inter',sans-serif"}}>Buscando...</div>):query.length<2?(<div style={{textAlign:"center",padding:"60px 20px"}}><div style={{fontSize:48,marginBottom:12}}>{ICONS.comment}</div><div style={{fontSize:15,fontFamily:"'Syne',sans-serif",color:C.text,marginBottom:6}}>Busca en Epale</div><div style={{fontSize:13,color:C.muted,fontFamily:"'Inter',sans-serif"}}>Encuentra posts, trabajos, eventos y personas</div></div>):results.length===0?(<div style={{textAlign:"center",padding:"60px 20px"}}><div style={{fontSize:48,marginBottom:12}}>{ICONS.group}</div><div style={{fontSize:15,fontFamily:"'Syne',sans-serif",color:C.text}}>Sin resultados para "{query}"</div></div>):results.map(function(p,i){ return (<div key={p.id} style={{background:C.card,borderBottom:"1px solid "+C.border,padding:"14px 16px"}}><div style={{display:"flex",gap:10,marginBottom:6}}><Av t={p.av||p.name} i={i} s={36}/><div><div style={{fontWeight:700,fontSize:13,fontFamily:"'Syne',sans-serif",color:C.text}}>{p.name}</div><div style={{fontSize:10,color:C.blue,fontFamily:"'Inter',sans-serif"}}>{toFlag(CITY_FLAGS[p.city])} {getCity(p.city).name} - {formatTime(p.time||p.created_at)}</div></div></div><p style={{fontSize:13,lineHeight:1.6,color:C.text,fontFamily:"'Inter',sans-serif",margin:0}}>{p.content}</p></div>); })}</div></div>);
+  var onClose=props.onClose, following=props.following||[], onFollow=props.onFollow, onOpenProfile=props.onOpenProfile||function(){}, userName=props.userName||"";
+  var [query,setQuery]=useState("");
+  var [tab,setTab]=useState("posts");
+  var [postResults,setPostResults]=useState([]);
+  var [userResults,setUserResults]=useState([]);
+  var [loading,setLoading]=useState(false);
+  var [error,setError]=useState(null);
+
+  useEffect(function(){
+    if(query.length<2){ setPostResults([]); setUserResults([]); setError(null); return; }
+    setLoading(true); setError(null);
+    var timer=setTimeout(function(){
+      Promise.all([
+        api.searchPosts(query).catch(function(){ return []; }),
+        api.searchProfiles(query).catch(function(){ return []; })
+      ]).then(function(results){
+        setPostResults(Array.isArray(results[0])?results[0]:[]);
+        setUserResults(Array.isArray(results[1])?results[1]:[]);
+        setLoading(false);
+      }).catch(function(){ setError("Error de conexion. Intenta de nuevo."); setLoading(false); });
+    },400);
+    return function(){ clearTimeout(timer); };
+  },[query]);
+
+  var tabBtn=function(id,label,count){
+    return <button onClick={function(){setTab(id);}} style={{flex:1,padding:"10px 0",background:"none",border:"none",borderBottom:"2px solid "+(tab===id?C.blue:"transparent"),cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:13,fontWeight:tab===id?700:500,color:tab===id?C.text:C.muted}}>{label}{count>0?<span style={{marginLeft:6,background:C.blue,color:"#fff",borderRadius:9999,padding:"1px 7px",fontSize:10}}>{count}</span>:null}</button>;
+  };
+
+  return (
+    <div style={{position:"fixed",inset:0,zIndex:300,background:C.bg,maxWidth:480,margin:"0 auto",display:"flex",flexDirection:"column"}}>
+      <div style={{display:"flex",height:4}}><div style={{flex:1,background:C.yellow}}/><div style={{flex:1,background:C.blue}}/><div style={{flex:1,background:C.red}}/></div>
+      {/* Search bar */}
+      <div style={{background:C.card,borderBottom:"1px solid "+C.border,padding:"12px 16px",display:"flex",gap:10,alignItems:"center"}}>
+        <button onClick={onClose} style={{background:"none",border:"none",cursor:"pointer",color:C.blue,fontSize:20,minWidth:44,minHeight:44,display:"flex",alignItems:"center",justifyContent:"center"}}>{"←"}</button>
+        <input autoFocus value={query} onChange={function(e){setQuery(e.target.value);}} placeholder="Buscar personas y posts..." style={{flex:1,padding:"12px 16px",background:C.bg,border:"1.5px solid "+(query?C.blue:C.border),borderRadius:100,fontFamily:"'Inter',sans-serif",fontSize:16,color:C.text,outline:"none"}}/>
+        {query?<button onClick={function(){setQuery("");}} style={{background:"none",border:"none",cursor:"pointer",color:C.muted,fontSize:18,minWidth:44,minHeight:44,display:"flex",alignItems:"center",justifyContent:"center"}}>✕</button>:null}
+      </div>
+      {/* Tabs */}
+      {query.length>=2&&<div style={{display:"flex",background:C.card,borderBottom:"1px solid "+C.border}}>
+        {tabBtn("posts","Posts",postResults.length)}
+        {tabBtn("people","Personas",userResults.length)}
+      </div>}
+      {/* Results */}
+      <div style={{flex:1,overflowY:"auto",WebkitOverflowScrolling:"touch",paddingBottom:40}}>
+        {loading?(
+          <div style={{padding:"20px 0"}}>{[1,2,3].map(function(i){return <PostSkeleton key={i}/>;})}</div>
+        ):error?(
+          <div style={{textAlign:"center",padding:"60px 20px"}}>
+            <div style={{fontSize:40,marginBottom:12}}>⚠️</div>
+            <div style={{fontSize:15,color:C.text,fontFamily:"'Syne',sans-serif",marginBottom:8}}>Error de conexion</div>
+            <div style={{fontSize:13,color:C.muted,fontFamily:"'Inter',sans-serif",marginBottom:20}}>{error}</div>
+            <button onClick={function(){setQuery(query+" ");setTimeout(function(){setQuery(query);},10);}} style={{padding:"10px 24px",background:C.blue,color:"#fff",border:"none",borderRadius:100,cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:13,fontWeight:700}}>Reintentar</button>
+          </div>
+        ):query.length<2?(
+          <div style={{textAlign:"center",padding:"60px 20px"}}>
+            <div style={{fontSize:56,marginBottom:16}}>🔍</div>
+            <div style={{fontSize:17,fontFamily:"'Syne',sans-serif",color:C.text,marginBottom:8}}>Busca en Epale</div>
+            <div style={{fontSize:14,color:C.muted,fontFamily:"'Inter',sans-serif",lineHeight:1.6}}>Encuentra venezolanos, posts,{"
+"}trabajos y eventos</div>
+          </div>
+        ):tab==="people"?(
+          userResults.length===0?(
+            <div style={{textAlign:"center",padding:"60px 20px"}}>
+              <div style={{fontSize:48,marginBottom:12}}>👤</div>
+              <div style={{fontSize:15,fontFamily:"'Syne',sans-serif",color:C.text}}>Nadie con "{query}"</div>
+            </div>
+          ):userResults.map(function(u,i){
+            var isFollowing=following.includes(u.name);
+            return (
+              <div key={u.id||i} onClick={function(){onOpenProfile(u.name);}} style={{display:"flex",alignItems:"center",gap:14,padding:"14px 16px",borderBottom:"1px solid "+C.border,background:C.card,cursor:"pointer"}}>
+                <Av t={u.name} i={i} s={48} photo={u.photo_url}/>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{display:"flex",alignItems:"center",gap:4}}>
+                    <div style={{fontWeight:700,fontSize:15,fontFamily:"'Syne',sans-serif",color:C.text}}>{u.name}</div>
+                    {isVerified(u.name)?<span style={{fontSize:13,color:C.blue}}>✓</span>:null}
+                  </div>
+                  <div style={{fontSize:12,color:C.blue,fontFamily:"'Inter',sans-serif"}}>{toFlag(CITY_FLAGS[u.city])} {getCity(u.city).name}</div>
+                  {u.bio?<div style={{fontSize:12,color:C.muted,fontFamily:"'Inter',sans-serif",marginTop:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{u.bio}</div>:null}
+                </div>
+                {u.name!==userName&&onFollow?<button onClick={function(e){e.stopPropagation();onFollow(u.name);}} style={{padding:"8px 16px",borderRadius:100,border:"1.5px solid "+(isFollowing?C.border:C.blue),background:isFollowing?"transparent":C.blue,color:isFollowing?C.muted:"#fff",fontFamily:"'Inter',sans-serif",fontSize:12,fontWeight:700,cursor:"pointer",flexShrink:0,minHeight:36}}>{isFollowing?"Siguiendo":"Seguir"}</button>:null}
+              </div>
+            );
+          })
+        ):(
+          postResults.length===0?(
+            <div style={{textAlign:"center",padding:"60px 20px"}}>
+              <div style={{fontSize:48,marginBottom:12}}>📭</div>
+              <div style={{fontSize:15,fontFamily:"'Syne',sans-serif",color:C.text}}>Sin posts para "{query}"</div>
+            </div>
+          ):postResults.map(function(p,i){
+            return (
+              <div key={p.id} style={{background:C.card,borderBottom:"1px solid "+C.border,padding:"14px 16px"}}>
+                <div style={{display:"flex",gap:10,marginBottom:8}}>
+                  <Av t={p.av||p.name} i={i} s={36}/>
+                  <div>
+                    <div style={{display:"flex",alignItems:"center",gap:4}}>
+                      <div style={{fontWeight:700,fontSize:13,fontFamily:"'Syne',sans-serif",color:C.text}}>{p.name}</div>
+                      {isVerified(p.name)?<span style={{fontSize:11,color:C.blue}}>✓</span>:null}
+                    </div>
+                    <div style={{fontSize:10,color:C.blue,fontFamily:"'Inter',sans-serif"}}>{toFlag(CITY_FLAGS[p.city])} {getCity(p.city).name} · {formatTime(p.time||p.created_at)}</div>
+                  </div>
+                </div>
+                <p style={{fontSize:14,lineHeight:1.6,color:C.text,fontFamily:"'Inter',sans-serif",margin:0}}>{p.content}</p>
+              </div>
+            );
+          })
+        )}
+      </div>
+    </div>
+  );
 }
 
 function MisPublicaciones(props) {
@@ -635,7 +801,7 @@ function Profile(props) {
   if(subScreen==="saved") return <Guardados saved={savedPosts} onClose={function(){setSubScreen(null);}}/>;
   if(subScreen==="seguidores") return <FollowersList title="Seguidores" users={SAMPLE_USERS} following={following} onFollow={onFollow||function(){}} onClose={function(){setSubScreen(null);}}/>;
   if(subScreen==="siguiendo") return <FollowersList title="Siguiendo" users={following.map(function(n){ return {name:n,av:n,city:userCity,bio:""}; })} following={following} onFollow={onFollow||function(){}} onClose={function(){setSubScreen(null);}}/>;
-  if(subScreen==="notifs") return <Notificaciones onClose={function(){setSubScreen(null);}} userId={props.userId}/>;
+  if(subScreen==="notifs") return <Notificaciones onClose={function(){setSubScreen(null); if(props.onClearNotifs) props.onClearNotifs();}} userId={props.userId}/>;
   if(subScreen==="config") return <Configuracion userCity={userCity} onClose={function(){setSubScreen(null);}} onLogout={onLogout} onSetDark={onSetDark} onSetLang={onSetLang} isDark={isDark} currentLang={currentLang} userName={userName} userPhoto={userPhoto} userBio={userBio}/>;
   if(subScreen==="edit") return <EditProfile userCity={userCity} userPhoto={userPhoto} userName={userName} userBio={userBio} onPhotoChange={onPhotoChange} onBioChange={onBioChange} onClose={function(){setSubScreen(null);}}/>;
   return (
@@ -781,6 +947,68 @@ function AuthHero(props) {
   return (<div style={{background:"#0a0a0a",position:"relative",overflow:"hidden"}}><div style={{display:"flex",height:4}}><div style={{flex:1,background:"#ffcc00"}}/><div style={{flex:1,background:"#0066ff"}}/><div style={{flex:1,background:"#ff2d2d"}}/></div><div style={{position:"relative",padding:"36px 24px 28px",textAlign:"center"}}><div style={{fontSize:54,fontFamily:"'Syne',sans-serif",letterSpacing:-2,fontWeight:800,marginBottom:6}}><span style={{color:"#ffcc00"}}>E</span><span style={{color:"#0066ff"}}>pa</span><span style={{color:"#ff2d2d"}}>le</span></div><div style={{fontSize:22}}>{ICONS.flag_ve}</div><div style={{fontSize:12,color:"rgba(255,255,255,0.4)",fontFamily:"'Inter',sans-serif",marginTop:6}}>venezolanos del mundo</div>{mode==="register"?(<div style={{marginTop:16,display:"flex",alignItems:"center",gap:8}}><div style={{flex:1,height:3,borderRadius:2,background:"rgba(255,255,255,0.1)",overflow:"hidden"}}><div style={{height:"100%",width:((step/4)*100)+"%",background:"#ffcc00",borderRadius:2}}/></div><span style={{fontSize:10,color:"rgba(255,255,255,0.35)",fontFamily:"'Inter',sans-serif"}}>Paso {step}/4</span></div>):null}</div></div>);
 }
 
+
+function Onboarding(props) {
+  var onDone=props.onDone, userCity=props.userCity, userId=props.userId, userName=props.userName;
+  var following=props.following||[], onFollow=props.onFollow;
+  var [suggested,setSuggested]=useState([]);
+  var [loading,setLoading]=useState(true);
+
+  useEffect(function(){
+    api.getTopProfiles(userCity).then(function(data){
+      if(Array.isArray(data)){
+        var filtered=data.filter(function(u){ return u.name&&u.name!==userName; }).slice(0,6);
+        setSuggested(filtered);
+      }
+      setLoading(false);
+    }).catch(function(){ setLoading(false); });
+  },[]);
+
+  return (
+    <div style={{position:"fixed",inset:0,zIndex:400,background:C.bg,maxWidth:480,margin:"0 auto",overflowY:"auto"}}>
+      <div style={{display:"flex",height:4}}><div style={{flex:1,background:C.yellow}}/><div style={{flex:1,background:C.blue}}/><div style={{flex:1,background:C.red}}/></div>
+      <div style={{padding:"32px 20px 20px",textAlign:"center"}}>
+        <div style={{fontSize:56,marginBottom:12}}>🇻🇪</div>
+        <div style={{fontSize:24,fontFamily:"'Syne',sans-serif",color:C.text,fontWeight:700,marginBottom:8}}>Bienvenido a Epale!</div>
+        <div style={{fontSize:15,color:C.muted,fontFamily:"'Inter',sans-serif",lineHeight:1.6,marginBottom:28}}>Sigue a venezolanos en {getCity(userCity).name} para comenzar tu feed</div>
+      </div>
+      <div style={{paddingBottom:20}}>
+        {loading?[1,2,3].map(function(i){
+          return <div key={i} style={{display:"flex",alignItems:"center",gap:14,padding:"14px 20px",borderBottom:"1px solid "+C.border}}>
+            <div style={{width:52,height:52,borderRadius:9999,background:C.border,flexShrink:0}}/>
+            <div style={{flex:1}}><Skeleton w="50%" h={14} r={6} mb={6}/><Skeleton w="35%" h={11} r={6}/></div>
+            <Skeleton w={80} h={36} r={100}/>
+          </div>;
+        }):[].concat(suggested,SAMPLE_USERS.filter(function(s){ return !suggested.find(function(x){return x.name===s.name;}); })).slice(0,6).map(function(u,i){
+          var isFollowing=following.includes(u.name||u);
+          var uName=u.name||u; var uCity=u.city||userCity; var uBio=u.bio||"";
+          return (
+            <div key={i} style={{display:"flex",alignItems:"center",gap:14,padding:"14px 20px",borderBottom:"1px solid "+C.border,background:C.card}}>
+              <Av t={uName} i={i} s={52} photo={u.photo_url||null}/>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{display:"flex",alignItems:"center",gap:4}}>
+                  <div style={{fontWeight:700,fontSize:15,fontFamily:"'Syne',sans-serif",color:C.text}}>{uName}</div>
+                  {isVerified(uName)?<span style={{fontSize:13,color:C.blue}}>✓</span>:null}
+                </div>
+                <div style={{fontSize:12,color:C.blue,fontFamily:"'Inter',sans-serif"}}>{toFlag(CITY_FLAGS[uCity])} {getCity(uCity).name}</div>
+                {uBio?<div style={{fontSize:12,color:C.muted,fontFamily:"'Inter',sans-serif",marginTop:2}}>{uBio}</div>:null}
+              </div>
+              <button onClick={function(){onFollow(uName);}} style={{padding:"8px 18px",borderRadius:100,border:"1.5px solid "+(isFollowing?C.border:C.blue),background:isFollowing?"transparent":C.blue,color:isFollowing?C.muted:"#fff",fontFamily:"'Inter',sans-serif",fontSize:13,fontWeight:700,cursor:"pointer",flexShrink:0,minHeight:44}}>
+                {isFollowing?"✓ Siguiendo":"Seguir"}
+              </button>
+            </div>
+          );
+        })}
+      </div>
+      <div style={{padding:"16px 20px 40px"}}>
+        <button onClick={onDone} style={{width:"100%",padding:"15px",background:C.yellow,color:"#1a1a1a",border:"none",borderRadius:100,cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:15,fontWeight:700}}>
+          {following.length>0?"Ir al feed ("+following.length+" siguiendo)":"Explorar sin seguir nadie"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function Auth(props) {
   var onDone=props.onDone; var [mode,setMode]=useState("login"); var [step,setStep]=useState(1);
   var [email,setEmail]=useState(""); var [password,setPassword]=useState(""); var [password2,setPassword2]=useState("");
@@ -807,6 +1035,8 @@ export default function App() {
   var [showSearch,setShowSearch]=useState(false);
   var [sessionExpired,setSessionExpired]=useState(false);
   var [viewingUser,setViewingUser]=useState(null);
+  var [showOnboarding,setShowOnboarding]=useState(false);
+  var [unreadNotifs,setUnreadNotifs]=useState(0);
 
   useEffect(function(){ _onAuthExpired=function(){ setSessionExpired(true); }; return function(){ _onAuthExpired=null; }; },[]);
 
@@ -828,6 +1058,14 @@ export default function App() {
       api.getFollowing(userId).then(function(data){ if(Array.isArray(data)){ var names=data.map(function(r){return r.following_name;}).filter(Boolean); if(names.length>0) setFollowing(names); } }).catch(function(){});
       api.getSaved(userId).then(function(data){ if(Array.isArray(data)){ var ids=data.map(function(r){return r.post_id;}).filter(Boolean); if(ids.length>0) setSavedPosts(ids); } }).catch(function(){});
       api.getLikes(userId).then(function(data){ if(Array.isArray(data)){ var ids=data.map(function(r){return r.post_id;}).filter(Boolean); setLikedPosts(ids); } setLikedLoaded(true); }).catch(function(){ setLikedLoaded(true); });
+      // Load unread notif count
+      api.getNotifications(userId).then(function(data){ if(Array.isArray(data)){ setUnreadNotifs(data.filter(function(n){return !n.read;}).length); } }).catch(function(){});
+      // Subscribe to new notifications in real time
+      var notifChannel=supabase.channel("notifs:"+userId)
+        .on("postgres_changes",{event:"INSERT",schema:"public",table:"notifications",filter:"user_id=eq."+userId},function(){
+          setUnreadNotifs(function(n){return n+1;});
+        }).subscribe();
+      return function(){ supabase.removeChannel(notifChannel); };
     });
   },[userId]);
 
@@ -856,14 +1094,19 @@ export default function App() {
   if(screen==="feed") return (
     <div key={dark?"dark":"light"}>
       {sessionExpired?<SessionExpiredBanner onLogin={handleExpiredLogin}/>:null}
-      {showProfile?<Profile key={dark?"dark":"light"} userCity={userCity} onLogout={handleLogout} onClose={function(){setShowProfile(false);}} onSetDark={setDarkSaved} onSetLang={setLangSaved} isDark={dark} currentLang={lang} following={following} onFollow={toggleFollow} userPhoto={userPhoto} userName={userName} onPhotoChange={setUserPhoto} userId={userId} savedPosts={savedPosts} likedPosts={likedPosts} userBio={userBio} onBioChange={setUserBio}/>:null}
-      {showSearch?<Search onClose={function(){setShowSearch(false);}} posts={[]} />:null}
+      {showOnboarding?<Onboarding onDone={function(){setShowOnboarding(false);}} userCity={userCity} userId={userId} userName={userName} following={following} onFollow={toggleFollow}/>:null}
+      {showProfile?<Profile key={dark?"dark":"light"} userCity={userCity} onLogout={handleLogout} onClose={function(){setShowProfile(false);}} onSetDark={setDarkSaved} onSetLang={setLangSaved} isDark={dark} currentLang={lang} following={following} onFollow={toggleFollow} userPhoto={userPhoto} userName={userName} onPhotoChange={setUserPhoto} userId={userId} savedPosts={savedPosts} likedPosts={likedPosts} userBio={userBio} onBioChange={setUserBio} onClearNotifs={function(){setUnreadNotifs(0);}}/>:null}
+      {showSearch?<Search onClose={function(){setShowSearch(false);}} following={following} onFollow={toggleFollow} onOpenProfile={function(n){ setShowSearch(false); if(n!==userName) setViewingUser(n); else setShowProfile(true); }} userName={userName}/>:null}
       {viewingUser?<UserProfile name={viewingUser} onClose={function(){setViewingUser(null);}} following={following} onFollow={toggleFollow} currentUserName={userName}/>:null}
       <Feed userCity={userCity} onProfile={function(){setShowProfile(true);}} following={following} onFollow={toggleFollow} userPhoto={userPhoto} userName={userName} userId={userId} savedPosts={savedPosts} onSave={toggleSave} likedPosts={likedPosts} onLike={toggleLike} lang={lang} userBio={userBio} likedLoaded={likedLoaded} onOpenProfile={function(n){ if(n!==userName) setViewingUser(n); else setShowProfile(true); }}/>
       <div style={{position:"fixed",bottom:0,left:0,right:0,minHeight:60,paddingBottom:"env(safe-area-inset-bottom)",background:C.card,borderTop:"1px solid "+C.border,display:"flex",alignItems:"center",justifyContent:"space-around",zIndex:90,maxWidth:768,margin:"0 auto",visibility:window.innerWidth>=768?"hidden":"visible"}}>
-        {[{id:"feed",icon:ICONS.fire,label:"Inicio"},{id:"search",icon:ICONS.comment,label:"Buscar"},{id:"post",icon:ICONS.pencil,label:"Publicar",action:true},{id:"notifs",icon:ICONS.bell,label:"Avisos"},{id:"me",icon:ICONS.group,label:"Yo"}].map(function(tab){
+        {[{id:"feed",icon:ICONS.fire,label:"Inicio"},{id:"search",icon:ICONS.comment,label:"Buscar"},{id:"post",icon:ICONS.pencil,label:"Publicar",action:true},{id:"notifs",icon:ICONS.bell,label:"Avisos",badge:unreadNotifs},{id:"me",icon:ICONS.group,label:"Yo"}].map(function(tab){
           var isActive=activeTab===tab.id;
-          return (<button key={tab.id} onClick={function(){ if(tab.id==="me"){ setShowProfile(true); return; } if(tab.id==="search"){ setShowSearch(true); return; } if(tab.id==="post"){ document.dispatchEvent(new CustomEvent("epale:openComposer")); return; } setActiveTab(tab.id); }} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:2,background:tab.action?C.yellow:"none",border:"none",cursor:"pointer",padding:tab.action?"8px 16px":"6px 10px",borderRadius:tab.action?12:8,minWidth:48}}><span style={{fontSize:tab.action?20:18,color:tab.action?C.text:isActive?C.blue:C.muted}}>{tab.icon}</span><span style={{fontSize:9,fontFamily:"'Inter',sans-serif",color:tab.action?C.text:isActive?C.blue:C.muted,fontWeight:isActive?700:400}}>{tab.label}</span></button>);
+          return (<button key={tab.id} onClick={function(){ if(tab.id==="me"){ setShowProfile(true); return; } if(tab.id==="search"){ setShowSearch(true); return; } if(tab.id==="post"){ document.dispatchEvent(new CustomEvent("epale:openComposer")); return; } if(tab.id==="notifs"){ setShowProfile(true); return; } setActiveTab(tab.id); }} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:2,background:tab.action?C.yellow:"none",border:"none",cursor:"pointer",padding:tab.action?"8px 16px":"6px 10px",borderRadius:tab.action?12:8,minWidth:48,position:"relative"}}>
+              {tab.badge>0?<div style={{position:"absolute",top:4,right:6,width:8,height:8,borderRadius:9999,background:C.red,border:"2px solid "+C.card}}/>:null}
+              <span style={{fontSize:tab.action?20:18,color:tab.action?C.text:isActive?C.blue:C.muted}}>{tab.icon}</span>
+              <span style={{fontSize:9,fontFamily:"'Inter',sans-serif",color:tab.action?C.text:isActive?C.blue:C.muted,fontWeight:isActive?700:400}}>{tab.label}</span>
+            </button>);
         })}
       </div>
     </div>
