@@ -360,15 +360,109 @@ function UserProfile(props) {
   );
 }
 
+
+function CountryFeed(props) {
+  var cityId=props.cityId, onClose=props.onClose, savedPosts=props.savedPosts||[], onSave=props.onSave,
+      likedPosts=props.likedPosts||[], onLike=props.onLike, following=props.following||[], onFollow=props.onFollow,
+      userName=props.userName||"", userId=props.userId||"", lang=props.lang||"es",
+      onOpenProfile=props.onOpenProfile||function(){};
+  var TR=T[lang]||T.es;
+  var cityObj=getCity(cityId);
+  var [posts,setPosts]=useState(SEED.filter(function(p){return p.city===cityId;}));
+  var [filter,setFilter]=useState("all");
+  var [showComposer,setShowComposer]=useState(false);
+
+  useEffect(function(){
+    api.getPosts(cityId).then(function(data){
+      if(Array.isArray(data)&&data.length>0){
+        var mapped=data.map(function(p){ return {id:p.id,city:p.city,type:p.type||"post",name:p.name||"Anonimo",av:p.name||"?",content:p.content,likes:p.likes||0,comments:p.comments||0,time:p.created_at||"reciente"}; });
+        var seedFiltered=SEED.filter(function(s){return s.city===cityId&&!mapped.find(function(m){return String(m.id)===String(s.id);});});
+        setPosts(mapped.concat(seedFiltered));
+      }
+    }).catch(function(){});
+
+    var channel=supabase.channel("cf:"+cityId)
+      .on("postgres_changes",{event:"INSERT",schema:"public",table:"posts",filter:"city=eq."+cityId},function(payload){
+        var p=payload.new; if(!p||!p.id) return;
+        var np={id:p.id,city:p.city,type:p.type||"post",name:p.name||"Anonimo",av:p.name||"?",content:p.content,likes:p.likes||0,comments:p.comments||0,time:p.created_at||"reciente"};
+        setPosts(function(cur){ if(cur.find(function(x){return String(x.id)===String(p.id);})) return cur; return [np].concat(cur); });
+      }).subscribe();
+    return function(){ supabase.removeChannel(channel); };
+  },[cityId]);
+
+  var addPost=function(p){
+    var displayName=userName||"Tu"; var newPostId=String(Date.now());
+    var newPost={id:newPostId,city:cityId,type:p.type,name:displayName,av:displayName,content:p.content,media:p.media,likes:0,comments:0,time:new Date().toISOString(),_local:true};
+    setPosts(function(pp){ return [newPost].concat(pp); });
+    if(userId) api.createPost(userId,cityId,p.type,p.content,displayName).catch(function(){});
+  };
+
+  var typeButtons=Object.entries(TYPES).map(function(entry){
+    var id=entry[0],m=entry[1];
+    return (<button key={id} onClick={function(){setFilter(id);}} style={{padding:"5px 12px",borderRadius:100,border:"1.5px solid "+(filter===id?C.blue:C.border),background:filter===id?C.blue:C.card,color:filter===id?"#fff":C.muted,fontFamily:"'Inter',sans-serif",fontSize:10,fontWeight:700,cursor:"pointer",whiteSpace:"nowrap",flexShrink:0}}>{m.icon} {m.label}</button>);
+  });
+
+  var filtered=posts.filter(function(p){ return filter==="all"||p.type===filter; });
+
+  return (
+    <div style={{position:"fixed",inset:0,zIndex:250,background:C.bg,maxWidth:480,margin:"0 auto",overflowY:"auto",display:"flex",flexDirection:"column"}}>
+      <div style={{display:"flex",height:4}}><div style={{flex:1,background:C.yellow}}/><div style={{flex:1,background:C.blue}}/><div style={{flex:1,background:C.red}}/></div>
+
+      {/* Header */}
+      <div style={{position:"sticky",top:0,zIndex:10,background:C.card,borderBottom:"1px solid "+C.border}}>
+        <div style={{padding:"12px 16px",display:"flex",alignItems:"center",gap:12}}>
+          <button onClick={onClose} style={{background:C.bg,border:"none",borderRadius:9999,width:34,height:34,cursor:"pointer",color:C.blue,fontSize:18,display:"flex",alignItems:"center",justifyContent:"center"}}>{"<-"}</button>
+          <div style={{flex:1,display:"flex",alignItems:"center",gap:10}}>
+            <span style={{fontSize:28}}>{toFlag(CITY_FLAGS[cityId])}</span>
+            <div>
+              <div style={{fontSize:17,fontFamily:"'Syne',sans-serif",color:C.text,fontWeight:700}}>{cityObj.name}</div>
+              <div style={{fontSize:11,color:C.muted,fontFamily:"'Inter',sans-serif"}}>{cityObj.pop}</div>
+            </div>
+          </div>
+          <button onClick={function(){setShowComposer(true);}} style={{background:C.yellow,border:"none",borderRadius:100,padding:"8px 16px",cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:12,fontWeight:700,color:"#1a1a1a"}}>+ Post</button>
+        </div>
+        <div style={{display:"flex",gap:6,padding:"0 12px 10px",overflowX:"auto"}}>
+          <button onClick={function(){setFilter("all");}} style={{padding:"5px 14px",borderRadius:100,border:"1.5px solid "+(filter==="all"?C.blue:C.border),background:filter==="all"?C.blue:C.card,color:filter==="all"?"#fff":C.muted,fontFamily:"'Inter',sans-serif",fontSize:10,fontWeight:700,cursor:"pointer",whiteSpace:"nowrap",flexShrink:0}}>Todos</button>
+          {typeButtons}
+        </div>
+      </div>
+
+      {/* Posts */}
+      <div style={{flex:1,paddingBottom:40}}>
+        {filtered.length===0?(
+          <div style={{textAlign:"center",padding:"60px 20px",color:C.muted}}>
+            <div style={{fontSize:40,marginBottom:12}}>{toFlag(CITY_FLAGS[cityId])}</div>
+            <div style={{fontSize:15,fontFamily:"'Inter',sans-serif"}}>Se el primero en publicar en {cityObj.name}</div>
+          </div>
+        ):filtered.map(function(p,i){
+          return <PostCard key={p.id} post={p} idx={i} cityObj={cityObj} saved={savedPosts.includes(p.id)} onSave={onSave} following={following} onFollow={onFollow} userName={userName} liked={likedPosts.includes(String(p.id))} onLike={function(id){onLike(id,p.user_id,p.name);}} userId={userId} likedLoaded={true} onOpenProfile={onOpenProfile} lang={lang}/>;
+        })}
+      </div>
+
+      {/* Composer */}
+      {showComposer?<Composer cityObj={cityObj} onPost={addPost} onClose={function(){setShowComposer(false);}}/>:null}
+
+      {/* Invite banner */}
+      <a href={waInvite(cityId)} target="_blank" rel="noreferrer" style={{textDecoration:"none",display:"block",margin:"0 14px 20px"}}>
+        <div style={{background:C.wa,borderRadius:14,padding:"12px 16px",display:"flex",alignItems:"center",gap:12}}>
+          <span style={{fontSize:20}}>{ICONS.phone}</span>
+          <div style={{flex:1}}><div style={{fontWeight:700,color:"#fff",fontFamily:"'Inter',sans-serif",fontSize:13}}>Invita venezolanos a {cityObj.name}</div><div style={{fontSize:11,color:"rgba(255,255,255,0.8)",fontFamily:"'Inter',sans-serif"}}>Comparte con tus panas</div></div>
+        </div>
+      </a>
+    </div>
+  );
+}
+
 function Feed(props) {
   var userCity=props.userCity,onProfile=props.onProfile,userPhoto=props.userPhoto,userName=props.userName||"Tu",lang=props.lang||"es",userBio=props.userBio||"",likedLoaded=props.likedLoaded||false,onOpenProfile=props.onOpenProfile||function(){};
   var TR=T[lang]||T.es; var userId=props.userId||null;
   var [filter,setFilter]=useState("all"); var [posts,setPosts]=useState(SEED); var [showComposer,setShowComposer]=useState(false);
-  var [inviteCount,setInviteCount]=useState(0); var [activeCity,setActiveCity]=useState(userCity);
+  var [inviteCount,setInviteCount]=useState(0); var activeCity=userCity;
   var savedPosts=props.savedPosts||[]; var likedPosts=props.likedPosts||[];
   var toggleLike=props.onLike||function(){}; var toggleSave=props.onSave||function(){};
   var [feedTab,setFeedTab]=useState("forYou"); var following=props.following||[]; var toggleFollow=props.onFollow||function(){};
   var [isMobile,setIsMobile]=useState(window.innerWidth<768);
+  var [openCity,setOpenCity]=useState(null);
   useEffect(function(){
     // Keep local posts, reset DB+SEED portion
     setPosts(function(current){
@@ -401,7 +495,10 @@ function Feed(props) {
   },[activeCity]);
   useEffect(function(){ var handler=function(){ setIsMobile(window.innerWidth<768); }; window.addEventListener("resize",handler); return function(){ window.removeEventListener("resize",handler); }; },[]);
   var cityObj=getCity(activeCity);
-  var cityButtons=CITIES.map(function(c){ return (<button key={c.id} onClick={function(){setActiveCity(c.id);}} style={{padding:"5px 12px",borderRadius:100,border:"1.5px solid "+(activeCity===c.id?C.blue:C.border),background:activeCity===c.id?C.blue:C.card,color:activeCity===c.id?"#fff":C.muted,fontFamily:"'Inter',sans-serif",fontSize:10,fontWeight:700,cursor:"pointer",whiteSpace:"nowrap",flexShrink:0}}>{toFlag(CITY_FLAGS[c.id])} {c.name}</button>); });
+  var cityButtons=CITIES.map(function(c){
+    var isHome=c.id===userCity;
+    return (<button key={c.id} onClick={function(){ if(isHome) return; setOpenCity(c.id); }} style={{padding:"5px 12px",borderRadius:100,border:"1.5px solid "+(isHome?C.yellow:C.border),background:isHome?C.yellow:C.card,color:isHome?"#1a1a1a":C.muted,fontFamily:"'Inter',sans-serif",fontSize:10,fontWeight:700,cursor:isHome?"default":"pointer",whiteSpace:"nowrap",flexShrink:0}}>{toFlag(CITY_FLAGS[c.id])} {c.name}{isHome?" 🏠":""}</button>);
+  });
   var typeButtons=Object.entries(TYPES).map(function(entry){ var id=entry[0],m=entry[1]; return (<button key={id} onClick={function(){setFilter(id);}} style={{padding:"5px 12px",borderRadius:100,border:"1.5px solid "+(filter===id?C.blue:C.border),background:filter===id?C.blue:C.card,color:filter===id?"#fff":C.muted,fontFamily:"'Inter',sans-serif",fontSize:10,fontWeight:700,cursor:"pointer",whiteSpace:"nowrap",flexShrink:0}}>{m.icon} {m.label}</button>); });
   var tabButtons=[["forYou",TR.forYou],["following",TR.siguiendo]].map(function(item){ var id=item[0],label=item[1]; return (<button key={id} onClick={function(){setFeedTab(id);}} style={{background:"none",border:"none",cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:13,fontWeight:feedTab===id?700:500,color:feedTab===id?C.text:C.muted,paddingBottom:2,borderBottom:feedTab===id?"2px solid "+C.text:"2px solid transparent"}}>{label}</button>); });
   var allFiltered=posts.filter(function(p){ return filter==="all"||p.type===filter; });
@@ -415,8 +512,12 @@ function Feed(props) {
   var postsList=filtered.length===0?(<div style={{textAlign:"center",padding:"60px 20px",color:C.muted}}><div style={{fontSize:40,marginBottom:12}}>{feedTab==="following"?"(siguiendo)":"(feed)"}</div><div style={{fontSize:15,fontFamily:"'Inter',sans-serif"}}>{feedTab==="following"?"Sigue a alguien para ver sus posts":"Se el primero en publicar"}</div></div>):filtered.map(function(p,i){ return <PostCard key={p.id} post={p} idx={i} cityObj={cityObj} saved={savedPosts.includes(p.id)} onSave={toggleSave} following={following} onFollow={toggleFollow} userName={userName} liked={likedPosts.includes(String(p.id))} onLike={function(id){ toggleLike(id,p.user_id,p.name); }} userId={userId} likedLoaded={likedLoaded} onOpenProfile={props.onOpenProfile} lang={lang}/>; });
   var inviteBanner=(<a href={waInvite(activeCity)} target="_blank" rel="noreferrer" style={{textDecoration:"none",display:"block",marginBottom:16}} onClick={function(){setInviteCount(function(c){return Math.min(c+1,3);});}}><div style={{background:C.wa,borderRadius:16,padding:"16px"}}><div style={{fontSize:13,fontWeight:700,color:"#fff",fontFamily:"'Inter',sans-serif",marginBottom:4}}>Invita venezolanos a {cityObj.name}</div><div style={{fontSize:11,color:"rgba(255,255,255,0.8)",fontFamily:"'Inter',sans-serif",marginBottom:10}}>{inviteCount>=3?"Meta cumplida!":inviteCount===0?TR.invitaTusP:inviteCount+" de 3 invitados"}</div><div style={{display:"flex",gap:6,marginBottom:10}}>{[0,1,2].map(function(j){ return <div key={j} style={{flex:1,height:4,borderRadius:2,background:j<inviteCount?"#fff":"rgba(255,255,255,0.3)"}}/>; })}</div><div style={{background:"rgba(255,255,255,0.2)",borderRadius:10,padding:"8px 12px",textAlign:"center",color:"#fff",fontFamily:"'Inter',sans-serif",fontSize:12,fontWeight:700}}>Invitar por WhatsApp</div></div></a>);
   var header=(<div style={{position:"sticky",top:0,zIndex:100,background:C.card,backdropFilter:"blur(20px)",boxShadow:"0 1px 0 rgba(0,0,0,0.1)"}}><div style={{display:"flex",height:4}}><div style={{flex:1,background:C.yellow}}/><div style={{flex:1,background:C.blue}}/><div style={{flex:1,background:C.red}}/></div>{isMobile?(<div><div style={{padding:"10px 16px 6px",display:"flex",alignItems:"center",justifyContent:"space-between"}}><div style={{fontSize:24,fontFamily:"'Syne',sans-serif",letterSpacing:-1,fontWeight:800}}><span style={{color:C.yellow}}>E</span><span style={{color:C.blue}}>pa</span><span style={{color:C.red}}>le</span></div><div style={{display:"flex",gap:20}}>{tabButtons}</div><button onClick={onProfile} style={{background:"none",border:"none",cursor:"pointer"}}><Av t={userName} i={0} s={34} photo={userPhoto}/></button></div><div style={{display:"flex",gap:6,padding:"0 12px 8px",overflowX:"auto"}}>{cityButtons}</div><div style={{display:"flex",gap:6,padding:"0 12px 8px",overflowX:"auto",borderTop:"1px solid "+C.border}}><button onClick={function(){setFilter("all");}} style={{padding:"5px 14px",borderRadius:100,border:"1.5px solid "+(filter==="all"?C.blue:C.border),background:filter==="all"?C.blue:C.card,color:filter==="all"?"#fff":C.muted,fontFamily:"'Inter',sans-serif",fontSize:10,fontWeight:700,cursor:"pointer",whiteSpace:"nowrap",flexShrink:0}}>Todos</button>{typeButtons}</div></div>):(<div><div style={{maxWidth:1200,margin:"0 auto",padding:"8px 20px 0",display:"flex",alignItems:"center",gap:20}}><div style={{fontSize:26,fontFamily:"'Syne',sans-serif",letterSpacing:-1,fontWeight:800,minWidth:120}}><span style={{color:C.yellow}}>E</span><span style={{color:C.blue}}>pa</span><span style={{color:C.red}}>le</span></div><div style={{flex:1,display:"flex",justifyContent:"center",gap:28}}>{tabButtons}</div><div style={{minWidth:120,display:"flex",justifyContent:"flex-end"}}><button onClick={onProfile} style={{background:"none",border:"none",cursor:"pointer"}}><Av t={userName} i={0} s={34} photo={userPhoto}/></button></div></div><div style={{maxWidth:1200,margin:"0 auto",padding:"6px 20px 8px",display:"flex",gap:6,overflowX:"auto"}}>{cityButtons}</div><div style={{maxWidth:1200,margin:"0 auto",padding:"0 20px 8px",display:"flex",gap:6,overflowX:"auto",borderTop:"1px solid "+C.border}}><button onClick={function(){setFilter("all");}} style={{padding:"5px 14px",borderRadius:100,border:"1.5px solid "+(filter==="all"?C.blue:C.border),background:filter==="all"?C.blue:C.card,color:filter==="all"?"#fff":C.muted,fontFamily:"'Inter',sans-serif",fontSize:10,fontWeight:700,cursor:"pointer",whiteSpace:"nowrap",flexShrink:0}}>Todos</button>{typeButtons}</div></div>)}</div>);
-  if(isMobile){ return (<div style={{minHeight:"100vh",background:C.bg}}>{showComposer?<Composer cityObj={cityObj} onPost={addPost} onClose={function(){setShowComposer(false);}}/>:null}{header}<div style={{paddingBottom:80}}><div style={{margin:"10px 14px 0"}}>{dollarWidget}</div><div style={{marginTop:4}}>{postsList}</div><div style={{margin:"10px 14px 20px"}}>{inviteBanner}</div></div><button onClick={function(){setShowComposer(true);}} style={{position:"fixed",bottom:80,right:24,width:52,height:52,borderRadius:26,background:C.yellow,border:"none",cursor:"pointer",fontSize:30,boxShadow:"0 4px 18px rgba(255,204,0,0.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:150,lineHeight:1}}>{ICONS.pencil}</button></div>); }
-  return (<div style={{minHeight:"100vh",background:C.bg}}>{showComposer?<Composer cityObj={cityObj} onPost={addPost} onClose={function(){setShowComposer(false);}}/>:null}{header}<button onClick={function(){setShowComposer(true);}} style={{position:"fixed",bottom:32,right:32,width:56,height:56,borderRadius:28,background:C.yellow,border:"none",cursor:"pointer",fontSize:28,boxShadow:"0 4px 18px rgba(255,204,0,0.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:150,lineHeight:1}}>{ICONS.pencil}</button><div style={{maxWidth:1200,margin:"0 auto",padding:"20px",display:"flex",gap:24,alignItems:"flex-start"}}><div style={{width:240,flexShrink:0,position:"sticky",top:170}}><div style={{background:C.card,borderRadius:16,border:"1px solid "+C.border,overflow:"hidden",marginBottom:16}}><div style={{background:"linear-gradient(135deg,#ffcc00,#0066ff)",height:60}}/><div style={{padding:"0 16px 16px",marginTop:-28}}><Av t={userName} i={0} s={52} photo={userPhoto}/><div style={{marginTop:8,fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:16,color:C.text}}>{userName}</div><div style={{fontSize:12,color:C.muted,fontFamily:"'Inter',sans-serif",marginBottom:4}}>{"@"+userName.toLowerCase().replace(" ","")}</div>{userBio?<div style={{fontSize:11,color:C.muted,fontFamily:"'Inter',sans-serif",marginBottom:12,lineHeight:1.4}}>{userBio}</div>:<div style={{marginBottom:12}}/>}<button onClick={onProfile} style={{width:"100%",padding:"8px",background:C.yellow,border:"none",borderRadius:10,cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:12,fontWeight:700,color:C.text}}>Ver perfil</button></div></div><button onClick={function(){setShowComposer(true);}} style={{width:"100%",padding:"12px",background:C.yellow,border:"none",borderRadius:12,cursor:"pointer",fontFamily:"'Syne',sans-serif",fontSize:14,fontWeight:700,color:C.text,marginBottom:16}}>+ Publicar</button><div style={{background:C.card,borderRadius:16,border:"1px solid "+C.border,padding:"14px 16px"}}><div style={{fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:13,color:C.text,marginBottom:12}}>Proximos eventos</div>{SEED.filter(function(p){ return p.type==="evento"&&p.city===activeCity; }).slice(0,3).map(function(ev,i){ return (<div key={ev.id} onClick={function(){setFilter("evento");}} style={{display:"flex",gap:10,marginBottom:12,cursor:"pointer",padding:"8px 10px",borderRadius:10,background:C.bg}}><div style={{width:36,height:36,borderRadius:10,background:"#7b2d8b",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,flexShrink:0}}>{ICONS.bell}</div><div style={{flex:1,minWidth:0}}><div style={{fontSize:12,fontWeight:700,color:C.text,fontFamily:"'Inter',sans-serif",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{ev.name}</div><div style={{fontSize:11,color:C.muted,fontFamily:"'Inter',sans-serif",marginTop:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{ev.content.slice(0,45)}...</div></div></div>); })}{SEED.filter(function(p){ return p.type==="evento"&&p.city===activeCity; }).length===0?(<div style={{textAlign:"center",padding:"10px 0"}}><div style={{fontSize:11,color:C.muted,fontFamily:"'Inter',sans-serif"}}>No hay eventos en este pais aun</div><button onClick={function(){setShowComposer(true);}} style={{marginTop:8,padding:"6px 14px",background:C.yellow,border:"none",borderRadius:100,cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:11,fontWeight:700,color:C.text}}>Crear evento</button></div>):null}</div></div><div style={{flex:1,minWidth:0}}>{dollarWidget}{postsList}</div><div style={{width:280,flexShrink:0,position:"sticky",top:170}}>{inviteBanner}<div style={{background:C.card,borderRadius:16,border:"1px solid "+C.border,padding:"14px 16px",marginBottom:16}}><div style={{fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:13,color:C.text,marginBottom:12}}>Venezolanos en {cityObj.name}</div>{SEED.filter(function(p){return p.city===activeCity;}).slice(0,4).map(function(p,i){ return (<div key={p.id} style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}><Av t={p.av} i={i} s={36}/><div style={{flex:1}}><div style={{fontSize:13,fontWeight:600,color:C.text,fontFamily:"'Inter',sans-serif"}}>{p.name}</div><div style={{fontSize:11,color:C.muted,fontFamily:"'Inter',sans-serif"}}>{p.type}</div></div></div>); })}</div><div style={{background:C.card,borderRadius:16,border:"1px solid "+C.border,padding:"14px 16px"}}><div style={{fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:13,color:C.text,marginBottom:10}}>Epale</div><div style={{fontSize:11,color:C.muted,fontFamily:"'Inter',sans-serif",lineHeight:1.6}}>La red social de los venezolanos en el mundo. Conecta, comparte y crece con tu gente.</div><div style={{marginTop:10,display:"flex",gap:8,flexWrap:"wrap"}}>{["Terminos","Privacidad","Contacto"].map(function(t){ return <span key={t} style={{fontSize:10,color:C.muted,fontFamily:"'Inter',sans-serif",cursor:"pointer",textDecoration:"underline"}}>{t}</span>; })}</div></div></div></div></div>);
+  if(isMobile){ return (<div style={{minHeight:"100vh",background:C.bg}}>
+    {openCity?<CountryFeed cityId={openCity} onClose={function(){setOpenCity(null);}} savedPosts={savedPosts} onSave={toggleSave} likedPosts={likedPosts} onLike={toggleLike} following={following} onFollow={toggleFollow} userName={userName} userId={userId} lang={lang} onOpenProfile={props.onOpenProfile}/>:null}
+    {showComposer?<Composer cityObj={cityObj} onPost={addPost} onClose={function(){setShowComposer(false);}}/>:null}{header}<div style={{paddingBottom:80}}><div style={{margin:"10px 14px 0"}}>{dollarWidget}</div><div style={{marginTop:4}}>{postsList}</div><div style={{margin:"10px 14px 20px"}}>{inviteBanner}</div></div><button onClick={function(){setShowComposer(true);}} style={{position:"fixed",bottom:80,right:24,width:52,height:52,borderRadius:26,background:C.yellow,border:"none",cursor:"pointer",fontSize:30,boxShadow:"0 4px 18px rgba(255,204,0,0.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:150,lineHeight:1}}>{ICONS.pencil}</button></div>); }
+  return (<div style={{minHeight:"100vh",background:C.bg}}>
+    {openCity?<CountryFeed cityId={openCity} onClose={function(){setOpenCity(null);}} savedPosts={savedPosts} onSave={toggleSave} likedPosts={likedPosts} onLike={toggleLike} following={following} onFollow={toggleFollow} userName={userName} userId={userId} lang={lang} onOpenProfile={props.onOpenProfile}/>:null}
+    {showComposer?<Composer cityObj={cityObj} onPost={addPost} onClose={function(){setShowComposer(false);}}/>:null}{header}<button onClick={function(){setShowComposer(true);}} style={{position:"fixed",bottom:32,right:32,width:56,height:56,borderRadius:28,background:C.yellow,border:"none",cursor:"pointer",fontSize:28,boxShadow:"0 4px 18px rgba(255,204,0,0.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:150,lineHeight:1}}>{ICONS.pencil}</button><div style={{maxWidth:1200,margin:"0 auto",padding:"20px",display:"flex",gap:24,alignItems:"flex-start"}}><div style={{width:240,flexShrink:0,position:"sticky",top:170}}><div style={{background:C.card,borderRadius:16,border:"1px solid "+C.border,overflow:"hidden",marginBottom:16}}><div style={{background:"linear-gradient(135deg,#ffcc00,#0066ff)",height:60}}/><div style={{padding:"0 16px 16px",marginTop:-28}}><Av t={userName} i={0} s={52} photo={userPhoto}/><div style={{marginTop:8,fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:16,color:C.text}}>{userName}</div><div style={{fontSize:12,color:C.muted,fontFamily:"'Inter',sans-serif",marginBottom:4}}>{"@"+userName.toLowerCase().replace(" ","")}</div>{userBio?<div style={{fontSize:11,color:C.muted,fontFamily:"'Inter',sans-serif",marginBottom:12,lineHeight:1.4}}>{userBio}</div>:<div style={{marginBottom:12}}/>}<button onClick={onProfile} style={{width:"100%",padding:"8px",background:C.yellow,border:"none",borderRadius:10,cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:12,fontWeight:700,color:C.text}}>Ver perfil</button></div></div><button onClick={function(){setShowComposer(true);}} style={{width:"100%",padding:"12px",background:C.yellow,border:"none",borderRadius:12,cursor:"pointer",fontFamily:"'Syne',sans-serif",fontSize:14,fontWeight:700,color:C.text,marginBottom:16}}>+ Publicar</button><div style={{background:C.card,borderRadius:16,border:"1px solid "+C.border,padding:"14px 16px"}}><div style={{fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:13,color:C.text,marginBottom:12}}>Proximos eventos</div>{SEED.filter(function(p){ return p.type==="evento"&&p.city===activeCity; }).slice(0,3).map(function(ev,i){ return (<div key={ev.id} onClick={function(){setFilter("evento");}} style={{display:"flex",gap:10,marginBottom:12,cursor:"pointer",padding:"8px 10px",borderRadius:10,background:C.bg}}><div style={{width:36,height:36,borderRadius:10,background:"#7b2d8b",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,flexShrink:0}}>{ICONS.bell}</div><div style={{flex:1,minWidth:0}}><div style={{fontSize:12,fontWeight:700,color:C.text,fontFamily:"'Inter',sans-serif",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{ev.name}</div><div style={{fontSize:11,color:C.muted,fontFamily:"'Inter',sans-serif",marginTop:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{ev.content.slice(0,45)}...</div></div></div>); })}{SEED.filter(function(p){ return p.type==="evento"&&p.city===activeCity; }).length===0?(<div style={{textAlign:"center",padding:"10px 0"}}><div style={{fontSize:11,color:C.muted,fontFamily:"'Inter',sans-serif"}}>No hay eventos en este pais aun</div><button onClick={function(){setShowComposer(true);}} style={{marginTop:8,padding:"6px 14px",background:C.yellow,border:"none",borderRadius:100,cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:11,fontWeight:700,color:C.text}}>Crear evento</button></div>):null}</div></div><div style={{flex:1,minWidth:0}}>{dollarWidget}{postsList}</div><div style={{width:280,flexShrink:0,position:"sticky",top:170}}>{inviteBanner}<div style={{background:C.card,borderRadius:16,border:"1px solid "+C.border,padding:"14px 16px",marginBottom:16}}><div style={{fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:13,color:C.text,marginBottom:12}}>Venezolanos en {cityObj.name}</div>{SEED.filter(function(p){return p.city===activeCity;}).slice(0,4).map(function(p,i){ return (<div key={p.id} style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}><Av t={p.av} i={i} s={36}/><div style={{flex:1}}><div style={{fontSize:13,fontWeight:600,color:C.text,fontFamily:"'Inter',sans-serif"}}>{p.name}</div><div style={{fontSize:11,color:C.muted,fontFamily:"'Inter',sans-serif"}}>{p.type}</div></div></div>); })}</div><div style={{background:C.card,borderRadius:16,border:"1px solid "+C.border,padding:"14px 16px"}}><div style={{fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:13,color:C.text,marginBottom:10}}>Epale</div><div style={{fontSize:11,color:C.muted,fontFamily:"'Inter',sans-serif",lineHeight:1.6}}>La red social de los venezolanos en el mundo. Conecta, comparte y crece con tu gente.</div><div style={{marginTop:10,display:"flex",gap:8,flexWrap:"wrap"}}>{["Terminos","Privacidad","Contacto"].map(function(t){ return <span key={t} style={{fontSize:10,color:C.muted,fontFamily:"'Inter',sans-serif",cursor:"pointer",textDecoration:"underline"}}>{t}</span>; })}</div></div></div></div></div>);
 }
 
 function Composer(props) {
