@@ -122,7 +122,7 @@ var api = {
 
 const LIGHT={bg:"#f5f5f7",card:"#ffffff",border:"#e8e8ed",yellow:"#ffcc00",blue:"#0066ff",red:"#ff2d2d",text:"#1a1a1a",muted:"#86868b",green:"#1a7a3c",wa:"#25D366"};
 const DARK={bg:"#0d0d12",card:"#18181f",border:"#2a2a38",yellow:"#ffd60a",blue:"#60a5fa",red:"#f87171",text:"#ffffff",muted:"#a0a0b0",green:"#4ade80",wa:"#25D366"};
-var T={es:{forYou:"Para ti",following:"Siguiendo",todos:"Todos",post:"Post",trabajo:"Trabajo",vivienda:"Vivienda",servicio:"Servicio",ayuda:"Ayuda",evento:"Evento",publicar:"+ Publicar",verPerfil:"Ver perfil",invitar:"Invitar por WhatsApp",invitaVene:"Invita venezolanos a",invitaTusP:"Invita a tus panas",trending:"Trending",venezolanos:"Venezolanos en",compartir:"Compartir en WhatsApp",enviaPost:"Envia este post a tus panas",guardar:"Guardar",guardado:"Guardado",seguir:"Seguir",siguiendo:"Siguiendo",misPubl:"Mis publicaciones",guardados:"Guardados",notifs:"Notificaciones",config:"Configuracion",proxEventos:"Proximos eventos",nueva:"Nueva publicacion",foto:"Foto",video:"Video",camara:"Camara",publicarBtn:"Publicar",publicando:"Publicando...",terminos:"Terminos",privacidad:"Privacidad",contacto:"Contacto",cerrarSesion:"Cerrar Sesion"},en:{forYou:"For you",following:"Following",todos:"All",post:"Post",trabajo:"Jobs",vivienda:"Housing",servicio:"Services",ayuda:"Help",evento:"Events",publicar:"+ Post",verPerfil:"View profile",invitar:"Invite via WhatsApp",invitaVene:"Invite Venezuelans to",invitaTusP:"Invite your friends",trending:"Trending",venezolanos:"Venezuelans in",compartir:"Share on WhatsApp",enviaPost:"Send this post to your friends",guardar:"Save",guardado:"Saved",seguir:"Follow",siguiendo:"Following",misPubl:"My posts",guardados:"Saved",notifs:"Notifications",config:"Settings",proxEventos:"Upcoming events",nueva:"New post",foto:"Photo",video:"Video",camara:"Camera",publicarBtn:"Post",publicando:"Posting...",terminos:"Terms",privacidad:"Privacy",contacto:"Contact",cerrarSesion:"Sign out"}};
+var T={es:{forYou:"Para ti",following:"Siguiendo",todos:"Todos",post:"Post",trabajo:"Trabajo",vivienda:"Vivienda",servicio:"Servicio",ayuda:"Ayuda",evento:"Evento",publicar:"✏️ Escribir",verPerfil:"Ver perfil",invitar:"Invitar por WhatsApp",invitaVene:"Invita venezolanos a",invitaTusP:"Invita a tus panas",trending:"Trending",venezolanos:"Venezolanos en",compartir:"Compartir en WhatsApp",enviaPost:"Envia este post a tus panas",guardar:"Guardar",guardado:"Guardado",seguir:"Seguir",siguiendo:"Siguiendo",misPubl:"Mis publicaciones",guardados:"Guardados",notifs:"Notificaciones",config:"Configuracion",proxEventos:"Proximos eventos",nueva:"Nueva publicacion",foto:"Foto",video:"Video",camara:"Camara",publicarBtn:"Publicar",publicando:"Publicando...",terminos:"Terminos",privacidad:"Privacidad",contacto:"Contacto",cerrarSesion:"Cerrar Sesion"},en:{forYou:"For you",following:"Following",todos:"All",post:"Post",trabajo:"Jobs",vivienda:"Housing",servicio:"Services",ayuda:"Help",evento:"Events",publicar:"✏️ Write",verPerfil:"View profile",invitar:"Invite via WhatsApp",invitaVene:"Invite Venezuelans to",invitaTusP:"Invite your friends",trending:"Trending",venezolanos:"Venezuelans in",compartir:"Share on WhatsApp",enviaPost:"Send this post to your friends",guardar:"Save",guardado:"Saved",seguir:"Follow",siguiendo:"Following",misPubl:"My posts",guardados:"Saved",notifs:"Notifications",config:"Settings",proxEventos:"Upcoming events",nueva:"New post",foto:"Photo",video:"Video",camara:"Camera",publicarBtn:"Post",publicando:"Posting...",terminos:"Terms",privacidad:"Privacy",contacto:"Contact",cerrarSesion:"Sign out"}};
 var ICONS={heart:"\u2764\uFE0F",heartEmpty:"\uD83E\uDD0D",comment:"\uD83D\uDCAC",bookmark:"\uD83D\uDD16",phone:"\uD83D\uDCF1",dollar:"\uD83D\uDCB5",fire:"\uD83D\uDD25",pencil:"\u270F\uFE0F",briefcase:"\uD83D\uDCBC",house:"\uD83C\uDFE0",wrench:"\uD83D\uDD27",handshake:"\uD83E\uDD1D",bell:"\uD83D\uDD14",gear:"\u2699\uFE0F",eye:"\uD83D\uDC41\uFE0F",photo:"\uD83D\uDDBC\uFE0F",video:"\uD83C\uDFAC",camera:"\uD83D\uDCF7",notepad:"\uD83D\uDCDD",check:"\u2705",key:"\uD83D\uDD11",email:"\uD83D\uDCE7",group:"\uD83D\uDC65",flag_ve:"\uD83C\uDDFB\uD83C\uDDEA",share:"\u2197\uFE0F",like_on:"\u2764\uFE0F",like_off:"\uD83E\uDD0D"};
 var _theme=LIGHT; var C=LIGHT;
 const CITIES=[{id:"madrid",name:"Espana",flag:"ES",pop:"280K venezolanos"},{id:"miami",name:"USA",flag:"US",pop:"350K venezolanos"},{id:"bogota",name:"Colombia",flag:"CO",pop:"600K venezolanos"},{id:"santiago",name:"Chile",flag:"CL",pop:"150K venezolanos"},{id:"lima",name:"Peru",flag:"PE",pop:"130K venezolanos"},{id:"buenos",name:"Argentina",flag:"AR",pop:"90K venezolanos"},{id:"quito",name:"Ecuador",flag:"EC",pop:"70K venezolanos"},{id:"panama",name:"Panama",flag:"PA",pop:"55K venezolanos"},{id:"caracas",name:"Venezuela",flag:"VE",pop:"Capital"},{id:"portugal",name:"Portugal",flag:"PT",pop:"40K venezolanos"},{id:"italia",name:"Italia",flag:"IT",pop:"35K venezolanos"},{id:"canada",name:"Canada",flag:"CA",pop:"30K venezolanos"}];
@@ -249,6 +249,157 @@ function PostSkeleton() {
   );
 }
 
+
+
+var TENOR_KEY = "AIzaSyAyimkuYQYF_FXVALexPZnueVGQdqOn6Pc"; // Free Tenor API key
+
+function GifPicker(props) {
+  var onSelect=props.onSelect, onClose=props.onClose;
+  var [query,setQuery]=useState("");
+  var [gifs,setGifs]=useState([]);
+  var [loading,setLoading]=useState(true);
+  var [page,setPage]=useState("");
+
+  var fetchGifs=function(q,pos){
+    setLoading(true);
+    var url=q
+      ? "https://tenor.googleapis.com/v2/search?q="+encodeURIComponent(q)+"&key="+TENOR_KEY+"&limit=20&media_filter=gif&contentfilter=medium"+(pos?"&pos="+pos:"")
+      : "https://tenor.googleapis.com/v2/featured?key="+TENOR_KEY+"&limit=20&media_filter=gif&contentfilter=medium"+(pos?"&pos="+pos:"");
+    fetch(url).then(function(r){return r.json();}).then(function(data){
+      if(data.results){
+        setGifs(function(g){ return pos?g.concat(data.results):data.results; });
+        setPage(data.next||"");
+      }
+      setLoading(false);
+    }).catch(function(){ setLoading(false); });
+  };
+
+  useEffect(function(){
+    var timer=setTimeout(function(){ fetchGifs(query,""); setPage(""); setGifs([]); },query?400:0);
+    return function(){ clearTimeout(timer); };
+  },[query]);
+
+  return (
+    <div style={{position:"fixed",inset:0,zIndex:600,background:"rgba(0,0,0,0.6)",display:"flex",alignItems:"flex-end",justifyContent:"center"}} onClick={onClose}>
+      <div onClick={function(e){e.stopPropagation();}} style={{width:"100%",maxWidth:480,background:C.card,borderRadius:"20px 20px 0 0",maxHeight:"70vh",display:"flex",flexDirection:"column"}}>
+        {/* Handle */}
+        <div style={{display:"flex",justifyContent:"center",padding:"10px 0 4px"}}><div style={{width:36,height:4,borderRadius:2,background:C.border}}/></div>
+        {/* Header */}
+        <div style={{padding:"8px 16px 10px",display:"flex",gap:10,alignItems:"center"}}>
+          <span style={{fontSize:20}}>🎞</span>
+          <input autoFocus value={query} onChange={function(e){setQuery(e.target.value);}} placeholder="Buscar GIFs..." style={{flex:1,padding:"10px 14px",background:C.bg,border:"1.5px solid "+(query?C.blue:C.border),borderRadius:100,fontFamily:"'Inter',sans-serif",fontSize:16,color:C.text,outline:"none"}}/>
+          {query?<button onClick={function(){setQuery("");}} style={{background:"none",border:"none",cursor:"pointer",color:C.muted,fontSize:18,minWidth:36}}>✕</button>:null}
+        </div>
+        {/* Powered by Tenor */}
+        <div style={{padding:"0 16px 6px",fontSize:10,color:C.muted,fontFamily:"'Inter',sans-serif"}}>Powered by Tenor</div>
+        {/* GIF Grid */}
+        <div style={{overflowY:"auto",flex:1,WebkitOverflowScrolling:"touch",padding:"0 12px 20px"}}>
+          {loading&&gifs.length===0?(
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
+              {[1,2,3,4,5,6].map(function(i){ return <div key={i} style={{height:120,borderRadius:10,background:C.border,animation:"epale-shimmer 1.4s infinite"}}/>; })}
+            </div>
+          ):(
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
+              {gifs.map(function(gif,i){
+                var url=gif.media_formats&&gif.media_formats.gif&&gif.media_formats.gif.url;
+                var preview=gif.media_formats&&gif.media_formats.tinygif&&gif.media_formats.tinygif.url||url;
+                if(!url) return null;
+                return (
+                  <div key={gif.id||i} onClick={function(){onSelect({src:url,preview:preview,kind:"gif",id:gif.id});}} style={{borderRadius:10,overflow:"hidden",cursor:"pointer",background:C.bg,position:"relative"}}>
+                    <img src={preview} alt={gif.content_description||"gif"} style={{width:"100%",height:120,objectFit:"cover",display:"block"}} loading="lazy"/>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+          {page&&!loading?<button onClick={function(){fetchGifs(query,page);}} style={{width:"100%",padding:"12px",background:"none",border:"1px solid "+C.border,borderRadius:12,cursor:"pointer",color:C.muted,fontFamily:"'Inter',sans-serif",fontSize:13,marginTop:10}}>Cargar más</button>:null}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+var EMOJIS = {
+  "😀 Caras": ["😀","😃","😄","😁","😆","😅","🤣","😂","🙂","🙃","😉","😊","😇","🥰","😍","🤩","😘","😗","😚","😙","🥲","😋","😛","😜","🤪","😝","🤑","🤗","🤭","🤫","🤔","🤐","🤨","😐","😑","😶","😏","😒","🙄","😬","🤥","😌","😔","😪","🤤","😴","😷","🤒","🤕","🤢","🤮","🤧","🥵","🥶","🥴","😵","💫","🤯","🤠","🥳","🥸","😎","🤓","🧐","😕","😟","🙁","☹️","😮","😯","😲","😳","🥺","😦","😧","😨","😰","😥","😢","😭","😱","😖","😣","😞","😓","😩","😫","🥱","😤","😡","😠","🤬","😈","👿","💀","☠️","💩","🤡","👹","👺","👻","👽","👾","🤖"],
+  "👋 Gestos": ["👋","🤚","🖐","✋","🖖","👌","🤌","🤏","✌️","🤞","🤟","🤘","🤙","👈","👉","👆","🖕","👇","☝️","👍","👎","✊","👊","🤛","🤜","👏","🙌","👐","🤲","🤝","🙏","✍️","💅","🤳","💪","🦾","🦿","🦵","🦶","👂","🦻","👃","👣","👀","👁","👅","👄","💋","🫀","🫁","🧠","🦷","🦴"],
+  "❤️ Amor": ["❤️","🧡","💛","💚","💙","💜","🖤","🤍","🤎","💔","❣️","💕","💞","💓","💗","💖","💘","💝","💟","☮️","✝️","☪️","🕉","✡️","🔯","🕎","☯️","☦️","🛐","⛎","♈","💯","💢","💥","💫","💦","💨","🕳","💬","💭","💤","💋","❤️‍🔥","❤️‍🩹","🫶"],
+  "🎉 Celebrar": ["🎉","🎊","🎈","🎁","🎀","🎗","🎟","🎫","🏆","🥇","🥈","🥉","🏅","🎖","🏵","🎗","🎪","🤹","🎭","🎨","🎬","🎤","🎧","🎼","🎵","🎶","🎷","🎸","🎹","🎺","🎻","🥁","🪘","🎮","🕹","🎲","🧩","🪅","🪆","🎯","🎳","🎰","🛹","🛼","🛷","🥊","🏋️","⚽","🏀","🏈","⚾","🎾","🏐","🏉","🥏","🎱","🪃","🏓","🏸","🥅","⛳","🪁","🎣","🤿","🎽","🎿","🛷","🥌"],
+  "🇻🇪 Venezuela": ["🇻🇪","🌴","🏖","🌺","🦜","🦋","🌊","🏔","🌿","🌻","🌹","🥭","🍍","🌽","🫘","☕","🍺","🥃","🍷","🥂","🫙","🏠","🚗","✈️","🌍","🌎","🌏","💃","🕺","🎶","🎸","🥁","🪘","🎺","🌮","🌯","🍽","🥘","🍲","🧆","🥙"],
+  "😭 Sentimientos": ["😭","😢","🥺","💔","😔","😞","😟","😣","😖","😩","😫","🥱","😤","😡","🤬","😈","🤯","🤪","😜","😎","🤩","🥳","😍","🥰","😘","😗","😊","😁","🤣","😂","😅","🤗","🤭","🤫","🤔","😶","🙄","😬","🤥","😴","🥴","😵"],
+  "🔥 Popular": ["🔥","💯","✅","❌","⚡","🌟","⭐","💫","✨","🎯","💪","🙌","👏","🤝","💥","🚀","🌈","💎","👑","🦁","🐯","🦊","🐺","🦅","🦆","🐝","🌸","🌺","🍀","🌙","☀️","🌤","⛅","🌦","🌧","⛈","🌩","❄️","🌊","🏄"],
+};
+var EMOJI_CATS = Object.keys(EMOJIS);
+
+function EmojiPicker(props) {
+  var onSelect=props.onSelect, onClose=props.onClose;
+  var [cat,setCat]=useState(EMOJI_CATS[EMOJI_CATS.length-1]); // default: Popular
+  var [search,setSearch]=useState("");
+  var searchResults=search.length>0?EMOJI_CATS.reduce(function(acc,k){ return acc.concat(EMOJIS[k]); },[]).filter(function(e){ return e.includes(search); }):null;
+  var emojis=searchResults||EMOJIS[cat]||[];
+
+  return (
+    <div style={{position:"absolute",bottom:"100%",left:0,right:0,zIndex:500,background:C.card,border:"1px solid "+C.border,borderRadius:16,boxShadow:"0 -4px 24px rgba(0,0,0,0.15)",overflow:"hidden",marginBottom:4}}>
+      {/* Search bar */}
+      <div style={{padding:"10px 12px 6px",borderBottom:"1px solid "+C.border}}>
+        <input value={search} onChange={function(e){setSearch(e.target.value);}} placeholder="Buscar emoji..." style={{width:"100%",padding:"8px 12px",background:C.bg,border:"1px solid "+C.border,borderRadius:20,fontFamily:"'Inter',sans-serif",fontSize:14,color:C.text,outline:"none",boxSizing:"border-box"}}/>
+      </div>
+      {/* Category tabs */}
+      {!search&&<div style={{display:"flex",overflowX:"auto",borderBottom:"1px solid "+C.border,scrollbarWidth:"none"}}>
+        {EMOJI_CATS.map(function(k){
+          var icon=k.split(" ")[0];
+          return <button key={k} onClick={function(){setCat(k);}} style={{padding:"8px 12px",background:"none",border:"none",borderBottom:"2px solid "+(cat===k?C.blue:"transparent"),cursor:"pointer",fontSize:16,flexShrink:0,opacity:cat===k?1:0.5}}>{icon}</button>;
+        })}
+      </div>}
+      {/* Emoji grid */}
+      <div style={{display:"grid",gridTemplateColumns:"repeat(8,1fr)",gap:2,padding:"8px",maxHeight:200,overflowY:"auto",WebkitOverflowScrolling:"touch"}}>
+        {emojis.map(function(e,i){
+          return <button key={i} onClick={function(){onSelect(e);}} style={{background:"none",border:"none",cursor:"pointer",fontSize:22,padding:"6px",borderRadius:8,textAlign:"center",lineHeight:1}} onMouseEnter={function(ev){ev.target.style.background=C.bg;}} onMouseLeave={function(ev){ev.target.style.background="none";}}>{e}</button>;
+        })}
+        {emojis.length===0&&<div style={{gridColumn:"1/-1",textAlign:"center",padding:"20px",color:C.muted,fontFamily:"'Inter',sans-serif",fontSize:13}}>Sin resultados</div>}
+      </div>
+    </div>
+  );
+}
+
+
+var parseVideoUrl=function(url){
+  if(!url) return null;
+  // YouTube
+  var yt=url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([\w-]{11})/);
+  if(yt) return {type:"youtube",id:yt[1],thumb:"https://img.youtube.com/vi/"+yt[1]+"/hqdefault.jpg",embed:"https://www.youtube.com/embed/"+yt[1]+"?autoplay=1"};
+  // TikTok
+  var tt=url.match(/tiktok\.com\/@[^/]+\/video\/(\d+)/);
+  if(tt) return {type:"tiktok",id:tt[1],embed:"https://www.tiktok.com/embed/"+tt[1]};
+  // Instagram Reel
+  var ig=url.match(/instagram\.com\/(?:reel|p)\/([\w-]+)/);
+  if(ig) return {type:"instagram",id:ig[1],embed:"https://www.instagram.com/p/"+ig[1]+"/embed"};
+  return null;
+};
+
+function VideoEmbed(props) {
+  var video=props.video;
+  var [playing,setPlaying]=useState(false);
+  if(!video) return null;
+  if(playing) return (
+    <div style={{borderRadius:12,overflow:"hidden",marginBottom:10,position:"relative",paddingTop:"56.25%"}}>
+      <iframe src={video.embed} style={{position:"absolute",top:0,left:0,width:"100%",height:"100%",border:"none"}} allowFullScreen allow="autoplay"/>
+    </div>
+  );
+  return (
+    <div onClick={function(){setPlaying(true);}} style={{borderRadius:12,overflow:"hidden",marginBottom:10,cursor:"pointer",position:"relative",background:"#000"}}>
+      {video.thumb?<img src={video.thumb} alt="video" style={{width:"100%",height:200,objectFit:"cover",display:"block",opacity:0.8}}/>:<div style={{height:160,background:C.border,display:"flex",alignItems:"center",justifyContent:"center"}}><span style={{fontSize:48}}>🎬</span></div>}
+      <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
+        <div style={{width:60,height:60,borderRadius:9999,background:"rgba(0,0,0,0.7)",display:"flex",alignItems:"center",justifyContent:"center"}}>
+          <span style={{fontSize:28,marginLeft:4}}>▶</span>
+        </div>
+      </div>
+      <div style={{position:"absolute",bottom:8,left:10,background:"rgba(0,0,0,0.6)",borderRadius:6,padding:"2px 8px"}}>
+        <span style={{fontSize:11,color:"#fff",fontFamily:"'Inter',sans-serif",fontWeight:700}}>{video.type==="youtube"?"YouTube":video.type==="tiktok"?"TikTok":"Instagram"}</span>
+      </div>
+    </div>
+  );
+}
+
 function PostCard(props) {
   var post=props.post,idx=props.idx,cityObj=props.cityObj,saved=props.saved,onSave=props.onSave,following=props.following||[],onFollow=props.onFollow,userName=props.userName||"",liked=props.liked||false,onLike=props.onLike||function(){},likedLoaded=props.likedLoaded||false,userPhoto=props.userPhoto||null;
   var TR=T[props.lang||"es"]||T.es;
@@ -268,6 +419,7 @@ function PostCard(props) {
   var [comment,setComment]=useState("");
   var [comments,setComments]=useState([]);
   var commentInputRef=React.useRef(null);
+  var [showCommentEmoji,setShowCommentEmoji]=useState(false);
   var [showMenu,setShowMenu]=useState(false);
   var [blocked,setBlocked]=useState(false);
   var [deleted,setDeleted]=useState(false);
@@ -337,6 +489,7 @@ function PostCard(props) {
               </div>
             )}
           </div>):null}
+          {(function(){ var videoData=parseVideoUrl((postContent||"").trim()); return videoData?<VideoEmbed video={videoData}/>:null; })()}
           {editing?(
             <div style={{marginBottom:12}}>
               <textarea value={editText} onChange={function(e){setEditText(e.target.value);}} autoFocus style={{width:"100%",padding:"12px 14px",background:C.bg,border:"1.5px solid "+C.blue,borderRadius:12,color:C.text,fontFamily:"'Inter',sans-serif",fontSize:15,resize:"none",minHeight:80,outline:"none",boxSizing:"border-box",lineHeight:1.6}}/>
@@ -358,7 +511,11 @@ function PostCard(props) {
           ):(
             <p style={{fontSize:15,lineHeight:1.6,color:C.text,margin:"0 0 12px",fontFamily:"'Inter',sans-serif"}}>{postContent}{post.content!==postContent?<span style={{fontSize:10,color:C.muted,marginLeft:6}}>(editado)</span>:null}</p>
           )}
-          {post.media?(<div style={{borderRadius:12,overflow:"hidden",marginBottom:10,border:"1px solid "+C.border}}>{post.media.kind==="image"?<img src={post.media.src} alt="post" style={{width:"100%",maxHeight:280,objectFit:"cover",display:"block"}}/>:<video src={post.media.src} controls style={{width:"100%",maxHeight:280,display:"block"}}/>}</div>):null}
+          {post.media?(<div style={{borderRadius:12,overflow:"hidden",marginBottom:10,border:"1px solid "+C.border}}>
+              {post.media.kind==="gif"?<img src={post.media.preview||post.media.src} alt="gif" style={{width:"100%",maxHeight:280,objectFit:"cover",display:"block"}}/>
+              :post.media.kind==="image"?<img src={post.media.src} alt="post" style={{width:"100%",maxHeight:280,objectFit:"cover",display:"block"}}/>
+              :<video src={post.media.src} controls style={{width:"100%",maxHeight:280,display:"block"}}/>}
+            </div>):null}
           <div style={{display:"flex",gap:6,marginBottom:10}}>
             <button onClick={function(){ if(likeProcessing) return; setLikeProcessing(true); var nl=!likedLocal; setLikedLocal(nl); setLikes(function(l){return nl?Math.max(0,l+1):Math.max(0,l-1);}); onLike(post.id); setTimeout(function(){setLikeProcessing(false);},1000); }} style={{display:"flex",alignItems:"center",gap:6,padding:"10px 14px",minHeight:44,background:likedLocal?"#fff0f0":C.bg,border:"1px solid "+(likedLocal?"#ffb3b3":C.border),borderRadius:100,cursor:likeProcessing?"not-allowed":"pointer",color:likedLocal?C.red:C.muted,fontFamily:"'Inter',sans-serif",fontSize:13,opacity:likeProcessing?0.5:1}}>
               {likedLocal?ICONS.like_on:ICONS.like_off} {likes.toLocaleString()}
@@ -401,9 +558,13 @@ function PostCard(props) {
             </div>
           );
         })}
-        <div style={{display:"flex",gap:8,alignItems:"center",marginTop:4}}>
-          <input ref={commentInputRef} value={comment} onChange={function(e){setComment(e.target.value);}} onKeyDown={function(e){if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendComment();}}} placeholder="Comenta..." style={{flex:1,padding:"12px 14px",background:C.bg,border:"1px solid "+(comment.startsWith("@")?C.blue:C.border),borderRadius:20,fontFamily:"'Inter',sans-serif",fontSize:16,color:C.text,outline:"none"}}/>
-          <button onClick={sendComment} style={{background:C.blue,border:"none",borderRadius:9999,width:44,height:44,cursor:"pointer",color:"#fff",fontSize:18,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>&#8593;</button>
+        <div style={{position:"relative"}}>
+          {showCommentEmoji&&<EmojiPicker onSelect={function(e){ setComment(function(c){return c+e;}); if(commentInputRef.current) commentInputRef.current.focus(); }} onClose={function(){setShowCommentEmoji(false);}}/>}
+          <div style={{display:"flex",gap:8,alignItems:"center",marginTop:4}}>
+            <button onClick={function(){setShowCommentEmoji(function(v){return !v;});}} style={{background:"none",border:"none",cursor:"pointer",fontSize:22,padding:"0 4px",flexShrink:0,opacity:0.7,minWidth:36,minHeight:44,display:"flex",alignItems:"center",justifyContent:"center"}}>😊</button>
+            <input ref={commentInputRef} value={comment} onChange={function(e){setComment(e.target.value);}} onKeyDown={function(e){if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendComment();setShowCommentEmoji(false);}}} onFocus={function(){setShowCommentEmoji(false);}} placeholder="Comenta..." style={{flex:1,padding:"12px 14px",background:C.bg,border:"1px solid "+(comment.startsWith("@")?C.blue:C.border),borderRadius:20,fontFamily:"'Inter',sans-serif",fontSize:16,color:C.text,outline:"none"}}/>
+            <button onClick={function(){sendComment();setShowCommentEmoji(false);}} style={{background:C.blue,border:"none",borderRadius:9999,width:44,height:44,cursor:"pointer",color:"#fff",fontSize:18,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>↑</button>
+          </div>
         </div>
       </div>):null}
     </div>
@@ -519,7 +680,13 @@ function CountryFeed(props) {
     var displayName=userName||"Tu"; var newPostId=String(Date.now());
     var newPost={id:newPostId,city:cityId,type:p.type,name:displayName,av:displayName,photo_url:props.userPhoto||null,content:p.content,media:p.media,likes:0,comments:0,time:new Date().toISOString(),_local:true};
     setPosts(function(pp){ return [newPost].concat(pp); });
-    if(userId) api.createPost(userId,cityId,p.type,p.content,displayName).catch(function(){});
+    if(userId) {
+      api.createPost(userId,cityId,p.type,p.content,displayName).then(function(res){
+        if(res&&(res[0]||res.id)){
+          setPosts(function(pp){ return pp.filter(function(x){ return x.id!==newPostId; }); });
+        }
+      }).catch(function(){});
+    }
   };
 
   var typeButtons=Object.entries(TYPES).map(function(entry){
@@ -600,7 +767,7 @@ function CountryFeed(props) {
             <div style={{fontSize:56,marginBottom:16}}>{toFlag(CITY_FLAGS[cityId])}</div>
             <div style={{fontSize:16,fontFamily:"'Syne',sans-serif",color:C.text,marginBottom:8}}>{cityObj.name}</div>
             <div style={{fontSize:14,fontFamily:"'Inter',sans-serif",lineHeight:1.6}}>Se el primero en publicar aqui</div>
-            <button onClick={function(){setShowComposer(true);}} style={{marginTop:20,padding:"12px 28px",background:C.yellow,border:"none",borderRadius:100,cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:14,fontWeight:700,color:"#1a1a1a"}}>+ Publicar</button>
+            <button onClick={function(){setShowComposer(true);}} style={{marginTop:20,padding:"12px 28px",background:C.yellow,border:"none",borderRadius:100,cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:14,fontWeight:700,color:"#1a1a1a"}}>✏️ Escribir</button>
           </div>
         ):filtered.map(function(p,i){
           return <PostCard key={p.id} post={p} idx={i} cityObj={cityObj}
@@ -730,10 +897,41 @@ function Feed(props) {
   var cityFiltered=allFiltered.filter(function(p){ return p.city===activeCity; });
   var followFiltered=allFiltered.filter(function(p){ return following.includes(p.name); });
   var filtered=feedTab==="following"?followFiltered:cityFiltered;
-  var addPost=function(p){ var displayName=userName||"Tu"; var currentUserId=userId||""; var citiesToPost=p.city==="all"?CITIES.map(function(c){return c.id;}):[p.city]; var newPostId=String(Date.now()); citiesToPost.forEach(function(cityId){ var newPost={id:newPostId,city:cityId,type:p.type,name:displayName,av:displayName,photo_url:userPhoto||null,content:p.content,media:p.media,likes:0,comments:0,time:new Date().toISOString(),_local:true}; setPosts(function(pp){ return [newPost].concat(pp); }); if(currentUserId) api.createPost(currentUserId,cityId,p.type,p.content,displayName).catch(function(){}); }); };
-  var [dollarBCV,setDollarBCV]=useState("36.84"); var [dollarPar,setDollarPar]=useState("38.20");
-  useEffect(function(){ api.getDollarRate().then(function(data){ if(Array.isArray(data)){ data.forEach(function(d){ if(d.fuente==="BCV"||d.nombre==="Oficial") setDollarBCV(parseFloat(d.promedio||d.price||36.84).toFixed(2)); if(d.fuente==="Paralelo"||d.nombre==="Paralelo") setDollarPar(parseFloat(d.promedio||d.price||38.20).toFixed(2)); }); } }).catch(function(){}); },[]);
-  var dollarWidget=(<div style={{background:C.card,borderRadius:14,border:"1px solid "+C.border,overflow:"hidden",marginBottom:16}}><div style={{background:"#0d0d0d",padding:"9px 14px",display:"flex",alignItems:"center",gap:10}}><span style={{fontSize:16}}>{ICONS.dollar}</span><div style={{flex:1,display:"flex",gap:12,alignItems:"center",flexWrap:"wrap"}}><span style={{fontFamily:"'Inter',sans-serif",fontSize:11,color:"rgba(255,255,255,0.5)"}}>BCV <strong style={{fontSize:14,color:"#ffcc00"}}>{"Bs "+dollarBCV}</strong></span><span style={{fontFamily:"'Inter',sans-serif",fontSize:11,color:"rgba(255,255,255,0.5)"}}>Paralelo <strong style={{fontSize:14,color:"#7defa0"}}>{"Bs "+dollarPar}</strong></span></div><span style={{fontSize:10,color:"rgba(255,255,255,0.3)",fontFamily:"'Inter',sans-serif"}}>hoy</span></div>{filtered[0]?(<div style={{padding:"8px 14px",display:"flex",gap:8,alignItems:"center"}}><span style={{fontSize:14}}>{ICONS.fire}</span><span style={{fontSize:11,color:C.muted,fontFamily:"'Inter',sans-serif"}}>Trending:</span><span style={{fontSize:12,color:C.text,fontFamily:"'Inter',sans-serif",fontWeight:600,flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{filtered[0].content.slice(0,80)}...</span></div>):null}</div>);
+  var addPost=function(p){ var displayName=userName||"Tu"; var currentUserId=userId||""; var citiesToPost=p.city==="all"?CITIES.map(function(c){return c.id;}):[p.city]; var newPostId=String(Date.now()); citiesToPost.forEach(function(cityId){
+    // Add optimistic local post immediately for instant feedback
+    var newPost={id:newPostId,city:cityId,type:p.type,name:displayName,av:displayName,photo_url:userPhoto||null,content:p.content,media:p.media,likes:0,comments:0,time:new Date().toISOString(),_local:true,_ts:Date.now()};
+    setPosts(function(pp){ return [newPost].concat(pp); });
+    if(currentUserId) {
+      api.createPost(currentUserId,cityId,p.type,p.content,displayName).then(function(res){
+        // Remove the local post now that DB has it — realtime will deliver the real one
+        if(res&&(res[0]||res.id)) {
+          setPosts(function(pp){ return pp.filter(function(x){ return x.id!==newPostId; }); });
+        }
+      }).catch(function(){});
+    }
+  }); };
+  var [dollarBCV,setDollarBCV]=useState("...");
+  var [dollarPar,setDollarPar]=useState("...");
+  var [dollarUpdated,setDollarUpdated]=useState("");
+  useEffect(function(){
+    api.getDollarRate().then(function(data){
+      if(Array.isArray(data)){
+        data.forEach(function(d){
+          var val=parseFloat(d.promedio||d.venta||d.compra||0);
+          if(!val) return;
+          var fuente=(d.fuente||d.nombre||"").toLowerCase();
+          if(fuente==="bcv") {
+            setDollarBCV(val.toLocaleString("es-VE",{minimumFractionDigits:2,maximumFractionDigits:2}));
+            if(d.fechaActualizacion) setDollarUpdated(d.fechaActualizacion.slice(0,10));
+          }
+          if(fuente==="paralelo"||fuente==="parallel") {
+            setDollarPar(val.toLocaleString("es-VE",{minimumFractionDigits:2,maximumFractionDigits:2}));
+          }
+        });
+      }
+    }).catch(function(){});
+  },[]);
+  var dollarWidget=(<div style={{background:C.card,borderRadius:14,border:"1px solid "+C.border,overflow:"hidden",marginBottom:16}}><div style={{background:"#0d0d0d",padding:"9px 14px",display:"flex",alignItems:"center",gap:10}}><span style={{fontSize:16}}>{ICONS.dollar}</span><div style={{flex:1,display:"flex",gap:12,alignItems:"center",flexWrap:"wrap"}}><span style={{fontFamily:"'Inter',sans-serif",fontSize:11,color:"rgba(255,255,255,0.5)"}}>BCV <strong style={{fontSize:14,color:"#ffcc00"}}>{"Bs "+dollarBCV}</strong></span><span style={{fontFamily:"'Inter',sans-serif",fontSize:11,color:"rgba(255,255,255,0.5)"}}>Paralelo <strong style={{fontSize:14,color:"#7defa0"}}>{"Bs "+dollarPar}</strong></span></div><span style={{fontSize:10,color:"rgba(255,255,255,0.3)",fontFamily:"'Inter',sans-serif"}}>{dollarUpdated||"hoy"}</span></div>{filtered[0]?(<div style={{padding:"8px 14px",display:"flex",gap:8,alignItems:"center"}}><span style={{fontSize:14}}>{ICONS.fire}</span><span style={{fontSize:11,color:C.muted,fontFamily:"'Inter',sans-serif"}}>Trending:</span><span style={{fontSize:12,color:C.text,fontFamily:"'Inter',sans-serif",fontWeight:600,flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{filtered[0].content.slice(0,80)}...</span></div>):null}</div>);
   var postsList=postsLoading?[1,2,3,4].map(function(i){return <PostSkeleton key={i}/>;})
     :filtered.length===0?(
       feedTab==="following"?(
@@ -770,11 +968,46 @@ function Composer(props) {
   var cityObj=props.cityObj,onPost=props.onPost,onClose=props.onClose,userPhoto=props.userPhoto||null,userName=props.userName||"";
   var [type,setType]=useState("post"); var [text,setText]=useState(""); var [media,setMedia]=useState(null);
   var [loading,setLoading]=useState(false); var [selectedCity,setSelectedCity]=useState(cityObj.id); var [showCityPicker,setShowCityPicker]=useState(false);
+  var [showEmoji,setShowEmoji]=useState(false);
+  var [showGif,setShowGif]=useState(false);
+  var [videoLink,setVideoLink]=useState("");
+  var [showVideoInput,setShowVideoInput]=useState(false);
+  var textareaRef=React.useRef(null);
   var handleFile=function(e,kind){ var file=e.target.files[0]; if(!file) return; var reader=new FileReader(); reader.onload=function(ev){ setMedia({src:ev.target.result,kind:kind}); }; reader.readAsDataURL(file); };
-  var canPost=text.trim()||media;
-  var submit=function(){ if(!canPost) return; setLoading(true); setTimeout(function(){ onPost({city:selectedCity,type:type,content:text,media:media}); setLoading(false); onClose(); },600); };
+  var submit=function(){
+    if(!canPost&&!videoLink) return;
+    setLoading(true);
+    var finalContent=text;
+    if(videoLink&&parseVideoUrl(videoLink)) finalContent=text?(text+"\n"+videoLink):videoLink;
+    setTimeout(function(){ onPost({city:selectedCity,type:type,content:finalContent,media:media}); setLoading(false); onClose(); },600);
+  };
+  var canPost=text.trim()||media||videoLink;
   var selectedCityObj=getCity(selectedCity);
-  return (<div style={{position:"fixed",inset:0,zIndex:200,background:"rgba(0,0,0,0.5)",display:"flex",alignItems:"center",justifyContent:"center"}} onClick={onClose}><div onClick={function(e){e.stopPropagation();}} style={{width:"100%",maxWidth:560,background:C.card,borderRadius:22,padding:"0 0 36px",maxHeight:"90vh",overflowY:"auto",margin:"0 16px"}}><div style={{display:"flex",justifyContent:"center",padding:"12px 0 4px"}}><div style={{width:36,height:4,borderRadius:2,background:C.border}}/></div><div style={{padding:"4px 20px 0"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}><div style={{display:"flex",alignItems:"center",gap:10}}><Av t={userName||"?"} i={0} s={38} photo={userPhoto}/><span style={{fontSize:15,fontFamily:"'Syne',sans-serif",color:C.text,fontWeight:700}}>Nueva publicacion</span></div><button onClick={function(){setShowCityPicker(function(v){return !v;});}} style={{background:C.bg,border:"1.5px solid "+C.border,borderRadius:100,padding:"5px 12px",cursor:"pointer",display:"flex",alignItems:"center",gap:6}}><span style={{fontSize:14}}>{selectedCity==="all"?ICONS.group:toFlag(CITY_FLAGS[selectedCity])}</span><span style={{fontSize:12,color:C.blue,fontFamily:"'Inter',sans-serif",fontWeight:700}}>{selectedCity==="all"?"Todos los paises":selectedCityObj.name}</span><span style={{fontSize:10,color:C.muted}}>{"v"}</span></button></div>{showCityPicker?(<div style={{background:C.bg,borderRadius:14,border:"1px solid "+C.border,padding:"8px",marginBottom:12,display:"flex",flexWrap:"wrap",gap:6}}><button onClick={function(){setSelectedCity("all");setShowCityPicker(false);}} style={{padding:"5px 10px",borderRadius:100,border:"1.5px solid "+(selectedCity==="all"?C.yellow:C.border),background:selectedCity==="all"?C.yellow:C.card,color:C.text,fontFamily:"'Inter',sans-serif",fontSize:11,fontWeight:700,cursor:"pointer"}}>Todos los paises</button>{CITIES.map(function(c){ return (<button key={c.id} onClick={function(){setSelectedCity(c.id);setShowCityPicker(false);}} style={{padding:"5px 10px",borderRadius:100,border:"1.5px solid "+(selectedCity===c.id?C.blue:C.border),background:selectedCity===c.id?C.blue:C.card,color:selectedCity===c.id?"#fff":C.text,fontFamily:"'Inter',sans-serif",fontSize:11,fontWeight:600,cursor:"pointer",display:"flex",alignItems:"center",gap:4}}><span>{toFlag(CITY_FLAGS[c.id])}</span><span>{c.name}</span></button>); })}</div>):null}<div style={{display:"flex",gap:6,marginBottom:14,overflowX:"auto"}}>{Object.entries(TYPES).map(function(entry){ var id=entry[0],m=entry[1]; return <button key={id} onClick={function(){setType(id);}} style={{padding:"5px 12px",borderRadius:20,border:"1.5px solid "+(type===id?C.blue:C.border),background:type===id?C.blue:C.card,color:type===id?"#fff":C.muted,fontFamily:"'Inter',sans-serif",fontSize:11,fontWeight:700,cursor:"pointer",whiteSpace:"nowrap",flexShrink:0}}>{m.icon} {m.label}</button>; })}</div><textarea value={text} onChange={function(e){setText(e.target.value);}} placeholder="Que esta pasando en tu pais?" style={{width:"100%",background:C.bg,border:"1.5px solid "+(text?C.blue:C.border),borderRadius:12,padding:"12px 14px",color:C.text,fontFamily:"'Inter',sans-serif",fontSize:16,resize:"none",minHeight:90,outline:"none",boxSizing:"border-box",marginBottom:12}}/>{media?(<div style={{position:"relative",marginBottom:12,borderRadius:12,overflow:"hidden",border:"1.5px solid "+C.border}}>{media.kind==="image"?<img src={media.src} alt="preview" style={{width:"100%",maxHeight:220,objectFit:"cover",display:"block"}}/>:<video src={media.src} controls style={{width:"100%",maxHeight:220,display:"block"}}/>}<button onClick={function(){setMedia(null);}} style={{position:"absolute",top:8,right:8,background:"rgba(0,0,0,0.6)",border:"none",borderRadius:9999,width:28,height:28,cursor:"pointer",color:"#fff",fontSize:14}}>X</button></div>):(<div style={{display:"flex",gap:8,marginBottom:14}}>{[[ICONS.photo,"Foto","image/*","image"],[ICONS.video,"Video","video/*","video"],[ICONS.camera,"Camara","image/*","image"]].map(function(item,idx){ return (<label key={idx} style={{flex:1}}><div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:6,padding:"10px",background:C.bg,border:"1.5px solid "+C.border,borderRadius:12,cursor:"pointer"}}><span style={{fontSize:18}}>{item[0]}</span><span style={{fontSize:11,fontFamily:"'Inter',sans-serif",color:C.muted,fontWeight:700}}>{item[1]}</span></div><input type="file" accept={item[2]} style={{display:"none"}} onChange={function(e){handleFile(e,item[3]);}}/></label>); })}</div>)}<button onClick={submit} disabled={!canPost} style={{width:"100%",padding:"13px",background:canPost?C.yellow:C.border,color:canPost?C.text:C.muted,border:"none",borderRadius:100,cursor:canPost?"pointer":"not-allowed",fontFamily:"'Inter',sans-serif",fontSize:14,fontWeight:700}}>{loading?"Publicando...":"Publicar"}</button></div></div></div>);
+  return (<div style={{position:"fixed",inset:0,zIndex:200,background:"rgba(0,0,0,0.5)",display:"flex",alignItems:"center",justifyContent:"center"}} onClick={onClose}>
+    {showGif&&<GifPicker onSelect={function(gif){ setMedia({src:gif.src,preview:gif.preview,kind:"gif"}); setShowGif(false); }} onClose={function(){setShowGif(false);}}/>}<div onClick={function(e){e.stopPropagation();}} style={{width:"100%",maxWidth:560,background:C.card,borderRadius:22,padding:"0 0 36px",maxHeight:"90vh",overflowY:"auto",margin:"0 16px"}}><div style={{display:"flex",justifyContent:"center",padding:"12px 0 4px"}}><div style={{width:36,height:4,borderRadius:2,background:C.border}}/></div><div style={{padding:"4px 20px 0"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}><div style={{display:"flex",alignItems:"center",gap:10}}><Av t={userName||"?"} i={0} s={38} photo={userPhoto}/><span style={{fontSize:15,fontFamily:"'Syne',sans-serif",color:C.text,fontWeight:700}}>Nueva publicacion</span></div><button onClick={function(){setShowCityPicker(function(v){return !v;});}} style={{background:C.bg,border:"1.5px solid "+C.border,borderRadius:100,padding:"5px 12px",cursor:"pointer",display:"flex",alignItems:"center",gap:6}}><span style={{fontSize:14}}>{selectedCity==="all"?ICONS.group:toFlag(CITY_FLAGS[selectedCity])}</span><span style={{fontSize:12,color:C.blue,fontFamily:"'Inter',sans-serif",fontWeight:700}}>{selectedCity==="all"?"Todos los paises":selectedCityObj.name}</span><span style={{fontSize:10,color:C.muted}}>{"v"}</span></button></div>{showCityPicker?(<div style={{background:C.bg,borderRadius:14,border:"1px solid "+C.border,padding:"8px",marginBottom:12,display:"flex",flexWrap:"wrap",gap:6}}><button onClick={function(){setSelectedCity("all");setShowCityPicker(false);}} style={{padding:"5px 10px",borderRadius:100,border:"1.5px solid "+(selectedCity==="all"?C.yellow:C.border),background:selectedCity==="all"?C.yellow:C.card,color:C.text,fontFamily:"'Inter',sans-serif",fontSize:11,fontWeight:700,cursor:"pointer"}}>Todos los paises</button>{CITIES.map(function(c){ return (<button key={c.id} onClick={function(){setSelectedCity(c.id);setShowCityPicker(false);}} style={{padding:"5px 10px",borderRadius:100,border:"1.5px solid "+(selectedCity===c.id?C.blue:C.border),background:selectedCity===c.id?C.blue:C.card,color:selectedCity===c.id?"#fff":C.text,fontFamily:"'Inter',sans-serif",fontSize:11,fontWeight:600,cursor:"pointer",display:"flex",alignItems:"center",gap:4}}><span>{toFlag(CITY_FLAGS[c.id])}</span><span>{c.name}</span></button>); })}</div>):null}<div style={{display:"flex",gap:6,marginBottom:14,overflowX:"auto"}}>{Object.entries(TYPES).map(function(entry){ var id=entry[0],m=entry[1]; return <button key={id} onClick={function(){setType(id);}} style={{padding:"5px 12px",borderRadius:20,border:"1.5px solid "+(type===id?C.blue:C.border),background:type===id?C.blue:C.card,color:type===id?"#fff":C.muted,fontFamily:"'Inter',sans-serif",fontSize:11,fontWeight:700,cursor:"pointer",whiteSpace:"nowrap",flexShrink:0}}>{m.icon} {m.label}</button>; })}</div><div style={{position:"relative",marginBottom:12}}>
+          {showEmoji&&<EmojiPicker onSelect={function(e){ setText(function(t){return t+e;}); setShowEmoji(false); if(textareaRef.current) textareaRef.current.focus(); }} onClose={function(){setShowEmoji(false);}}/>}
+          <textarea ref={textareaRef} value={text} onChange={function(e){setText(e.target.value);}} onFocus={function(){setShowEmoji(false);}} placeholder="Que esta pasando en tu pais?" style={{width:"100%",background:C.bg,border:"1.5px solid "+(text?C.blue:C.border),borderRadius:12,padding:"12px 14px 12px 14px",color:C.text,fontFamily:"'Inter',sans-serif",fontSize:16,resize:"none",minHeight:90,outline:"none",boxSizing:"border-box"}}/>
+          <button onClick={function(){setShowEmoji(function(v){return !v;});}} style={{position:"absolute",bottom:10,right:12,background:"none",border:"none",cursor:"pointer",fontSize:22,opacity:0.7,padding:0}}>😊</button>
+        </div>{media?(<div style={{position:"relative",marginBottom:12,borderRadius:12,overflow:"hidden",border:"1.5px solid "+C.border}}>{media.kind==="image"?<img src={media.src} alt="preview" style={{width:"100%",maxHeight:220,objectFit:"cover",display:"block"}}/>:<video src={media.src} controls style={{width:"100%",maxHeight:220,display:"block"}}/>}<button onClick={function(){setMedia(null);}} style={{position:"absolute",top:8,right:8,background:"rgba(0,0,0,0.6)",border:"none",borderRadius:9999,width:28,height:28,cursor:"pointer",color:"#fff",fontSize:14}}>X</button></div>):(<div style={{marginBottom:14}}>
+            <div style={{display:"flex",gap:8,marginBottom:8}}>
+              {[[ICONS.photo,"Foto","image/*","image"],[ICONS.video,"Video","video/*","video"],[ICONS.camera,"Camara","image/*","image"]].map(function(item,idx){ return (<label key={idx} style={{flex:1}}><div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:6,padding:"10px",background:C.bg,border:"1.5px solid "+C.border,borderRadius:12,cursor:"pointer"}}><span style={{fontSize:18}}>{item[0]}</span><span style={{fontSize:11,fontFamily:"'Inter',sans-serif",color:C.muted,fontWeight:700}}>{item[1]}</span></div><input type="file" accept={item[2]} style={{display:"none"}} onChange={function(e){handleFile(e,item[3]);}}/></label>); })}
+            </div>
+            <div style={{display:"flex",gap:8}}>
+              <button onClick={function(){setShowGif(true);}} style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",gap:6,padding:"10px",background:C.bg,border:"1.5px solid "+C.border,borderRadius:12,cursor:"pointer"}}>
+                <span style={{fontSize:18}}>🎞</span><span style={{fontSize:11,fontFamily:"'Inter',sans-serif",color:C.muted,fontWeight:700}}>GIF</span>
+              </button>
+              <button onClick={function(){setShowVideoInput(function(v){return !v;});}} style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",gap:6,padding:"10px",background:showVideoInput?C.blue:C.bg,border:"1.5px solid "+(showVideoInput?C.blue:C.border),borderRadius:12,cursor:"pointer"}}>
+                <span style={{fontSize:18}}>🔗</span><span style={{fontSize:11,fontFamily:"'Inter',sans-serif",color:showVideoInput?"#fff":C.muted,fontWeight:700}}>Video link</span>
+              </button>
+            </div>
+            {showVideoInput&&(
+              <div style={{marginTop:8}}>
+                <input value={videoLink} onChange={function(e){setVideoLink(e.target.value);}} placeholder="Pega link de YouTube, TikTok o Instagram..." style={{width:"100%",padding:"10px 14px",background:C.bg,border:"1.5px solid "+(videoLink?C.blue:C.border),borderRadius:10,color:C.text,fontFamily:"'Inter',sans-serif",fontSize:14,outline:"none",boxSizing:"border-box"}}/>
+                {videoLink&&parseVideoUrl(videoLink)&&<div style={{marginTop:6,padding:"8px 12px",background:C.bg,borderRadius:8,border:"1px solid "+C.green,fontSize:12,color:C.green,fontFamily:"'Inter',sans-serif"}}>✓ {parseVideoUrl(videoLink).type==="youtube"?"YouTube detectado":parseVideoUrl(videoLink).type==="tiktok"?"TikTok detectado":"Instagram detectado"}</div>}
+                {videoLink&&!parseVideoUrl(videoLink)&&<div style={{marginTop:6,padding:"8px 12px",background:C.bg,borderRadius:8,border:"1px solid "+C.red,fontSize:12,color:C.red,fontFamily:"'Inter',sans-serif"}}>Link no reconocido. Usa YouTube, TikTok o Instagram.</div>}
+              </div>
+            )}
+          </div>)}<button onClick={submit} disabled={!canPost} style={{width:"100%",padding:"13px",background:canPost?C.yellow:C.border,color:canPost?C.text:C.muted,border:"none",borderRadius:100,cursor:canPost?"pointer":"not-allowed",fontFamily:"'Inter',sans-serif",fontSize:14,fontWeight:700}}>{loading?"Publicando...":"Publicar"}</button></div></div></div>);
 }
 
 function Search(props) {
@@ -1211,6 +1444,13 @@ function App() {
   var [viewingUser,setViewingUser]=useState(null);
   var [showOnboarding,setShowOnboarding]=useState(false);
   var [unreadNotifs,setUnreadNotifs]=useState(0);
+  var [isMobileApp,setIsMobileApp]=useState(window.innerWidth<768);
+  var [profileReady,setProfileReady]=useState(false);
+  useEffect(function(){
+    var handler=function(){ setIsMobileApp(window.innerWidth<768); };
+    window.addEventListener("resize",handler);
+    return function(){ window.removeEventListener("resize",handler); };
+  },[]);
 
   useEffect(function(){ _onAuthExpired=function(){ setSessionExpired(true); }; return function(){ _onAuthExpired=null; }; },[]);
 
@@ -1248,8 +1488,9 @@ function App() {
               localStorage.setItem("epale_session",JSON.stringify(d));
             } catch(e){}
           }
-        }).catch(function(){});
-      }
+          setProfileReady(true);
+        }).catch(function(){ setProfileReady(true); });
+      } else { setProfileReady(true); }
       api.getFollowing(userId).then(function(data){ if(Array.isArray(data)){ var names=data.map(function(r){return r.following_name;}).filter(Boolean); if(names.length>0) setFollowing(names); } }).catch(function(){});
       api.getSaved(userId).then(function(data){ if(Array.isArray(data)){ var ids=data.map(function(r){return r.post_id;}).filter(Boolean); if(ids.length>0) setSavedPosts(ids); } }).catch(function(){});
       api.getLikes(userId).then(function(data){ if(Array.isArray(data)){ var ids=data.map(function(r){return r.post_id;}).filter(Boolean); setLikedPosts(ids); } setLikedLoaded(true); }).catch(function(){ setLikedLoaded(true); });
@@ -1295,13 +1536,13 @@ function App() {
       {showSearch?<Search onClose={function(){setShowSearch(false);}} following={following} onFollow={toggleFollow} onOpenProfile={function(n){ setShowSearch(false); if(n!==userName) setViewingUser(n); else setShowProfile(true); }} userName={userName}/>:null}
       {viewingUser?<UserProfile name={viewingUser} onClose={function(){setViewingUser(null);}} following={following} onFollow={toggleFollow} currentUserName={userName}/>:null}
       <Feed userCity={userCity} onProfile={function(){setShowProfile(true);}} following={following} onFollow={toggleFollow} userPhoto={userPhoto} userName={userName} userId={userId} savedPosts={savedPosts} onSave={toggleSave} likedPosts={likedPosts} onLike={toggleLike} lang={lang} userBio={userBio} likedLoaded={likedLoaded} onOpenProfile={function(n){ if(n!==userName) setViewingUser(n); else setShowProfile(true); }}/>
-      <div style={{position:"fixed",bottom:0,left:0,right:0,minHeight:60,paddingBottom:"env(safe-area-inset-bottom)",background:C.card,borderTop:"1px solid "+C.border,display:window.innerWidth>=768?"none":"flex",alignItems:"center",justifyContent:"space-around",zIndex:90,maxWidth:768,margin:"0 auto"}}>
-        {[{id:"feed",icon:ICONS.fire,label:"Inicio"},{id:"search",icon:ICONS.comment,label:"Buscar"},{id:"post",icon:ICONS.pencil,label:"Publicar",action:true},{id:"notifs",icon:ICONS.bell,label:"Avisos",badge:unreadNotifs},{id:"me",icon:ICONS.group,label:"Yo"}].map(function(tab){
+      <div style={{position:"fixed",bottom:0,left:0,right:0,minHeight:60,paddingBottom:"env(safe-area-inset-bottom)",background:C.card,borderTop:"1px solid "+C.border,display:isMobileApp?"flex":"none",alignItems:"center",justifyContent:"space-around",zIndex:90,maxWidth:768,margin:"0 auto"}}>
+        {[{id:"feed",icon:ICONS.fire,label:"Inicio"},{id:"search",icon:ICONS.comment,label:"Buscar"},{id:"post",icon:ICONS.pencil,label:"",action:true},{id:"notifs",icon:ICONS.bell,label:"Avisos",badge:unreadNotifs},{id:"me",icon:ICONS.group,label:"Yo"}].map(function(tab){
           var isActive=activeTab===tab.id;
           return (<button key={tab.id} onClick={function(){ if(tab.id==="me"){ setShowProfile(true); return; } if(tab.id==="search"){ setShowSearch(true); return; } if(tab.id==="post"){ document.dispatchEvent(new CustomEvent("epale:openComposer")); return; } if(tab.id==="notifs"){ setShowProfile(true); return; } setActiveTab(tab.id); }} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:2,background:tab.action?C.yellow:"none",border:"none",cursor:"pointer",padding:tab.action?"8px 16px":"6px 10px",borderRadius:tab.action?12:8,minWidth:48,position:"relative"}}>
               {tab.badge>0?<div style={{position:"absolute",top:4,right:6,width:8,height:8,borderRadius:9999,background:C.red,border:"2px solid "+C.card}}/>:null}
               <span style={{fontSize:tab.action?20:18,color:tab.action?C.text:isActive?C.blue:C.muted}}>{tab.icon}</span>
-              <span style={{fontSize:9,fontFamily:"'Inter',sans-serif",color:tab.action?C.text:isActive?C.blue:C.muted,fontWeight:isActive?700:400}}>{tab.label}</span>
+              {tab.label?<span style={{fontSize:9,fontFamily:"'Inter',sans-serif",color:tab.action?C.text:isActive?C.blue:C.muted,fontWeight:isActive?700:400}}>{tab.label}</span>:null}
             </button>);
         })}
       </div>
