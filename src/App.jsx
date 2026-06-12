@@ -893,10 +893,10 @@ function Feed(props) {
       }
     });
   };
-  var [dollarBCV,setDollarBCV]=useState("...");
-  var [dollarPar,setDollarPar]=useState("...");
+  var [dollarBCV,setDollarBCV]=useState("580,00");
+  var [dollarPar,setDollarPar]=useState("800,00");
   var [dollarProm,setDollarProm]=useState("");
-  var [dollarUpdated,setDollarUpdated]=useState("");
+  var [dollarUpdated,setDollarUpdated]=useState("estimado");
   useEffect(function(){
     api.getDollarRate().then(function(results){
       var oficial=results[0], paralelo=results[1], promedio=results[2];
@@ -1425,12 +1425,33 @@ function App() {
   var [dark,setDark]=useState(function(){ try{return localStorage.getItem("epale_dark")==="1";}catch(e){return false;} });
   var [lang,setLang]=useState(function(){ try{return localStorage.getItem("epale_lang")||"es";}catch(e){return "es";} });
   C=dark?DARK:LIGHT;
-  var [screen,setScreen]=useState(function(){ try { var s=localStorage.getItem("sb-zkydbsymcnnbepvmbchr-auth-token"); if(s){ var d=JSON.parse(s); if(d&&d.access_token) return "feed"; } var s2=localStorage.getItem("epale_session"); var d2=s2?JSON.parse(s2):null; return d2&&d2.token&&d2.token.length>10?"feed":"auth"; } catch(e){ return "auth"; } });
+  var [screen,setScreen]=useState(function(){
+    try {
+      var s=localStorage.getItem("sb-zkydbsymcnnbepvmbchr-auth-token");
+      if(s){ var d=JSON.parse(s); if(d&&d.access_token&&d.user) return "feed"; }
+    } catch(e){}
+    return "auth";
+  });
   var [userCity,setUserCity]=useState(function(){ try { var s=localStorage.getItem("epale_session"); var d=s?JSON.parse(s):null; return d&&d.city?d.city:"madrid"; } catch(e){ return "madrid"; } });
   var [userName,setUserName]=useState("");
   var [userPhoto,setUserPhoto]=useState(null);
   var [userBio,setUserBio]=useState("");
-  var [userId,setUserId]=useState(function(){ try { var s=localStorage.getItem("epale_session"); var d=s?JSON.parse(s):null; if(d&&d.token&&d.token.length>10){ window._supaToken=d.token; } return d&&d.uid?d.uid:""; } catch(e){ return ""; } });
+  var [userId,setUserId]=useState(function(){
+    try {
+      // Primary: read from Supabase SDK stored session (most reliable)
+      var s=localStorage.getItem("sb-zkydbsymcnnbepvmbchr-auth-token");
+      var d=s?JSON.parse(s):null;
+      if(d&&d.access_token&&d.user&&d.user.id){
+        window._supaToken=d.access_token;
+        return d.user.id;
+      }
+      // Fallback: epale_session
+      var s2=localStorage.getItem("epale_session");
+      var d2=s2?JSON.parse(s2):null;
+      if(d2&&d2.token&&d2.token.length>10){ window._supaToken=d2.token; }
+      return d2&&d2.uid?d2.uid:"";
+    } catch(e){ return ""; }
+  });
   var [showProfile,setShowProfile]=useState(false);
   var [following,setFollowing]=useState([]);
   var [savedPosts,setSavedPosts]=useState([]);
@@ -1467,7 +1488,7 @@ function App() {
       if(!window._supaToken || window._supaToken === SUPA_KEY) {
         setLikedLoaded(true); return;
       }
-      // Always refresh profile from DB on load to get fresh name/photo
+      // Always refresh profile from DB on load — DB is source of truth
       if(userId) {
         api.getProfile(userId).then(function(profiles){
           var prof=Array.isArray(profiles)&&profiles[0];
@@ -1476,13 +1497,15 @@ function App() {
             if(prof.photo_url) setUserPhoto(prof.photo_url);
             if(prof.bio) setUserBio(prof.bio);
             if(prof.city) setUserCity(prof.city);
+            // Overwrite epale_session completely with fresh DB data
             try {
               var s=localStorage.getItem("epale_session");
               var d=s?JSON.parse(s):{};
-              if(prof.name) d.name=prof.name;
-              if(prof.photo_url) d.photo=prof.photo_url;
-              if(prof.bio) d.bio=prof.bio;
-              if(prof.city) d.city=prof.city;
+              d.name=prof.name||d.name||"";
+              d.photo=prof.photo_url||d.photo||null;
+              d.bio=prof.bio||d.bio||"";
+              d.city=prof.city||d.city||"miami";
+              d.uid=userId;
               localStorage.setItem("epale_session",JSON.stringify(d));
             } catch(e){}
           }
