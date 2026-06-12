@@ -926,7 +926,18 @@ function Feed(props) {
       var fmt=function(v){ return parseFloat(v||0).toLocaleString("es-VE",{minimumFractionDigits:2,maximumFractionDigits:2}); };
       if(oficial&&oficial.promedio) {
         setDollarBCV(fmt(oficial.promedio));
-        if(oficial.fechaActualizacion) setDollarUpdated(oficial.fechaActualizacion.slice(0,10));
+        if(oficial.fechaActualizacion) {
+          try {
+            var raw=oficial.fechaActualizacion;
+            var d=new Date(raw);
+            if(!isNaN(d.getTime())) {
+              // Format as "12 jun 2026, 10:30"
+              setDollarUpdated(d.toLocaleString("es-VE",{day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"}));
+            } else {
+              setDollarUpdated(raw);
+            }
+          } catch(e){ setDollarUpdated(oficial.fechaActualizacion); }
+        }
       }
       if(paralelo&&paralelo.promedio) setDollarPar(fmt(paralelo.promedio));
       if(promedio&&promedio.promedio) setDollarProm(fmt(promedio.promedio));
@@ -936,7 +947,7 @@ function Feed(props) {
     <div style={{padding:"10px 14px",display:"flex",alignItems:"center",gap:8}}>
       <span style={{fontSize:16}}>{ICONS.dollar}</span>
       <span style={{fontSize:12,color:"rgba(255,255,255,0.4)",fontFamily:"'Inter',sans-serif",fontWeight:600}}>Dólar Venezuela</span>
-      <span style={{fontSize:10,color:"rgba(255,255,255,0.25)",fontFamily:"'Inter',sans-serif",marginLeft:"auto"}}>{dollarUpdated||"cargando..."}</span>
+      <span style={{fontSize:10,color:"rgba(255,255,255,0.25)",fontFamily:"'Inter',sans-serif",marginLeft:"auto"}}>{"Act: "+(dollarUpdated||"...")}</span>
     </div>
     <div style={{display:"flex",borderTop:"1px solid rgba(255,255,255,0.07)"}}>
       <div style={{flex:1,padding:"10px 14px",borderRight:"1px solid rgba(255,255,255,0.07)"}}>
