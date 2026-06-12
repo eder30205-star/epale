@@ -984,6 +984,7 @@ function Composer(props) {
   var [showVideoInput,setShowVideoInput]=useState(false);
   var textareaRef=React.useRef(null);
   var handleFile=function(e,kind){ var file=e.target.files[0]; if(!file) return; var reader=new FileReader(); reader.onload=function(ev){ setMedia({src:ev.target.result,kind:kind}); }; reader.readAsDataURL(file); };
+  var canPost=text.trim()||media||videoLink;
   var submit=function(){
     if(!canPost&&!videoLink) return;
     setLoading(true);
@@ -991,7 +992,6 @@ function Composer(props) {
     if(videoLink&&parseVideoUrl(videoLink)) finalContent=text?(text+"\n"+videoLink):videoLink;
     setTimeout(function(){ onPost({city:selectedCity,type:type,content:finalContent,media:media}); setLoading(false); onClose(); },600);
   };
-  var canPost=text.trim()||media||videoLink;
   var selectedCityObj=getCity(selectedCity);
   return (<div style={{position:"fixed",inset:0,zIndex:200,background:"rgba(0,0,0,0.5)",display:"flex",alignItems:"center",justifyContent:"center"}} onClick={onClose}>
     {showGif&&<GifPicker onSelect={function(gif){ setMedia({src:gif.src,preview:gif.preview,kind:"gif"}); setShowGif(false); }} onClose={function(){setShowGif(false);}}/>}<div onClick={function(e){e.stopPropagation();}} style={{width:"100%",maxWidth:560,background:C.card,borderRadius:22,padding:"0 0 36px",maxHeight:"90vh",overflowY:"auto",margin:"0 16px"}}><div style={{display:"flex",justifyContent:"center",padding:"12px 0 4px"}}><div style={{width:36,height:4,borderRadius:2,background:C.border}}/></div><div style={{padding:"4px 20px 0"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}><div style={{display:"flex",alignItems:"center",gap:10}}><Av t={userName||"?"} i={0} s={38} photo={userPhoto}/><span style={{fontSize:15,fontFamily:"'Syne',sans-serif",color:C.text,fontWeight:700}}>Nueva publicacion</span></div><button onClick={function(){setShowCityPicker(function(v){return !v;});}} style={{background:C.bg,border:"1.5px solid "+C.border,borderRadius:100,padding:"5px 12px",cursor:"pointer",display:"flex",alignItems:"center",gap:6}}><span style={{fontSize:14}}>{selectedCity==="all"?ICONS.group:toFlag(CITY_FLAGS[selectedCity])}</span><span style={{fontSize:12,color:C.blue,fontFamily:"'Inter',sans-serif",fontWeight:700}}>{selectedCity==="all"?"Todos los paises":selectedCityObj.name}</span><span style={{fontSize:10,color:C.muted}}>{"v"}</span></button></div>{showCityPicker?(<div style={{background:C.bg,borderRadius:14,border:"1px solid "+C.border,padding:"8px",marginBottom:12,display:"flex",flexWrap:"wrap",gap:6}}><button onClick={function(){setSelectedCity("all");setShowCityPicker(false);}} style={{padding:"5px 10px",borderRadius:100,border:"1.5px solid "+(selectedCity==="all"?C.yellow:C.border),background:selectedCity==="all"?C.yellow:C.card,color:C.text,fontFamily:"'Inter',sans-serif",fontSize:11,fontWeight:700,cursor:"pointer"}}>Todos los paises</button>{CITIES.map(function(c){ return (<button key={c.id} onClick={function(){setSelectedCity(c.id);setShowCityPicker(false);}} style={{padding:"5px 10px",borderRadius:100,border:"1.5px solid "+(selectedCity===c.id?C.blue:C.border),background:selectedCity===c.id?C.blue:C.card,color:selectedCity===c.id?"#fff":C.text,fontFamily:"'Inter',sans-serif",fontSize:11,fontWeight:600,cursor:"pointer",display:"flex",alignItems:"center",gap:4}}><span>{toFlag(CITY_FLAGS[c.id])}</span><span>{c.name}</span></button>); })}</div>):null}<div style={{display:"flex",gap:6,marginBottom:14,overflowX:"auto"}}>{Object.entries(TYPES).map(function(entry){ var id=entry[0],m=entry[1]; return <button key={id} onClick={function(){setType(id);}} style={{padding:"5px 12px",borderRadius:20,border:"1.5px solid "+(type===id?C.blue:C.border),background:type===id?C.blue:C.card,color:type===id?"#fff":C.muted,fontFamily:"'Inter',sans-serif",fontSize:11,fontWeight:700,cursor:"pointer",whiteSpace:"nowrap",flexShrink:0}}>{m.icon} {m.label}</button>; })}</div><div style={{position:"relative",marginBottom:12}}>
@@ -1576,14 +1576,7 @@ function App() {
 export default function AppRoot() {
   return (
     <ErrorBoundary>
-      <style>{`
-        @media (min-width: 768px) {
-          .epale-mobile-nav { display: none !important; }
-        }
-        @media (max-width: 767px) {
-          .epale-mobile-nav { display: flex !important; }
-        }
-      `}</style>
+      <style dangerouslySetInnerHTML={{__html:"@media (min-width: 768px) { .epale-mobile-nav { display: none !important; } } @media (max-width: 767px) { .epale-mobile-nav { display: flex !important; } }"}}/>
       <App/>
     </ErrorBoundary>
   );
