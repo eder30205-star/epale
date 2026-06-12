@@ -100,6 +100,9 @@ var api = {
   getPostsByName: function(name) {
     return fetch(SUPA_URL+"/rest/v1/posts?name=eq."+encodeURIComponent(name)+"&select=*&order=created_at.desc&limit=30",{headers:{"apikey":SUPA_KEY}}).then(function(r){return r.json();});
   },
+  deletePost: function(postId) {
+    return fetchAuth(SUPA_URL+"/rest/v1/posts?id=eq."+postId,{method:"DELETE",headers:{"apikey":SUPA_KEY,"Authorization":"Bearer "+getToken()}}).then(function(r){return r.ok;}).catch(function(){ return false; });
+  },
   searchProfiles: function(query) {
     var q=encodeURIComponent(query);
     return fetch(SUPA_URL+"/rest/v1/profiles?or=(name.ilike.*"+q+"*,username.ilike.*"+q+"*)&select=*&limit=20",{headers:{"apikey":SUPA_KEY,"Authorization":"Bearer "+getToken()}}).then(function(r){return r.json();});
@@ -173,6 +176,29 @@ function Av(props) {
 }
 function Stripe() { return <div style={{display:"flex",height:4}}><div style={{flex:1,background:C.yellow}}/><div style={{flex:1,background:C.blue}}/><div style={{flex:1,background:C.red}}/></div>; }
 
+
+function OfflineBanner() {
+  var [offline,setOffline]=useState(!navigator.onLine);
+  var [justBack,setJustBack]=useState(false);
+  useEffect(function(){
+    var goOffline=function(){ setOffline(true); setJustBack(false); };
+    var goOnline=function(){ setJustBack(true); setOffline(false); setTimeout(function(){ setJustBack(false); },3000); };
+    window.addEventListener("offline",goOffline);
+    window.addEventListener("online",goOnline);
+    return function(){ window.removeEventListener("offline",goOffline); window.removeEventListener("online",goOnline); };
+  },[]);
+  if(!offline&&!justBack) return null;
+  return (
+    <div style={{position:"fixed",top:0,left:0,right:0,zIndex:10000,background:offline?"#1a1a1a":"#1a7a3c",padding:"10px 16px",display:"flex",alignItems:"center",gap:10,boxShadow:"0 2px 8px rgba(0,0,0,0.3)"}}>
+      <span style={{fontSize:16}}>{offline?"📡":"✅"}</span>
+      <div style={{flex:1}}>
+        <div style={{color:"#fff",fontFamily:"'Syne',sans-serif",fontSize:13,fontWeight:700}}>{offline?"Sin conexion":"Conexion restaurada"}</div>
+        <div style={{color:"rgba(255,255,255,0.7)",fontFamily:"'Inter',sans-serif",fontSize:11,marginTop:1}}>{offline?"Revisando tu internet...":"Ya puedes seguir usando Epale"}</div>
+      </div>
+    </div>
+  );
+}
+
 function SessionExpiredBanner(props) {
   return (
     <div style={{position:"fixed",top:0,left:0,right:0,zIndex:9999,background:"#ff2d2d",padding:"14px 20px",display:"flex",alignItems:"center",justifyContent:"space-between",boxShadow:"0 2px 8px rgba(0,0,0,0.3)"}}>
@@ -237,6 +263,8 @@ function PostCard(props) {
   var commentInputRef=React.useRef(null);
   var [showMenu,setShowMenu]=useState(false);
   var [blocked,setBlocked]=useState(false);
+  var [deleted,setDeleted]=useState(false);
+  var [deleting,setDeleting]=useState(false);
   var [showFlag,setShowFlag]=useState(false);
   var [flagDone,setFlagDone]=useState(false);
   var t=TYPES[post.type]||TYPES.post;
@@ -247,6 +275,7 @@ function PostCard(props) {
     var uid=props.userId||(function(){ try{var d=JSON.parse(localStorage.getItem("epale_session")); return d&&d.uid?d.uid:"";}catch(e){return "";} })();
     if(uid){ api.addComment(post.id,uid,userName,comment).catch(function(){}); if(post.user_id&&post.user_id!==uid) api.addNotification(post.user_id,userName||"Alguien","comment",post.id).catch(function(){}); }
   };
+  if(deleted) return null;
   return (
     <div style={{background:blocked?"#f9f9f9":C.card,borderBottom:"1px solid "+C.border,opacity:blocked?0.6:1}}>
       {blocked?(<div style={{padding:"12px 16px",display:"flex",alignItems:"center",justifyContent:"space-between"}}><span style={{fontSize:13,color:C.muted,fontFamily:"'Inter',sans-serif"}}>Contenido oculto.</span><button onClick={function(){setBlocked(false);}} style={{background:"none",border:"1px solid "+C.border,borderRadius:100,padding:"5px 14px",cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:11,color:C.blue,fontWeight:600}}>Desbloquear</button></div>):(
@@ -266,6 +295,17 @@ function PostCard(props) {
             </div>
           </div>
           {showMenu?(<div style={{background:C.bg,borderRadius:12,border:"1px solid "+C.border,marginBottom:10,overflow:"hidden"}}>
+            {post.name===userName?(
+              <button onClick={function(){
+                if(!window.confirm("Eliminar esta publicacion?")) return;
+                setDeleting(true); setShowMenu(false);
+                api.deletePost(post.id).then(function(ok){
+                  if(ok){ setDeleted(true); } else { setDeleting(false); alert("Error al eliminar. Intenta de nuevo."); }
+                });
+              }} style={{width:"100%",padding:"12px 16px",background:"none",border:"none",borderBottom:"1px solid "+C.border,cursor:"pointer",textAlign:"left",fontFamily:"'Inter',sans-serif",fontSize:14,color:C.red,display:"flex",alignItems:"center",gap:10,opacity:deleting?0.5:1}}>
+                <span>{deleting?"Eliminando...":"🗑 Eliminar publicacion"}</span>
+              </button>
+            ):null}
             {post.name!=="Tu"&&post.name!==userName&&onFollow?(<button onClick={function(){onFollow(post.name);setShowMenu(false);}} style={{width:"100%",padding:"12px 16px",background:"none",border:"none",borderBottom:"1px solid "+C.border,cursor:"pointer",textAlign:"left",fontFamily:"'Inter',sans-serif",fontSize:14,color:C.text,display:"flex",alignItems:"center",gap:10}}><span>{following.includes(post.name)?"Dejar de seguir":TR.seguir}</span></button>):null}
             {post.name!=="Tu"&&post.name!==userName?(<button onClick={function(){setBlocked(true);setShowMenu(false);}} style={{width:"100%",padding:"12px 16px",background:"none",border:"none",borderBottom:"1px solid "+C.border,cursor:"pointer",textAlign:"left",fontFamily:"'Inter',sans-serif",fontSize:14,color:C.red,display:"flex",alignItems:"center",gap:10}}><span>Bloquear usuario</span></button>):null}
             <button onClick={function(){setShowFlag(true);setShowMenu(false);}} style={{width:"100%",padding:"12px 16px",background:"none",border:"none",borderBottom:"1px solid "+C.border,cursor:"pointer",textAlign:"left",fontFamily:"'Inter',sans-serif",fontSize:14,color:C.red,display:"flex",alignItems:"center",gap:10}}><span>Reportar publicacion</span></button>
@@ -1016,7 +1056,37 @@ function Auth(props) {
   return (<div style={{minHeight:"100vh",background:C.bg,display:"flex",flexDirection:"column",maxWidth:480,margin:"0 auto"}}><AuthHero mode={mode} step={step}/>{mode==="login"||step===1?(<div style={{display:"flex",margin:"18px 20px 0",background:C.bg,borderRadius:100,padding:4,border:"1px solid "+C.border}}>{["login","register"].map(function(m){ return <button key={m} onClick={function(){setMode(m);setStep(1);}} style={{flex:1,padding:"10px 0",borderRadius:100,border:"none",cursor:"pointer",background:mode===m?C.card:"transparent",color:mode===m?C.text:C.muted,fontFamily:"'Inter',sans-serif",fontSize:13,fontWeight:mode===m?700:400,boxShadow:mode===m?"0 1px 6px rgba(0,0,0,0.1)":"none"}}>{m==="login"?"Iniciar sesion":"Crear cuenta"}</button>; })}</div>):null}{mode==="login"?<AuthLogin onDone={onDone}/>:null}{mode==="register"&&step===1?<AuthStep1 onNext={function(){setStep(2);}} email={email} setEmail={setEmail} password={password} setPassword={setPassword} password2={password2} setPassword2={setPassword2}/>:null}{mode==="register"&&step===2?<AuthStep2 onNext={function(){setStep(3);}} onBack={function(){setStep(1);}} name={name} setName={setName} username={username} setUsername={setUsername}/>:null}{mode==="register"&&step===3?<AuthStep3 onNext={function(){setStep(4);}} onBack={function(){setStep(2);}} chosenCity={chosenCity} setChosenCity={setChosenCity} agreed={agreed} setAgreed={setAgreed}/>:null}{mode==="register"&&step===4?<AuthStep4 onDone={onDone} onBack={function(){setStep(3);}} email={email} chosenCity={chosenCity} userName={name} userPhoto={userPhoto} setUserPhoto={setUserPhoto} password={password}/>:null}</div>);
 }
 
-export default function App() {
+
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error: error };
+  }
+  componentDidCatch(error, info) {
+    console.error("Epale crash:", error, info);
+  }
+  render() {
+    if(this.state.hasError) {
+      return (
+        <div style={{minHeight:"100vh",background:"#0a0a0a",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"40px 24px",textAlign:"center"}}>
+          <div style={{display:"flex",height:4,position:"absolute",top:0,left:0,right:0}}><div style={{flex:1,background:"#ffcc00"}}/><div style={{flex:1,background:"#0066ff"}}/><div style={{flex:1,background:"#ff2d2d"}}/></div>
+          <div style={{fontSize:56,marginBottom:16}}>🇻🇪</div>
+          <div style={{fontSize:24,fontFamily:"'Syne',sans-serif",color:"#fff",fontWeight:700,marginBottom:8}}>Algo salio mal</div>
+          <div style={{fontSize:15,color:"rgba(255,255,255,0.5)",fontFamily:"'Inter',sans-serif",marginBottom:32,lineHeight:1.6}}>La app tuvo un problema inesperado.{"
+"}Tus datos estan seguros.</div>
+          <button onClick={function(){ window.location.reload(); }} style={{padding:"14px 32px",background:"#ffcc00",color:"#1a1a1a",border:"none",borderRadius:100,cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:15,fontWeight:700,marginBottom:16}}>Recargar Epale</button>
+          <button onClick={function(){ try{localStorage.clear();}catch(e){} window.location.reload(); }} style={{padding:"12px 24px",background:"transparent",color:"rgba(255,255,255,0.4)",border:"1px solid rgba(255,255,255,0.15)",borderRadius:100,cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:13}}>Limpiar datos y recargar</button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+function App() {
   var [dark,setDark]=useState(function(){ try{return localStorage.getItem("epale_dark")==="1";}catch(e){return false;} });
   var [lang,setLang]=useState(function(){ try{return localStorage.getItem("epale_lang")||"es";}catch(e){return "es";} });
   C=dark?DARK:LIGHT;
@@ -1089,10 +1159,11 @@ export default function App() {
   var setLangSaved=function(v){ setLang(v); try{localStorage.setItem("epale_lang",v);}catch(e){} };
   var handleLogout=function(){ try { localStorage.removeItem("epale_session"); } catch(e){} window._supaToken=null; setShowProfile(false); setSessionExpired(false); setScreen("auth"); };
 
-  if(screen==="auth") return <Auth key={dark?"dark":"light"} onDone={handleDone}/>;
+  if(screen==="auth") return <><OfflineBanner/><Auth key={dark?"dark":"light"} onDone={handleDone}/></>;
 
   if(screen==="feed") return (
     <div key={dark?"dark":"light"}>
+      <OfflineBanner/>
       {sessionExpired?<SessionExpiredBanner onLogin={handleExpiredLogin}/>:null}
       {showOnboarding?<Onboarding onDone={function(){setShowOnboarding(false);}} userCity={userCity} userId={userId} userName={userName} following={following} onFollow={toggleFollow}/>:null}
       {showProfile?<Profile key={dark?"dark":"light"} userCity={userCity} onLogout={handleLogout} onClose={function(){setShowProfile(false);}} onSetDark={setDarkSaved} onSetLang={setLangSaved} isDark={dark} currentLang={lang} following={following} onFollow={toggleFollow} userPhoto={userPhoto} userName={userName} onPhotoChange={setUserPhoto} userId={userId} savedPosts={savedPosts} likedPosts={likedPosts} userBio={userBio} onBioChange={setUserBio} onClearNotifs={function(){setUnreadNotifs(0);}}/>:null}
@@ -1113,4 +1184,8 @@ export default function App() {
   );
 
   return <div style={{padding:20}}>Cargando...</div>;
+}
+
+export default function AppRoot() {
+  return <ErrorBoundary><App/></ErrorBoundary>;
 }
