@@ -1,3 +1,4 @@
+// Epale v2.1 — 2026-06-12
 import { useState, useEffect } from "react";
 import React from "react";
 import { createClient } from "@supabase/supabase-js";
@@ -662,13 +663,7 @@ function CountryFeed(props) {
         var mapped=data.map(function(p){ return {id:p.id,city:p.city,type:p.type||"post",name:p.name||"Anonimo",av:p.name||"?",photo_url:p.name===userName?props.userPhoto:null,content:p.content,likes:p.likes||0,comments:p.comments||0,time:p.created_at||"reciente"}; });
         var seedFiltered=SEED.filter(function(s){return s.city===cityId&&!mapped.find(function(m){return String(m.id)===String(s.id);});});
         setPosts(function(current){
-          var now=Date.now();
-          var localOnly=current.filter(function(p){
-            if(!p._local) return false;
-            var tooOld=p.id&&(now-parseInt(p.id))>60000;
-            if(tooOld) return false;
-            return !mapped.find(function(m){ return m.name===p.name&&(m.content||"").trim()===(p.content||"").trim(); });
-          });
+          var localOnly=[];
           return localOnly.concat(mapped).concat(seedFiltered);
         });
       }
@@ -683,15 +678,9 @@ function CountryFeed(props) {
   },[cityId]);
 
   var addPost=function(p){
-    var displayName=userName||"Tu"; var newPostId=String(Date.now());
-    var newPost={id:newPostId,city:cityId,type:p.type,name:displayName,av:displayName,photo_url:props.userPhoto||null,content:p.content,media:p.media,likes:0,comments:0,time:new Date().toISOString(),_local:true};
-    setPosts(function(pp){ return [newPost].concat(pp); });
-    if(userId) {
-      api.createPost(userId,cityId,p.type,p.content,displayName).then(function(res){
-        if(res&&(res[0]||res.id)){
-          setPosts(function(pp){ return pp.filter(function(x){ return x.id!==newPostId; }); });
-        }
-      }).catch(function(){});
+    var displayName=userName||"Tu";
+    if(userId){
+      api.createPost(userId,cityId,p.type,p.content,displayName).catch(function(){});
     }
   };
 
@@ -826,10 +815,7 @@ function Feed(props) {
     setPostsLoading(true);
     setHasMore(true);
     oldestCursorRef.current=null;
-    // Keep local posts, reset DB+SEED portion
-    setPosts(function(current){
-      return current.filter(function(p){ return p._local; }).concat(SEED);
-    });
+    setPosts(SEED);
     api.getPosts(activeCity,null).then(function(data){
       if(Array.isArray(data)&&data.length>0){
         var mapped=data.map(function(p){ return {id:p.id,city:p.city,type:p.type||"post",name:p.name||"Anonimo",av:p.name||"?",photo_url:p.name===userName?userPhoto:null,content:p.content,likes:p.likes||0,comments:p.comments||0,time:p.created_at||"reciente",_created_at:p.created_at}; });
@@ -837,13 +823,7 @@ function Feed(props) {
         if(mapped.length>0) oldestCursorRef.current=mapped[mapped.length-1]._created_at;
         if(data.length<30) setHasMore(false);
         setPosts(function(current){
-          var now=Date.now();
-          var localOnly=current.filter(function(p){
-            if(!p._local) return false;
-            var tooOld=p.id&&(now-parseInt(p.id))>60000;
-            if(tooOld) return false;
-            return !mapped.find(function(m){ return m.name===p.name&&(m.content||"").trim()===(p.content||"").trim(); });
-          });
+          var localOnly=[];
           var seedFiltered=SEED.filter(function(s){ return !mapped.find(function(m){return String(m.id)===String(s.id);}); });
           return localOnly.concat(mapped).concat(seedFiltered);
         });
@@ -903,19 +883,16 @@ function Feed(props) {
   var cityFiltered=allFiltered.filter(function(p){ return p.city===activeCity; });
   var followFiltered=allFiltered.filter(function(p){ return following.includes(p.name); });
   var filtered=feedTab==="following"?followFiltered:cityFiltered;
-  var addPost=function(p){ var displayName=userName||"Tu"; var currentUserId=userId||""; var citiesToPost=p.city==="all"?CITIES.map(function(c){return c.id;}):[p.city]; var newPostId=String(Date.now()); citiesToPost.forEach(function(cityId){
-    // Add optimistic local post immediately for instant feedback
-    var newPost={id:newPostId,city:cityId,type:p.type,name:displayName,av:displayName,photo_url:userPhoto||null,content:p.content,media:p.media,likes:0,comments:0,time:new Date().toISOString(),_local:true,_ts:Date.now()};
-    setPosts(function(pp){ return [newPost].concat(pp); });
-    if(currentUserId) {
-      api.createPost(currentUserId,cityId,p.type,p.content,displayName).then(function(res){
-        // Remove the local post now that DB has it — realtime will deliver the real one
-        if(res&&(res[0]||res.id)) {
-          setPosts(function(pp){ return pp.filter(function(x){ return x.id!==newPostId; }); });
-        }
-      }).catch(function(){});
-    }
-  }); };
+  var addPost=function(p){
+    var displayName=userName||"Tu"; var currentUserId=userId||"";
+    var citiesToPost=p.city==="all"?CITIES.map(function(c){return c.id;}):[p.city];
+    citiesToPost.forEach(function(cityId){
+      if(currentUserId){
+        // Just write to DB — realtime subscription delivers it to feed instantly
+        api.createPost(currentUserId,cityId,p.type,p.content,displayName).catch(function(){});
+      }
+    });
+  };
   var [dollarBCV,setDollarBCV]=useState("...");
   var [dollarPar,setDollarPar]=useState("...");
   var [dollarProm,setDollarProm]=useState("");
@@ -1450,21 +1427,9 @@ function App() {
   C=dark?DARK:LIGHT;
   var [screen,setScreen]=useState(function(){ try { var s=localStorage.getItem("sb-zkydbsymcnnbepvmbchr-auth-token"); if(s){ var d=JSON.parse(s); if(d&&d.access_token) return "feed"; } var s2=localStorage.getItem("epale_session"); var d2=s2?JSON.parse(s2):null; return d2&&d2.token&&d2.token.length>10?"feed":"auth"; } catch(e){ return "auth"; } });
   var [userCity,setUserCity]=useState(function(){ try { var s=localStorage.getItem("epale_session"); var d=s?JSON.parse(s):null; return d&&d.city?d.city:"madrid"; } catch(e){ return "madrid"; } });
-  var [userName,setUserName]=useState(function(){ try { var s=localStorage.getItem("epale_session"); var d=s?JSON.parse(s):null; return d&&d.name?d.name:""; } catch(e){ return ""; } });
-  var [userPhoto,setUserPhoto]=useState(function(){
-    try {
-      // Try epale_session first
-      var s=localStorage.getItem("epale_session");
-      var d=s?JSON.parse(s):null;
-      if(d&&d.photo&&d.photo.length>5) return d.photo;
-      // Fallback: try Supabase auth token user_metadata
-      var s2=localStorage.getItem("sb-zkydbsymcnnbepvmbchr-auth-token");
-      var d2=s2?JSON.parse(s2):null;
-      if(d2&&d2.user&&d2.user.user_metadata&&d2.user.user_metadata.avatar_url) return d2.user.user_metadata.avatar_url;
-    } catch(e){}
-    return null;
-  });
-  var [userBio,setUserBio]=useState(function(){ try { var s=localStorage.getItem("epale_session"); var d=s?JSON.parse(s):null; return d&&d.bio?d.bio:""; } catch(e){ return ""; } });
+  var [userName,setUserName]=useState("");
+  var [userPhoto,setUserPhoto]=useState(null);
+  var [userBio,setUserBio]=useState("");
   var [userId,setUserId]=useState(function(){ try { var s=localStorage.getItem("epale_session"); var d=s?JSON.parse(s):null; if(d&&d.token&&d.token.length>10){ window._supaToken=d.token; } return d&&d.uid?d.uid:""; } catch(e){ return ""; } });
   var [showProfile,setShowProfile]=useState(false);
   var [following,setFollowing]=useState([]);
@@ -1569,7 +1534,7 @@ function App() {
       {showSearch?<Search onClose={function(){setShowSearch(false);}} following={following} onFollow={toggleFollow} onOpenProfile={function(n){ setShowSearch(false); if(n!==userName) setViewingUser(n); else setShowProfile(true); }} userName={userName}/>:null}
       {viewingUser?<UserProfile name={viewingUser} onClose={function(){setViewingUser(null);}} following={following} onFollow={toggleFollow} currentUserName={userName}/>:null}
       <Feed userCity={userCity} onProfile={function(){setShowProfile(true);}} following={following} onFollow={toggleFollow} userPhoto={userPhoto} userName={userName} userId={userId} savedPosts={savedPosts} onSave={toggleSave} likedPosts={likedPosts} onLike={toggleLike} lang={lang} userBio={userBio} likedLoaded={likedLoaded} onOpenProfile={function(n){ if(n!==userName) setViewingUser(n); else setShowProfile(true); }}/>
-      <div style={{position:"fixed",bottom:0,left:0,right:0,minHeight:60,paddingBottom:"env(safe-area-inset-bottom)",background:C.card,borderTop:"1px solid "+C.border,display:isMobileApp?"flex":"none",alignItems:"center",justifyContent:"space-around",zIndex:90,maxWidth:768,margin:"0 auto"}}>
+      <div className="epale-mobile-nav" style={{position:"fixed",bottom:0,left:0,right:0,minHeight:60,paddingBottom:"env(safe-area-inset-bottom)",background:C.card,borderTop:"1px solid "+C.border,alignItems:"center",justifyContent:"space-around",zIndex:90,maxWidth:"100%",margin:"0 auto"}}>
         {[{id:"feed",icon:ICONS.fire,label:"Inicio"},{id:"search",icon:ICONS.comment,label:"Buscar"},{id:"post",icon:ICONS.pencil,label:"",action:true},{id:"notifs",icon:ICONS.bell,label:"Avisos",badge:unreadNotifs},{id:"me",icon:ICONS.group,label:"Yo"}].map(function(tab){
           var isActive=activeTab===tab.id;
           return (<button key={tab.id} onClick={function(){ if(tab.id==="me"){ setShowProfile(true); return; } if(tab.id==="search"){ setShowSearch(true); return; } if(tab.id==="post"){ document.dispatchEvent(new CustomEvent("epale:openComposer")); return; } if(tab.id==="notifs"){ setShowProfile(true); return; } setActiveTab(tab.id); }} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:2,background:tab.action?C.yellow:"none",border:"none",cursor:"pointer",padding:tab.action?"8px 16px":"6px 10px",borderRadius:tab.action?12:8,minWidth:48,position:"relative"}}>
@@ -1586,5 +1551,17 @@ function App() {
 }
 
 export default function AppRoot() {
-  return <ErrorBoundary><App/></ErrorBoundary>;
+  return (
+    <ErrorBoundary>
+      <style>{`
+        @media (min-width: 768px) {
+          .epale-mobile-nav { display: none !important; }
+        }
+        @media (max-width: 767px) {
+          .epale-mobile-nav { display: flex !important; }
+        }
+      `}</style>
+      <App/>
+    </ErrorBoundary>
+  );
 }
