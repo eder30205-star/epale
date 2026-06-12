@@ -97,7 +97,13 @@ var api = {
   searchPosts: function(query) { var q=encodeURIComponent(query); return fetch(SUPA_URL+"/rest/v1/posts?or=(content.ilike.*"+q+"*,name.ilike.*"+q+"*)&select=*&order=created_at.desc&limit=30",{headers:{"apikey":SUPA_KEY}}).then(function(r){return r.json();}); },
   changePassword: function(newPassword) { return fetchAuth(SUPA_URL+"/auth/v1/user",{method:"PUT",headers:{"Content-Type":"application/json","apikey":SUPA_KEY,"Authorization":"Bearer "+getToken()},body:JSON.stringify({password:newPassword})}).then(function(r){return r.json();}).catch(function(){ return {error:{message:"Error"}}; }); },
   resetPassword: function(email) { return fetch(SUPA_URL+"/auth/v1/recover",{method:"POST",headers:{"Content-Type":"application/json","apikey":SUPA_KEY},body:JSON.stringify({email:email})}).then(function(r){return r.json();}); },
-  getDollarRate: function() { return fetch("https://ve.dolarapi.com/v1/dolares",{headers:{"Accept":"application/json"}}).then(function(r){return r.json();}).catch(function(){ return null; }); },
+  getDollarRate: function() {
+    return Promise.all([
+      fetch("https://ve.dolarapi.com/v1/dolares/oficial",{headers:{"Accept":"application/json"}}).then(function(r){return r.json();}).catch(function(){return null;}),
+      fetch("https://ve.dolarapi.com/v1/dolares/paralelo",{headers:{"Accept":"application/json"}}).then(function(r){return r.json();}).catch(function(){return null;}),
+      fetch("https://ve.dolarapi.com/v1/dolares/promedio",{headers:{"Accept":"application/json"}}).then(function(r){return r.json();}).catch(function(){return null;})
+    ]);
+  },
   getProfileByName: function(name) {
     return fetch(SUPA_URL+"/rest/v1/profiles?name=eq."+encodeURIComponent(name)+"&select=*",{headers:{"apikey":SUPA_KEY,"Authorization":"Bearer "+getToken()}}).then(function(r){return r.json();});
   },
@@ -912,26 +918,42 @@ function Feed(props) {
   }); };
   var [dollarBCV,setDollarBCV]=useState("...");
   var [dollarPar,setDollarPar]=useState("...");
+  var [dollarProm,setDollarProm]=useState("");
   var [dollarUpdated,setDollarUpdated]=useState("");
   useEffect(function(){
-    api.getDollarRate().then(function(data){
-      if(Array.isArray(data)){
-        data.forEach(function(d){
-          var val=parseFloat(d.promedio||d.venta||d.compra||0);
-          if(!val) return;
-          var fuente=(d.fuente||d.nombre||"").toLowerCase();
-          if(fuente==="bcv") {
-            setDollarBCV(val.toLocaleString("es-VE",{minimumFractionDigits:2,maximumFractionDigits:2}));
-            if(d.fechaActualizacion) setDollarUpdated(d.fechaActualizacion.slice(0,10));
-          }
-          if(fuente==="paralelo"||fuente==="parallel") {
-            setDollarPar(val.toLocaleString("es-VE",{minimumFractionDigits:2,maximumFractionDigits:2}));
-          }
-        });
+    api.getDollarRate().then(function(results){
+      var oficial=results[0], paralelo=results[1], promedio=results[2];
+      var fmt=function(v){ return parseFloat(v||0).toLocaleString("es-VE",{minimumFractionDigits:2,maximumFractionDigits:2}); };
+      if(oficial&&oficial.promedio) {
+        setDollarBCV(fmt(oficial.promedio));
+        if(oficial.fechaActualizacion) setDollarUpdated(oficial.fechaActualizacion.slice(0,10));
       }
+      if(paralelo&&paralelo.promedio) setDollarPar(fmt(paralelo.promedio));
+      if(promedio&&promedio.promedio) setDollarProm(fmt(promedio.promedio));
     }).catch(function(){});
   },[]);
-  var dollarWidget=(<div style={{background:C.card,borderRadius:14,border:"1px solid "+C.border,overflow:"hidden",marginBottom:16}}><div style={{background:"#0d0d0d",padding:"9px 14px",display:"flex",alignItems:"center",gap:10}}><span style={{fontSize:16}}>{ICONS.dollar}</span><div style={{flex:1,display:"flex",gap:12,alignItems:"center",flexWrap:"wrap"}}><span style={{fontFamily:"'Inter',sans-serif",fontSize:11,color:"rgba(255,255,255,0.5)"}}>BCV <strong style={{fontSize:14,color:"#ffcc00"}}>{"Bs "+dollarBCV}</strong></span><span style={{fontFamily:"'Inter',sans-serif",fontSize:11,color:"rgba(255,255,255,0.5)"}}>Paralelo <strong style={{fontSize:14,color:"#7defa0"}}>{"Bs "+dollarPar}</strong></span></div><span style={{fontSize:10,color:"rgba(255,255,255,0.3)",fontFamily:"'Inter',sans-serif"}}>{dollarUpdated||"hoy"}</span></div>{filtered[0]?(<div style={{padding:"8px 14px",display:"flex",gap:8,alignItems:"center"}}><span style={{fontSize:14}}>{ICONS.fire}</span><span style={{fontSize:11,color:C.muted,fontFamily:"'Inter',sans-serif"}}>Trending:</span><span style={{fontSize:12,color:C.text,fontFamily:"'Inter',sans-serif",fontWeight:600,flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{filtered[0].content.slice(0,80)}...</span></div>):null}</div>);
+  var dollarWidget=(<div style={{background:"#0d0d0d",borderRadius:14,overflow:"hidden",marginBottom:16}}>
+    <div style={{padding:"10px 14px",display:"flex",alignItems:"center",gap:8}}>
+      <span style={{fontSize:16}}>{ICONS.dollar}</span>
+      <span style={{fontSize:12,color:"rgba(255,255,255,0.4)",fontFamily:"'Inter',sans-serif",fontWeight:600}}>Dólar Venezuela</span>
+      <span style={{fontSize:10,color:"rgba(255,255,255,0.25)",fontFamily:"'Inter',sans-serif",marginLeft:"auto"}}>{dollarUpdated||"cargando..."}</span>
+    </div>
+    <div style={{display:"flex",borderTop:"1px solid rgba(255,255,255,0.07)"}}>
+      <div style={{flex:1,padding:"10px 14px",borderRight:"1px solid rgba(255,255,255,0.07)"}}>
+        <div style={{fontSize:10,color:"rgba(255,255,255,0.35)",fontFamily:"'Inter',sans-serif",marginBottom:3}}>BCV Oficial</div>
+        <div style={{fontSize:18,fontWeight:800,color:"#ffcc00",fontFamily:"'Syne',sans-serif"}}>{"Bs "+dollarBCV}</div>
+      </div>
+      <div style={{flex:1,padding:"10px 14px",borderRight:dollarProm?"1px solid rgba(255,255,255,0.07)":"none"}}>
+        <div style={{fontSize:10,color:"rgba(255,255,255,0.35)",fontFamily:"'Inter',sans-serif",marginBottom:3}}>Paralelo</div>
+        <div style={{fontSize:18,fontWeight:800,color:"#7defa0",fontFamily:"'Syne',sans-serif"}}>{"Bs "+dollarPar}</div>
+      </div>
+      {dollarProm?<div style={{flex:1,padding:"10px 14px"}}>
+        <div style={{fontSize:10,color:"rgba(255,255,255,0.35)",fontFamily:"'Inter',sans-serif",marginBottom:3}}>Promedio</div>
+        <div style={{fontSize:18,fontWeight:800,color:"#60a5fa",fontFamily:"'Syne',sans-serif"}}>{"Bs "+dollarProm}</div>
+      </div>:null}
+    </div>
+    {filtered[0]?(<div style={{padding:"8px 14px",borderTop:"1px solid rgba(255,255,255,0.07)",display:"flex",gap:8,alignItems:"center"}}><span style={{fontSize:13}}>{ICONS.fire}</span><span style={{fontSize:11,color:"rgba(255,255,255,0.4)",fontFamily:"'Inter',sans-serif"}}>Trending:</span><span style={{fontSize:12,color:"rgba(255,255,255,0.8)",fontFamily:"'Inter',sans-serif",fontWeight:600,flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{filtered[0].content.slice(0,80)}...</span></div>):null}
+  </div>);
   var postsList=postsLoading?[1,2,3,4].map(function(i){return <PostSkeleton key={i}/>;})
     :filtered.length===0?(
       feedTab==="following"?(
