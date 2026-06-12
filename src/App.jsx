@@ -66,7 +66,11 @@ var api = {
   signOut: function() { return supabase.auth.signOut(); },
   upsertProfile: function(id, name, city, username) { return fetchAuth(SUPA_URL+"/rest/v1/profiles",{method:"POST",headers:{"Content-Type":"application/json","apikey":SUPA_KEY,"Authorization":"Bearer "+getToken(),"Prefer":"resolution=merge-duplicates"},body:JSON.stringify({id:id,name:name,city:city,username:username})}).then(function(r){return r.json();}).catch(function(){}); },
   getProfile: function(id) { return fetchAuth(SUPA_URL+"/rest/v1/profiles?id=eq."+id+"&select=*",{headers:{"apikey":SUPA_KEY,"Authorization":"Bearer "+getToken()}}).then(function(r){return r.json();}); },
-  getPosts: function(city) { return fetch(SUPA_URL+"/rest/v1/posts?city=eq."+city+"&select=*&order=created_at.desc&limit=50",{headers:{"apikey":SUPA_KEY}}).then(function(r){return r.json();}); },
+  getPosts: function(city,before) {
+    var url=SUPA_URL+"/rest/v1/posts?city=eq."+city+"&select=*&order=created_at.desc&limit=30";
+    if(before) url+="&created_at=lt."+encodeURIComponent(before);
+    return fetch(url,{headers:{"apikey":SUPA_KEY}}).then(function(r){return r.json()});
+  },
   createPost: function(userId, city, type, content, name) { return fetchAuth(SUPA_URL+"/rest/v1/posts",{method:"POST",headers:{"Content-Type":"application/json","apikey":SUPA_KEY,"Authorization":"Bearer "+getToken(),"Prefer":"return=representation"},body:JSON.stringify({user_id:userId,city:city,type:type,content:content,name:name||"Anonimo"})}).then(function(r){return r.json();}).catch(function(){}); },
   uploadPhoto: function(uid, base64data) {
     var blob=(function(){ var parts=base64data.split(","); var mime=parts[0].match(/:(.*?);/)[1]; var raw=atob(parts[1]); var arr=new Uint8Array(raw.length); for(var i=0;i<raw.length;i++) arr[i]=raw.charCodeAt(i); return new Blob([arr],{type:mime}); })();
@@ -102,6 +106,9 @@ var api = {
   },
   deletePost: function(postId) {
     return fetchAuth(SUPA_URL+"/rest/v1/posts?id=eq."+postId,{method:"DELETE",headers:{"apikey":SUPA_KEY,"Authorization":"Bearer "+getToken()}}).then(function(r){return r.ok;}).catch(function(){ return false; });
+  },
+  editPost: function(postId, content) {
+    return fetchAuth(SUPA_URL+"/rest/v1/posts?id=eq."+postId,{method:"PATCH",headers:{"Content-Type":"application/json","apikey":SUPA_KEY,"Authorization":"Bearer "+getToken(),"Prefer":"return=representation"},body:JSON.stringify({content:content})}).then(function(r){return r.json();}).catch(function(){ return null; });
   },
   searchProfiles: function(query) {
     var q=encodeURIComponent(query);
@@ -243,7 +250,7 @@ function PostSkeleton() {
 }
 
 function PostCard(props) {
-  var post=props.post,idx=props.idx,cityObj=props.cityObj,saved=props.saved,onSave=props.onSave,following=props.following||[],onFollow=props.onFollow,userName=props.userName||"",liked=props.liked||false,onLike=props.onLike||function(){},likedLoaded=props.likedLoaded||false;
+  var post=props.post,idx=props.idx,cityObj=props.cityObj,saved=props.saved,onSave=props.onSave,following=props.following||[],onFollow=props.onFollow,userName=props.userName||"",liked=props.liked||false,onLike=props.onLike||function(){},likedLoaded=props.likedLoaded||false,userPhoto=props.userPhoto||null;
   var TR=T[props.lang||"es"]||T.es;
   var [likeProcessing,setLikeProcessing]=useState(false);
   var [likedLocal,setLikedLocal]=useState(false);
@@ -265,6 +272,10 @@ function PostCard(props) {
   var [blocked,setBlocked]=useState(false);
   var [deleted,setDeleted]=useState(false);
   var [deleting,setDeleting]=useState(false);
+  var [editing,setEditing]=useState(false);
+  var [editText,setEditText]=useState(post.content||"");
+  var [editSaving,setEditSaving]=useState(false);
+  var [postContent,setPostContent]=useState(post.content||"");
   var [showFlag,setShowFlag]=useState(false);
   var [flagDone,setFlagDone]=useState(false);
   var t=TYPES[post.type]||TYPES.post;
@@ -282,7 +293,7 @@ function PostCard(props) {
         <div style={{padding:"14px 14px 0"}}>
           {t.badgeBg?<div style={{display:"inline-flex",background:t.badgeBg,borderRadius:20,padding:"3px 10px",marginBottom:8}}><span style={{fontSize:11,fontWeight:700,color:t.badgeFg,fontFamily:"'Inter',sans-serif"}}>{t.icon} {t.label}</span></div>:null}
           <div style={{display:"flex",gap:12,marginBottom:10}}>
-            <Av t={post.av} i={idx} s={42}/>
+            <Av t={post.av||post.name} i={idx} s={42} photo={post.name===userName?userPhoto:(post.photo_url||null)}/>
             <div style={{flex:1}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                 <span onClick={function(){ if(props.onOpenProfile) props.onOpenProfile(post.name); }} style={{fontWeight:700,fontSize:15,fontFamily:"'Syne',sans-serif",color:C.text,cursor:"pointer",display:"inline-flex",alignItems:"center",gap:4}}>{post.name}{isVerified(post.name)?<span style={{fontSize:13,color:C.blue}} title="Cuenta verificada">✓</span>:null}</span>
@@ -296,15 +307,22 @@ function PostCard(props) {
           </div>
           {showMenu?(<div style={{background:C.bg,borderRadius:12,border:"1px solid "+C.border,marginBottom:10,overflow:"hidden"}}>
             {post.name===userName?(
-              <button onClick={function(){
-                if(!window.confirm("Eliminar esta publicacion?")) return;
-                setDeleting(true); setShowMenu(false);
-                api.deletePost(post.id).then(function(ok){
-                  if(ok){ setDeleted(true); } else { setDeleting(false); alert("Error al eliminar. Intenta de nuevo."); }
-                });
-              }} style={{width:"100%",padding:"12px 16px",background:"none",border:"none",borderBottom:"1px solid "+C.border,cursor:"pointer",textAlign:"left",fontFamily:"'Inter',sans-serif",fontSize:14,color:C.red,display:"flex",alignItems:"center",gap:10,opacity:deleting?0.5:1}}>
-                <span>{deleting?"Eliminando...":"🗑 Eliminar publicacion"}</span>
-              </button>
+              <>
+                <button onClick={function(){
+                  setEditing(true); setEditText(postContent); setShowMenu(false);
+                }} style={{width:"100%",padding:"12px 16px",background:"none",border:"none",borderBottom:"1px solid "+C.border,cursor:"pointer",textAlign:"left",fontFamily:"'Inter',sans-serif",fontSize:14,color:C.text,display:"flex",alignItems:"center",gap:10}}>
+                  <span>✏️ Editar publicacion</span>
+                </button>
+                <button onClick={function(){
+                  if(!window.confirm("Eliminar esta publicacion?")) return;
+                  setDeleting(true); setShowMenu(false);
+                  api.deletePost(post.id).then(function(ok){
+                    if(ok){ setDeleted(true); } else { setDeleting(false); alert("Error al eliminar. Intenta de nuevo."); }
+                  });
+                }} style={{width:"100%",padding:"12px 16px",background:"none",border:"none",borderBottom:"1px solid "+C.border,cursor:"pointer",textAlign:"left",fontFamily:"'Inter',sans-serif",fontSize:14,color:C.red,display:"flex",alignItems:"center",gap:10,opacity:deleting?0.5:1}}>
+                  <span>{deleting?"Eliminando...":"🗑 Eliminar publicacion"}</span>
+                </button>
+              </>
             ):null}
             {post.name!=="Tu"&&post.name!==userName&&onFollow?(<button onClick={function(){onFollow(post.name);setShowMenu(false);}} style={{width:"100%",padding:"12px 16px",background:"none",border:"none",borderBottom:"1px solid "+C.border,cursor:"pointer",textAlign:"left",fontFamily:"'Inter',sans-serif",fontSize:14,color:C.text,display:"flex",alignItems:"center",gap:10}}><span>{following.includes(post.name)?"Dejar de seguir":TR.seguir}</span></button>):null}
             {post.name!=="Tu"&&post.name!==userName?(<button onClick={function(){setBlocked(true);setShowMenu(false);}} style={{width:"100%",padding:"12px 16px",background:"none",border:"none",borderBottom:"1px solid "+C.border,cursor:"pointer",textAlign:"left",fontFamily:"'Inter',sans-serif",fontSize:14,color:C.red,display:"flex",alignItems:"center",gap:10}}><span>Bloquear usuario</span></button>):null}
@@ -319,7 +337,27 @@ function PostCard(props) {
               </div>
             )}
           </div>):null}
-          <p style={{fontSize:15,lineHeight:1.6,color:C.text,margin:"0 0 12px",fontFamily:"'Inter',sans-serif"}}>{post.content}</p>
+          {editing?(
+            <div style={{marginBottom:12}}>
+              <textarea value={editText} onChange={function(e){setEditText(e.target.value);}} autoFocus style={{width:"100%",padding:"12px 14px",background:C.bg,border:"1.5px solid "+C.blue,borderRadius:12,color:C.text,fontFamily:"'Inter',sans-serif",fontSize:15,resize:"none",minHeight:80,outline:"none",boxSizing:"border-box",lineHeight:1.6}}/>
+              <div style={{display:"flex",gap:8,marginTop:8}}>
+                <button onClick={function(){
+                  if(!editText.trim()||editText===postContent){setEditing(false);return;}
+                  setEditSaving(true);
+                  api.editPost(post.id,editText).then(function(res){
+                    if(res){ setPostContent(editText); }
+                    setEditing(false); setEditSaving(false);
+                  }).catch(function(){ setEditing(false); setEditSaving(false); });
+                }} style={{padding:"8px 20px",background:C.blue,color:"#fff",border:"none",borderRadius:100,cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:13,fontWeight:700,opacity:editSaving?0.6:1}}>
+                  {editSaving?"Guardando...":"Guardar"}
+                </button>
+                <button onClick={function(){setEditing(false);setEditText(postContent);}} style={{padding:"8px 16px",background:"none",border:"1px solid "+C.border,borderRadius:100,cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:13,color:C.muted}}>Cancelar</button>
+                {postContent!==editText&&!editSaving?<span style={{fontSize:11,color:C.muted,fontFamily:"'Inter',sans-serif",alignSelf:"center",marginLeft:4}}>sin guardar</span>:null}
+              </div>
+            </div>
+          ):(
+            <p style={{fontSize:15,lineHeight:1.6,color:C.text,margin:"0 0 12px",fontFamily:"'Inter',sans-serif"}}>{postContent}{post.content!==postContent?<span style={{fontSize:10,color:C.muted,marginLeft:6}}>(editado)</span>:null}</p>
+          )}
           {post.media?(<div style={{borderRadius:12,overflow:"hidden",marginBottom:10,border:"1px solid "+C.border}}>{post.media.kind==="image"?<img src={post.media.src} alt="post" style={{width:"100%",maxHeight:280,objectFit:"cover",display:"block"}}/>:<video src={post.media.src} controls style={{width:"100%",maxHeight:280,display:"block"}}/>}</div>):null}
           <div style={{display:"flex",gap:6,marginBottom:10}}>
             <button onClick={function(){ if(likeProcessing) return; setLikeProcessing(true); var nl=!likedLocal; setLikedLocal(nl); setLikes(function(l){return nl?Math.max(0,l+1):Math.max(0,l-1);}); onLike(post.id); setTimeout(function(){setLikeProcessing(false);},1000); }} style={{display:"flex",alignItems:"center",gap:6,padding:"10px 14px",minHeight:44,background:likedLocal?"#fff0f0":C.bg,border:"1px solid "+(likedLocal?"#ffb3b3":C.border),borderRadius:100,cursor:likeProcessing?"not-allowed":"pointer",color:likedLocal?C.red:C.muted,fontFamily:"'Inter',sans-serif",fontSize:13,opacity:likeProcessing?0.5:1}}>
@@ -454,9 +492,15 @@ function CountryFeed(props) {
   useEffect(function(){
     api.getPosts(cityId).then(function(data){
       if(Array.isArray(data)&&data.length>0){
-        var mapped=data.map(function(p){ return {id:p.id,city:p.city,type:p.type||"post",name:p.name||"Anonimo",av:p.name||"?",content:p.content,likes:p.likes||0,comments:p.comments||0,time:p.created_at||"reciente"}; });
+        var mapped=data.map(function(p){ return {id:p.id,city:p.city,type:p.type||"post",name:p.name||"Anonimo",av:p.name||"?",photo_url:p.name===userName?props.userPhoto:null,content:p.content,likes:p.likes||0,comments:p.comments||0,time:p.created_at||"reciente"}; });
         var seedFiltered=SEED.filter(function(s){return s.city===cityId&&!mapped.find(function(m){return String(m.id)===String(s.id);});});
-        setPosts(mapped.concat(seedFiltered));
+        setPosts(function(current){
+          var localOnly=current.filter(function(p){
+            if(!p._local) return false;
+            return !mapped.find(function(m){ return m.name===p.name&&m.content===p.content; });
+          });
+          return localOnly.concat(mapped).concat(seedFiltered);
+        });
       }
     }).catch(function(){});
     var channel=supabase.channel("cf:"+cityId)
@@ -470,7 +514,7 @@ function CountryFeed(props) {
 
   var addPost=function(p){
     var displayName=userName||"Tu"; var newPostId=String(Date.now());
-    var newPost={id:newPostId,city:cityId,type:p.type,name:displayName,av:displayName,content:p.content,media:p.media,likes:0,comments:0,time:new Date().toISOString(),_local:true};
+    var newPost={id:newPostId,city:cityId,type:p.type,name:displayName,av:displayName,photo_url:props.userPhoto||null,content:p.content,media:p.media,likes:0,comments:0,time:new Date().toISOString(),_local:true};
     setPosts(function(pp){ return [newPost].concat(pp); });
     if(userId) api.createPost(userId,cityId,p.type,p.content,displayName).catch(function(){});
   };
@@ -557,12 +601,12 @@ function CountryFeed(props) {
           </div>
         ):filtered.map(function(p,i){
           return <PostCard key={p.id} post={p} idx={i} cityObj={cityObj}
-            saved={savedPosts.includes(p.id)} onSave={onSave}
+            saved={savedPosts.includes(String(p.id))} onSave={onSave}
             following={following} onFollow={onFollow} userName={userName}
             liked={likedPosts.includes(String(p.id))}
             onLike={function(id){onLike(id,p.user_id,p.name);}}
             userId={userId} likedLoaded={true}
-            onOpenProfile={onOpenProfile} lang={lang}/>;
+            onOpenProfile={onOpenProfile} lang={lang} userPhoto={props.userPhoto||null}/>;
         })}
         {/* Invite banner at bottom of scroll */}
         {filtered.length>0&&<a href={waInvite(cityId)} target="_blank" rel="noreferrer" style={{textDecoration:"none",display:"block",margin:"8px 14px 16px"}}>
@@ -577,7 +621,7 @@ function CountryFeed(props) {
         </a>}
       </div>
 
-      {showComposer?<Composer cityObj={cityObj} onPost={addPost} onClose={function(){setShowComposer(false);}}/>:null}
+      {showComposer?<Composer cityObj={cityObj} onPost={addPost} onClose={function(){setShowComposer(false);}} userPhoto={props.userPhoto||null} userName={userName}/>:null}
     </div>
   );
 }
@@ -598,21 +642,33 @@ function Feed(props) {
     return function(){ document.removeEventListener("epale:openComposer",handler); };
   },[]);
   var [postsLoading,setPostsLoading]=useState(false);
+  var [hasMore,setHasMore]=useState(true);
+  var [loadingMore,setLoadingMore]=useState(false);
+  var oldestCursorRef=React.useRef(null);
+  var sentinelRef=React.useRef(null);
   useEffect(function(){
     setPostsLoading(true);
+    setHasMore(true);
+    oldestCursorRef.current=null;
     // Keep local posts, reset DB+SEED portion
     setPosts(function(current){
       return current.filter(function(p){ return p._local; }).concat(SEED);
     });
-    api.getPosts(activeCity).then(function(data){
+    api.getPosts(activeCity,null).then(function(data){
       if(Array.isArray(data)&&data.length>0){
-        var mapped=data.map(function(p){ return {id:p.id,city:p.city,type:p.type||"post",name:p.name||"Anonimo",av:p.name||"?",content:p.content,likes:p.likes||0,comments:p.comments||0,time:p.created_at||"reciente"}; });
+        var mapped=data.map(function(p){ return {id:p.id,city:p.city,type:p.type||"post",name:p.name||"Anonimo",av:p.name||"?",photo_url:p.name===userName?userPhoto:null,content:p.content,likes:p.likes||0,comments:p.comments||0,time:p.created_at||"reciente",_created_at:p.created_at}; });
+        // Track oldest post for cursor
+        if(mapped.length>0) oldestCursorRef.current=mapped[mapped.length-1]._created_at;
+        if(data.length<30) setHasMore(false);
         setPosts(function(current){
-          var localPosts=current.filter(function(p){ return p._local; });
+          var localOnly=current.filter(function(p){
+            if(!p._local) return false;
+            return !mapped.find(function(m){ return m.name===p.name&&m.content===p.content; });
+          });
           var seedFiltered=SEED.filter(function(s){ return !mapped.find(function(m){return String(m.id)===String(s.id);}); });
-          return localPosts.concat(mapped).concat(seedFiltered);
+          return localOnly.concat(mapped).concat(seedFiltered);
         });
-      }
+      } else { setHasMore(false); }
       setPostsLoading(false);
     }).catch(function(){ setPostsLoading(false); });
 
@@ -621,7 +677,7 @@ function Feed(props) {
       .on("postgres_changes",{event:"INSERT",schema:"public",table:"posts",filter:"city=eq."+activeCity},function(payload){
         var p=payload.new;
         if(!p||!p.id) return;
-        var newPost={id:p.id,city:p.city,type:p.type||"post",name:p.name||"Anonimo",av:p.name||"?",content:p.content,likes:p.likes||0,comments:p.comments||0,time:p.created_at||"reciente"};
+        var newPost={id:p.id,city:p.city,type:p.type||"post",name:p.name||"Anonimo",av:p.name||"?",photo_url:p.name===userName?userPhoto:null,content:p.content,likes:p.likes||0,comments:p.comments||0,time:p.created_at||"reciente"};
         setPosts(function(current){
           if(current.find(function(x){ return String(x.id)===String(p.id); })) return current;
           return [newPost].concat(current);
@@ -630,6 +686,32 @@ function Feed(props) {
       .subscribe();
     return function(){ supabase.removeChannel(channel); };
   },[activeCity]);
+
+  // Infinite scroll: load more when sentinel comes into view
+  useEffect(function(){
+    if(!sentinelRef.current) return;
+    var observer=new IntersectionObserver(function(entries){
+      if(entries[0].isIntersecting&&hasMore&&!loadingMore&&!postsLoading&&oldestCursorRef.current){
+        setLoadingMore(true);
+        api.getPosts(activeCity,oldestCursorRef.current).then(function(data){
+          if(Array.isArray(data)&&data.length>0){
+            var mapped=data.map(function(p){ return {id:p.id,city:p.city,type:p.type||"post",name:p.name||"Anonimo",av:p.name||"?",photo_url:p.name===userName?userPhoto:null,content:p.content,likes:p.likes||0,comments:p.comments||0,time:p.created_at||"reciente",_created_at:p.created_at}; });
+            if(mapped.length>0) oldestCursorRef.current=mapped[mapped.length-1]._created_at;
+            if(data.length<30) setHasMore(false);
+            setPosts(function(current){
+              var existingIds=new Set(current.map(function(p){return String(p.id);}));
+              var newPosts=mapped.filter(function(p){return !existingIds.has(String(p.id));});
+              return current.concat(newPosts);
+            });
+          } else { setHasMore(false); }
+          setLoadingMore(false);
+        }).catch(function(){ setLoadingMore(false); });
+      }
+    },{threshold:0.1});
+    observer.observe(sentinelRef.current);
+    return function(){ observer.disconnect(); };
+  },[hasMore,loadingMore,postsLoading,activeCity]);
+
   useEffect(function(){ var handler=function(){ setIsMobile(window.innerWidth<768); }; window.addEventListener("resize",handler); return function(){ window.removeEventListener("resize",handler); }; },[]);
   var cityObj=getCity(activeCity);
   var cityButtons=CITIES.map(function(c){
@@ -642,7 +724,7 @@ function Feed(props) {
   var cityFiltered=allFiltered.filter(function(p){ return p.city===activeCity; });
   var followFiltered=allFiltered.filter(function(p){ return following.includes(p.name); });
   var filtered=feedTab==="following"?followFiltered:cityFiltered;
-  var addPost=function(p){ var displayName=userName||"Tu"; var currentUserId=userId||""; var citiesToPost=p.city==="all"?CITIES.map(function(c){return c.id;}):[p.city]; var newPostId=String(Date.now()); citiesToPost.forEach(function(cityId){ var newPost={id:newPostId,city:cityId,type:p.type,name:displayName,av:displayName,content:p.content,media:p.media,likes:0,comments:0,time:new Date().toISOString(),_local:true}; setPosts(function(pp){ return [newPost].concat(pp); }); if(currentUserId) api.createPost(currentUserId,cityId,p.type,p.content,displayName).catch(function(){}); }); };
+  var addPost=function(p){ var displayName=userName||"Tu"; var currentUserId=userId||""; var citiesToPost=p.city==="all"?CITIES.map(function(c){return c.id;}):[p.city]; var newPostId=String(Date.now()); citiesToPost.forEach(function(cityId){ var newPost={id:newPostId,city:cityId,type:p.type,name:displayName,av:displayName,photo_url:userPhoto||null,content:p.content,media:p.media,likes:0,comments:0,time:new Date().toISOString(),_local:true}; setPosts(function(pp){ return [newPost].concat(pp); }); if(currentUserId) api.createPost(currentUserId,cityId,p.type,p.content,displayName).catch(function(){}); }); };
   var [dollarBCV,setDollarBCV]=useState("36.84"); var [dollarPar,setDollarPar]=useState("38.20");
   useEffect(function(){ api.getDollarRate().then(function(data){ if(Array.isArray(data)){ data.forEach(function(d){ if(d.fuente==="BCV"||d.nombre==="Oficial") setDollarBCV(parseFloat(d.promedio||d.price||36.84).toFixed(2)); if(d.fuente==="Paralelo"||d.nombre==="Paralelo") setDollarPar(parseFloat(d.promedio||d.price||38.20).toFixed(2)); }); } }).catch(function(){}); },[]);
   var dollarWidget=(<div style={{background:C.card,borderRadius:14,border:"1px solid "+C.border,overflow:"hidden",marginBottom:16}}><div style={{background:"#0d0d0d",padding:"9px 14px",display:"flex",alignItems:"center",gap:10}}><span style={{fontSize:16}}>{ICONS.dollar}</span><div style={{flex:1,display:"flex",gap:12,alignItems:"center",flexWrap:"wrap"}}><span style={{fontFamily:"'Inter',sans-serif",fontSize:11,color:"rgba(255,255,255,0.5)"}}>BCV <strong style={{fontSize:14,color:"#ffcc00"}}>{"Bs "+dollarBCV}</strong></span><span style={{fontFamily:"'Inter',sans-serif",fontSize:11,color:"rgba(255,255,255,0.5)"}}>Paralelo <strong style={{fontSize:14,color:"#7defa0"}}>{"Bs "+dollarPar}</strong></span></div><span style={{fontSize:10,color:"rgba(255,255,255,0.3)",fontFamily:"'Inter',sans-serif"}}>hoy</span></div>{filtered[0]?(<div style={{padding:"8px 14px",display:"flex",gap:8,alignItems:"center"}}><span style={{fontSize:14}}>{ICONS.fire}</span><span style={{fontSize:11,color:C.muted,fontFamily:"'Inter',sans-serif"}}>Trending:</span><span style={{fontSize:12,color:C.text,fontFamily:"'Inter',sans-serif",fontWeight:600,flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{filtered[0].content.slice(0,80)}...</span></div>):null}</div>);
@@ -663,26 +745,30 @@ function Feed(props) {
           <button onClick={function(){setShowComposer(true);}} style={{padding:"12px 24px",background:C.yellow,border:"none",borderRadius:100,cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:14,fontWeight:700,color:"#1a1a1a"}}>+ Publicar ahora</button>
         </div>
       )
-    ):filtered.map(function(p,i){ return <PostCard key={p.id} post={p} idx={i} cityObj={cityObj} saved={savedPosts.includes(p.id)} onSave={toggleSave} following={following} onFollow={toggleFollow} userName={userName} liked={likedPosts.includes(String(p.id))} onLike={function(id){ toggleLike(id,p.user_id,p.name); }} userId={userId} likedLoaded={likedLoaded} onOpenProfile={props.onOpenProfile} lang={lang}/>; });
+    ):(<>{filtered.map(function(p,i){ return <PostCard key={p.id} post={p} idx={i} cityObj={cityObj} saved={savedPosts.includes(String(p.id))} onSave={toggleSave} following={following} onFollow={toggleFollow} userName={userName} liked={likedPosts.includes(String(p.id))} onLike={function(id){ toggleLike(id,p.user_id,p.name); }} userId={userId} likedLoaded={likedLoaded} onOpenProfile={props.onOpenProfile} lang={lang} userPhoto={userPhoto}/>; })}
+    <div ref={sentinelRef} style={{height:60,display:"flex",alignItems:"center",justifyContent:"center"}}>
+      {loadingMore?(<div style={{display:"flex",gap:8,padding:"16px 0"}}>{[1,2,3].map(function(i){return <div key={i} style={{width:8,height:8,borderRadius:9999,background:C.muted,animation:"epale-shimmer 1.4s "+((i-1)*0.2)+"s infinite"}}/>; })}</div>):hasMore?null:<div style={{fontSize:12,color:C.muted,fontFamily:"'Inter',sans-serif",padding:"16px 0"}}>Has visto todo por ahora</div>}
+    </div>
+  </>);
   var inviteBanner=(<a href={waInvite(activeCity)} target="_blank" rel="noreferrer" style={{textDecoration:"none",display:"block",marginBottom:16}} onClick={function(){setInviteCount(function(c){return Math.min(c+1,3);});}}><div style={{background:C.wa,borderRadius:16,padding:"16px"}}><div style={{fontSize:13,fontWeight:700,color:"#fff",fontFamily:"'Inter',sans-serif",marginBottom:4}}>Invita venezolanos a {cityObj.name}</div><div style={{fontSize:11,color:"rgba(255,255,255,0.8)",fontFamily:"'Inter',sans-serif",marginBottom:10}}>{inviteCount>=3?"Meta cumplida!":inviteCount===0?TR.invitaTusP:inviteCount+" de 3 invitados"}</div><div style={{display:"flex",gap:6,marginBottom:10}}>{[0,1,2].map(function(j){ return <div key={j} style={{flex:1,height:4,borderRadius:2,background:j<inviteCount?"#fff":"rgba(255,255,255,0.3)"}}/>; })}</div><div style={{background:"rgba(255,255,255,0.2)",borderRadius:10,padding:"8px 12px",textAlign:"center",color:"#fff",fontFamily:"'Inter',sans-serif",fontSize:12,fontWeight:700}}>Invitar por WhatsApp</div></div></a>);
   var header=(<div style={{position:"sticky",top:0,zIndex:100,background:C.card,backdropFilter:"blur(20px)",boxShadow:"0 1px 0 rgba(0,0,0,0.1)"}}><div style={{display:"flex",height:4}}><div style={{flex:1,background:C.yellow}}/><div style={{flex:1,background:C.blue}}/><div style={{flex:1,background:C.red}}/></div>{isMobile?(<div><div style={{padding:"10px 16px 6px",display:"flex",alignItems:"center",justifyContent:"space-between"}}><div style={{fontSize:24,fontFamily:"'Syne',sans-serif",letterSpacing:-1,fontWeight:800}}><span style={{color:C.yellow}}>E</span><span style={{color:C.blue}}>pa</span><span style={{color:C.red}}>le</span></div><div style={{display:"flex",gap:20}}>{tabButtons}</div><button onClick={onProfile} style={{background:"none",border:"none",cursor:"pointer"}}><Av t={userName} i={0} s={34} photo={userPhoto}/></button></div><div style={{display:"flex",gap:6,padding:"0 12px 8px",overflowX:"auto",WebkitOverflowScrolling:"touch",scrollbarWidth:"none",msOverflowStyle:"none"}}>{cityButtons}</div><div style={{display:"flex",gap:6,padding:"0 12px 8px",overflowX:"auto",borderTop:"1px solid "+C.border}}><button onClick={function(){setFilter("all");}} style={{padding:"5px 14px",borderRadius:100,border:"1.5px solid "+(filter==="all"?C.blue:C.border),background:filter==="all"?C.blue:C.card,color:filter==="all"?"#fff":C.muted,fontFamily:"'Inter',sans-serif",fontSize:10,fontWeight:700,cursor:"pointer",whiteSpace:"nowrap",flexShrink:0}}>Todos</button>{typeButtons}</div></div>):(<div><div style={{maxWidth:1200,margin:"0 auto",padding:"8px 20px 0",display:"flex",alignItems:"center",gap:20}}><div style={{fontSize:26,fontFamily:"'Syne',sans-serif",letterSpacing:-1,fontWeight:800,minWidth:120}}><span style={{color:C.yellow}}>E</span><span style={{color:C.blue}}>pa</span><span style={{color:C.red}}>le</span></div><div style={{flex:1,display:"flex",justifyContent:"center",gap:28}}>{tabButtons}</div><div style={{minWidth:120,display:"flex",justifyContent:"flex-end"}}><button onClick={onProfile} style={{background:"none",border:"none",cursor:"pointer"}}><Av t={userName} i={0} s={34} photo={userPhoto}/></button></div></div><div style={{maxWidth:1200,margin:"0 auto",padding:"6px 20px 8px",display:"flex",gap:6,overflowX:"auto"}}>{cityButtons}</div><div style={{maxWidth:1200,margin:"0 auto",padding:"0 20px 8px",display:"flex",gap:6,overflowX:"auto",borderTop:"1px solid "+C.border}}><button onClick={function(){setFilter("all");}} style={{padding:"5px 14px",borderRadius:100,border:"1.5px solid "+(filter==="all"?C.blue:C.border),background:filter==="all"?C.blue:C.card,color:filter==="all"?"#fff":C.muted,fontFamily:"'Inter',sans-serif",fontSize:10,fontWeight:700,cursor:"pointer",whiteSpace:"nowrap",flexShrink:0}}>Todos</button>{typeButtons}</div></div>)}</div>);
   if(isMobile){ return (<div style={{minHeight:"100vh",background:C.bg}}>
-    {openCity?<CountryFeed cityId={openCity} onClose={function(){setOpenCity(null);}} savedPosts={savedPosts} onSave={toggleSave} likedPosts={likedPosts} onLike={toggleLike} following={following} onFollow={toggleFollow} userName={userName} userId={userId} lang={lang} onOpenProfile={props.onOpenProfile}/>:null}
-    {showComposer?<Composer cityObj={cityObj} onPost={addPost} onClose={function(){setShowComposer(false);}}/>:null}{header}<div style={{paddingBottom:"calc(80px + env(safe-area-inset-bottom))"}}><div style={{margin:"10px 14px 0"}}>{dollarWidget}</div><div style={{marginTop:4}}>{postsList}</div><div style={{margin:"10px 14px 20px"}}>{inviteBanner}</div></div></div>); }
+    {openCity?<CountryFeed cityId={openCity} onClose={function(){setOpenCity(null);}} savedPosts={savedPosts} onSave={toggleSave} likedPosts={likedPosts} onLike={toggleLike} following={following} onFollow={toggleFollow} userName={userName} userId={userId} lang={lang} onOpenProfile={props.onOpenProfile} userPhoto={userPhoto}/>:null}
+    {showComposer?<Composer cityObj={cityObj} onPost={addPost} onClose={function(){setShowComposer(false);}} userPhoto={userPhoto} userName={userName}/>:null}{header}<div style={{paddingBottom:"calc(80px + env(safe-area-inset-bottom))"}}><div style={{margin:"10px 14px 0"}}>{dollarWidget}</div><div style={{marginTop:4}}>{postsList}</div><div style={{margin:"10px 14px 20px"}}>{inviteBanner}</div></div></div>); }
   return (<div style={{minHeight:"100vh",background:C.bg}}>
-    {openCity?<CountryFeed cityId={openCity} onClose={function(){setOpenCity(null);}} savedPosts={savedPosts} onSave={toggleSave} likedPosts={likedPosts} onLike={toggleLike} following={following} onFollow={toggleFollow} userName={userName} userId={userId} lang={lang} onOpenProfile={props.onOpenProfile}/>:null}
-    {showComposer?<Composer cityObj={cityObj} onPost={addPost} onClose={function(){setShowComposer(false);}}/>:null}{header}<button onClick={function(){setShowComposer(true);}} style={{position:"fixed",bottom:32,right:32,width:56,height:56,borderRadius:28,background:C.yellow,border:"none",cursor:"pointer",fontSize:28,boxShadow:"0 4px 18px rgba(255,204,0,0.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:150,lineHeight:1}}>{ICONS.pencil}</button><div style={{maxWidth:1200,margin:"0 auto",padding:"20px",display:"flex",gap:24,alignItems:"flex-start"}}><div style={{width:240,flexShrink:0,position:"sticky",top:170}}><div style={{background:C.card,borderRadius:16,border:"1px solid "+C.border,overflow:"hidden",marginBottom:16}}><div style={{background:"linear-gradient(135deg,#ffcc00,#0066ff)",height:60}}/><div style={{padding:"0 16px 16px",marginTop:-28}}><Av t={userName} i={0} s={52} photo={userPhoto}/><div style={{marginTop:8,fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:16,color:C.text}}>{userName}</div><div style={{fontSize:12,color:C.muted,fontFamily:"'Inter',sans-serif",marginBottom:4}}>{"@"+userName.toLowerCase().replace(" ","")}</div>{userBio?<div style={{fontSize:11,color:C.muted,fontFamily:"'Inter',sans-serif",marginBottom:12,lineHeight:1.4}}>{userBio}</div>:<div style={{marginBottom:12}}/>}<button onClick={onProfile} style={{width:"100%",padding:"8px",background:C.yellow,border:"none",borderRadius:10,cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:12,fontWeight:700,color:C.text}}>Ver perfil</button></div></div><button onClick={function(){setShowComposer(true);}} style={{width:"100%",padding:"12px",background:C.yellow,border:"none",borderRadius:12,cursor:"pointer",fontFamily:"'Syne',sans-serif",fontSize:14,fontWeight:700,color:C.text,marginBottom:16}}>+ Publicar</button><div style={{background:C.card,borderRadius:16,border:"1px solid "+C.border,padding:"14px 16px"}}><div style={{fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:13,color:C.text,marginBottom:12}}>Proximos eventos</div>{SEED.filter(function(p){ return p.type==="evento"&&p.city===activeCity; }).slice(0,3).map(function(ev,i){ return (<div key={ev.id} onClick={function(){setFilter("evento");}} style={{display:"flex",gap:10,marginBottom:12,cursor:"pointer",padding:"8px 10px",borderRadius:10,background:C.bg}}><div style={{width:36,height:36,borderRadius:10,background:"#7b2d8b",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,flexShrink:0}}>{ICONS.bell}</div><div style={{flex:1,minWidth:0}}><div style={{fontSize:12,fontWeight:700,color:C.text,fontFamily:"'Inter',sans-serif",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{ev.name}</div><div style={{fontSize:11,color:C.muted,fontFamily:"'Inter',sans-serif",marginTop:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{ev.content.slice(0,45)}...</div></div></div>); })}{SEED.filter(function(p){ return p.type==="evento"&&p.city===activeCity; }).length===0?(<div style={{textAlign:"center",padding:"10px 0"}}><div style={{fontSize:11,color:C.muted,fontFamily:"'Inter',sans-serif"}}>No hay eventos en este pais aun</div><button onClick={function(){setShowComposer(true);}} style={{marginTop:8,padding:"6px 14px",background:C.yellow,border:"none",borderRadius:100,cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:11,fontWeight:700,color:C.text}}>Crear evento</button></div>):null}</div></div><div style={{flex:1,minWidth:0}}>{dollarWidget}{postsList}</div><div style={{width:280,flexShrink:0,position:"sticky",top:170}}>{inviteBanner}<div style={{background:C.card,borderRadius:16,border:"1px solid "+C.border,padding:"14px 16px",marginBottom:16}}><div style={{fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:13,color:C.text,marginBottom:12}}>Venezolanos en {cityObj.name}</div>{SEED.filter(function(p){return p.city===activeCity;}).slice(0,4).map(function(p,i){ return (<div key={p.id} style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}><Av t={p.av} i={i} s={36}/><div style={{flex:1}}><div style={{fontSize:13,fontWeight:600,color:C.text,fontFamily:"'Inter',sans-serif"}}>{p.name}</div><div style={{fontSize:11,color:C.muted,fontFamily:"'Inter',sans-serif"}}>{p.type}</div></div></div>); })}</div><div style={{background:C.card,borderRadius:16,border:"1px solid "+C.border,padding:"14px 16px"}}><div style={{fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:13,color:C.text,marginBottom:10}}>Epale</div><div style={{fontSize:11,color:C.muted,fontFamily:"'Inter',sans-serif",lineHeight:1.6}}>La red social de los venezolanos en el mundo. Conecta, comparte y crece con tu gente.</div><div style={{marginTop:10,display:"flex",gap:8,flexWrap:"wrap"}}>{["Terminos","Privacidad","Contacto"].map(function(t){ return <span key={t} style={{fontSize:10,color:C.muted,fontFamily:"'Inter',sans-serif",cursor:"pointer",textDecoration:"underline"}}>{t}</span>; })}</div></div></div></div></div>);
+    {openCity?<CountryFeed cityId={openCity} onClose={function(){setOpenCity(null);}} savedPosts={savedPosts} onSave={toggleSave} likedPosts={likedPosts} onLike={toggleLike} following={following} onFollow={toggleFollow} userName={userName} userId={userId} lang={lang} onOpenProfile={props.onOpenProfile} userPhoto={userPhoto}/>:null}
+    {showComposer?<Composer cityObj={cityObj} onPost={addPost} onClose={function(){setShowComposer(false);}} userPhoto={userPhoto} userName={userName}/>:null}{header}<button onClick={function(){setShowComposer(true);}} style={{position:"fixed",bottom:32,right:32,width:56,height:56,borderRadius:28,background:C.yellow,border:"none",cursor:"pointer",fontSize:28,boxShadow:"0 4px 18px rgba(255,204,0,0.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:150,lineHeight:1}}>{ICONS.pencil}</button><div style={{maxWidth:1200,margin:"0 auto",padding:"20px",display:"flex",gap:24,alignItems:"flex-start"}}><div style={{width:240,flexShrink:0,position:"sticky",top:170}}><div style={{background:C.card,borderRadius:16,border:"1px solid "+C.border,overflow:"hidden",marginBottom:16}}><div style={{background:"linear-gradient(135deg,#ffcc00,#0066ff)",height:60}}/><div style={{padding:"0 16px 16px",marginTop:-28}}><Av t={userName} i={0} s={52} photo={userPhoto}/><div style={{marginTop:8,fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:16,color:C.text}}>{userName}</div><div style={{fontSize:12,color:C.muted,fontFamily:"'Inter',sans-serif",marginBottom:4}}>{"@"+userName.toLowerCase().replace(" ","")}</div>{userBio?<div style={{fontSize:11,color:C.muted,fontFamily:"'Inter',sans-serif",marginBottom:12,lineHeight:1.4}}>{userBio}</div>:<div style={{marginBottom:12}}/>}<button onClick={onProfile} style={{width:"100%",padding:"8px",background:C.yellow,border:"none",borderRadius:10,cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:12,fontWeight:700,color:C.text}}>Ver perfil</button></div></div><button onClick={function(){setShowComposer(true);}} style={{width:"100%",padding:"12px",background:C.yellow,border:"none",borderRadius:12,cursor:"pointer",fontFamily:"'Syne',sans-serif",fontSize:14,fontWeight:700,color:C.text,marginBottom:16}}>+ Publicar</button><div style={{background:C.card,borderRadius:16,border:"1px solid "+C.border,padding:"14px 16px"}}><div style={{fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:13,color:C.text,marginBottom:12}}>Proximos eventos</div>{SEED.filter(function(p){ return p.type==="evento"&&p.city===activeCity; }).slice(0,3).map(function(ev,i){ return (<div key={ev.id} onClick={function(){setFilter("evento");}} style={{display:"flex",gap:10,marginBottom:12,cursor:"pointer",padding:"8px 10px",borderRadius:10,background:C.bg}}><div style={{width:36,height:36,borderRadius:10,background:"#7b2d8b",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,flexShrink:0}}>{ICONS.bell}</div><div style={{flex:1,minWidth:0}}><div style={{fontSize:12,fontWeight:700,color:C.text,fontFamily:"'Inter',sans-serif",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{ev.name}</div><div style={{fontSize:11,color:C.muted,fontFamily:"'Inter',sans-serif",marginTop:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{ev.content.slice(0,45)}...</div></div></div>); })}{SEED.filter(function(p){ return p.type==="evento"&&p.city===activeCity; }).length===0?(<div style={{textAlign:"center",padding:"10px 0"}}><div style={{fontSize:11,color:C.muted,fontFamily:"'Inter',sans-serif"}}>No hay eventos en este pais aun</div><button onClick={function(){setShowComposer(true);}} style={{marginTop:8,padding:"6px 14px",background:C.yellow,border:"none",borderRadius:100,cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:11,fontWeight:700,color:C.text}}>Crear evento</button></div>):null}</div></div><div style={{flex:1,minWidth:0}}>{dollarWidget}{postsList}</div><div style={{width:280,flexShrink:0,position:"sticky",top:170}}>{inviteBanner}<div style={{background:C.card,borderRadius:16,border:"1px solid "+C.border,padding:"14px 16px",marginBottom:16}}><div style={{fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:13,color:C.text,marginBottom:12}}>Venezolanos en {cityObj.name}</div>{SEED.filter(function(p){return p.city===activeCity;}).slice(0,4).map(function(p,i){ return (<div key={p.id} style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}><Av t={p.av} i={i} s={36}/><div style={{flex:1}}><div style={{fontSize:13,fontWeight:600,color:C.text,fontFamily:"'Inter',sans-serif"}}>{p.name}</div><div style={{fontSize:11,color:C.muted,fontFamily:"'Inter',sans-serif"}}>{p.type}</div></div></div>); })}</div><div style={{background:C.card,borderRadius:16,border:"1px solid "+C.border,padding:"14px 16px"}}><div style={{fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:13,color:C.text,marginBottom:10}}>Epale</div><div style={{fontSize:11,color:C.muted,fontFamily:"'Inter',sans-serif",lineHeight:1.6}}>La red social de los venezolanos en el mundo. Conecta, comparte y crece con tu gente.</div><div style={{marginTop:10,display:"flex",gap:8,flexWrap:"wrap"}}>{["Terminos","Privacidad","Contacto"].map(function(t){ return <span key={t} style={{fontSize:10,color:C.muted,fontFamily:"'Inter',sans-serif",cursor:"pointer",textDecoration:"underline"}}>{t}</span>; })}</div></div></div></div></div>);
 }
 
 function Composer(props) {
-  var cityObj=props.cityObj,onPost=props.onPost,onClose=props.onClose;
+  var cityObj=props.cityObj,onPost=props.onPost,onClose=props.onClose,userPhoto=props.userPhoto||null,userName=props.userName||"";
   var [type,setType]=useState("post"); var [text,setText]=useState(""); var [media,setMedia]=useState(null);
   var [loading,setLoading]=useState(false); var [selectedCity,setSelectedCity]=useState(cityObj.id); var [showCityPicker,setShowCityPicker]=useState(false);
   var handleFile=function(e,kind){ var file=e.target.files[0]; if(!file) return; var reader=new FileReader(); reader.onload=function(ev){ setMedia({src:ev.target.result,kind:kind}); }; reader.readAsDataURL(file); };
   var canPost=text.trim()||media;
   var submit=function(){ if(!canPost) return; setLoading(true); setTimeout(function(){ onPost({city:selectedCity,type:type,content:text,media:media}); setLoading(false); onClose(); },600); };
   var selectedCityObj=getCity(selectedCity);
-  return (<div style={{position:"fixed",inset:0,zIndex:200,background:"rgba(0,0,0,0.5)",display:"flex",alignItems:"center",justifyContent:"center"}} onClick={onClose}><div onClick={function(e){e.stopPropagation();}} style={{width:"100%",maxWidth:560,background:C.card,borderRadius:22,padding:"0 0 36px",maxHeight:"90vh",overflowY:"auto",margin:"0 16px"}}><div style={{display:"flex",justifyContent:"center",padding:"12px 0 4px"}}><div style={{width:36,height:4,borderRadius:2,background:C.border}}/></div><div style={{padding:"4px 20px 0"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}><span style={{fontSize:15,fontFamily:"'Syne',sans-serif",color:C.text,fontWeight:700}}>Nueva publicacion</span><button onClick={function(){setShowCityPicker(function(v){return !v;});}} style={{background:C.bg,border:"1.5px solid "+C.border,borderRadius:100,padding:"5px 12px",cursor:"pointer",display:"flex",alignItems:"center",gap:6}}><span style={{fontSize:14}}>{selectedCity==="all"?ICONS.group:toFlag(CITY_FLAGS[selectedCity])}</span><span style={{fontSize:12,color:C.blue,fontFamily:"'Inter',sans-serif",fontWeight:700}}>{selectedCity==="all"?"Todos los paises":selectedCityObj.name}</span><span style={{fontSize:10,color:C.muted}}>{"v"}</span></button></div>{showCityPicker?(<div style={{background:C.bg,borderRadius:14,border:"1px solid "+C.border,padding:"8px",marginBottom:12,display:"flex",flexWrap:"wrap",gap:6}}><button onClick={function(){setSelectedCity("all");setShowCityPicker(false);}} style={{padding:"5px 10px",borderRadius:100,border:"1.5px solid "+(selectedCity==="all"?C.yellow:C.border),background:selectedCity==="all"?C.yellow:C.card,color:C.text,fontFamily:"'Inter',sans-serif",fontSize:11,fontWeight:700,cursor:"pointer"}}>Todos los paises</button>{CITIES.map(function(c){ return (<button key={c.id} onClick={function(){setSelectedCity(c.id);setShowCityPicker(false);}} style={{padding:"5px 10px",borderRadius:100,border:"1.5px solid "+(selectedCity===c.id?C.blue:C.border),background:selectedCity===c.id?C.blue:C.card,color:selectedCity===c.id?"#fff":C.text,fontFamily:"'Inter',sans-serif",fontSize:11,fontWeight:600,cursor:"pointer",display:"flex",alignItems:"center",gap:4}}><span>{toFlag(CITY_FLAGS[c.id])}</span><span>{c.name}</span></button>); })}</div>):null}<div style={{display:"flex",gap:6,marginBottom:14,overflowX:"auto"}}>{Object.entries(TYPES).map(function(entry){ var id=entry[0],m=entry[1]; return <button key={id} onClick={function(){setType(id);}} style={{padding:"5px 12px",borderRadius:20,border:"1.5px solid "+(type===id?C.blue:C.border),background:type===id?C.blue:C.card,color:type===id?"#fff":C.muted,fontFamily:"'Inter',sans-serif",fontSize:11,fontWeight:700,cursor:"pointer",whiteSpace:"nowrap",flexShrink:0}}>{m.icon} {m.label}</button>; })}</div><textarea value={text} onChange={function(e){setText(e.target.value);}} placeholder="Que esta pasando en tu pais?" style={{width:"100%",background:C.bg,border:"1.5px solid "+(text?C.blue:C.border),borderRadius:12,padding:"12px 14px",color:C.text,fontFamily:"'Inter',sans-serif",fontSize:16,resize:"none",minHeight:90,outline:"none",boxSizing:"border-box",marginBottom:12}}/>{media?(<div style={{position:"relative",marginBottom:12,borderRadius:12,overflow:"hidden",border:"1.5px solid "+C.border}}>{media.kind==="image"?<img src={media.src} alt="preview" style={{width:"100%",maxHeight:220,objectFit:"cover",display:"block"}}/>:<video src={media.src} controls style={{width:"100%",maxHeight:220,display:"block"}}/>}<button onClick={function(){setMedia(null);}} style={{position:"absolute",top:8,right:8,background:"rgba(0,0,0,0.6)",border:"none",borderRadius:9999,width:28,height:28,cursor:"pointer",color:"#fff",fontSize:14}}>X</button></div>):(<div style={{display:"flex",gap:8,marginBottom:14}}>{[[ICONS.photo,"Foto","image/*","image"],[ICONS.video,"Video","video/*","video"],[ICONS.camera,"Camara","image/*","image"]].map(function(item,idx){ return (<label key={idx} style={{flex:1}}><div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:6,padding:"10px",background:C.bg,border:"1.5px solid "+C.border,borderRadius:12,cursor:"pointer"}}><span style={{fontSize:18}}>{item[0]}</span><span style={{fontSize:11,fontFamily:"'Inter',sans-serif",color:C.muted,fontWeight:700}}>{item[1]}</span></div><input type="file" accept={item[2]} style={{display:"none"}} onChange={function(e){handleFile(e,item[3]);}}/></label>); })}</div>)}<button onClick={submit} disabled={!canPost} style={{width:"100%",padding:"13px",background:canPost?C.yellow:C.border,color:canPost?C.text:C.muted,border:"none",borderRadius:100,cursor:canPost?"pointer":"not-allowed",fontFamily:"'Inter',sans-serif",fontSize:14,fontWeight:700}}>{loading?"Publicando...":"Publicar"}</button></div></div></div>);
+  return (<div style={{position:"fixed",inset:0,zIndex:200,background:"rgba(0,0,0,0.5)",display:"flex",alignItems:"center",justifyContent:"center"}} onClick={onClose}><div onClick={function(e){e.stopPropagation();}} style={{width:"100%",maxWidth:560,background:C.card,borderRadius:22,padding:"0 0 36px",maxHeight:"90vh",overflowY:"auto",margin:"0 16px"}}><div style={{display:"flex",justifyContent:"center",padding:"12px 0 4px"}}><div style={{width:36,height:4,borderRadius:2,background:C.border}}/></div><div style={{padding:"4px 20px 0"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}><div style={{display:"flex",alignItems:"center",gap:10}}><Av t={userName||"?"} i={0} s={38} photo={userPhoto}/><span style={{fontSize:15,fontFamily:"'Syne',sans-serif",color:C.text,fontWeight:700}}>Nueva publicacion</span></div><button onClick={function(){setShowCityPicker(function(v){return !v;});}} style={{background:C.bg,border:"1.5px solid "+C.border,borderRadius:100,padding:"5px 12px",cursor:"pointer",display:"flex",alignItems:"center",gap:6}}><span style={{fontSize:14}}>{selectedCity==="all"?ICONS.group:toFlag(CITY_FLAGS[selectedCity])}</span><span style={{fontSize:12,color:C.blue,fontFamily:"'Inter',sans-serif",fontWeight:700}}>{selectedCity==="all"?"Todos los paises":selectedCityObj.name}</span><span style={{fontSize:10,color:C.muted}}>{"v"}</span></button></div>{showCityPicker?(<div style={{background:C.bg,borderRadius:14,border:"1px solid "+C.border,padding:"8px",marginBottom:12,display:"flex",flexWrap:"wrap",gap:6}}><button onClick={function(){setSelectedCity("all");setShowCityPicker(false);}} style={{padding:"5px 10px",borderRadius:100,border:"1.5px solid "+(selectedCity==="all"?C.yellow:C.border),background:selectedCity==="all"?C.yellow:C.card,color:C.text,fontFamily:"'Inter',sans-serif",fontSize:11,fontWeight:700,cursor:"pointer"}}>Todos los paises</button>{CITIES.map(function(c){ return (<button key={c.id} onClick={function(){setSelectedCity(c.id);setShowCityPicker(false);}} style={{padding:"5px 10px",borderRadius:100,border:"1.5px solid "+(selectedCity===c.id?C.blue:C.border),background:selectedCity===c.id?C.blue:C.card,color:selectedCity===c.id?"#fff":C.text,fontFamily:"'Inter',sans-serif",fontSize:11,fontWeight:600,cursor:"pointer",display:"flex",alignItems:"center",gap:4}}><span>{toFlag(CITY_FLAGS[c.id])}</span><span>{c.name}</span></button>); })}</div>):null}<div style={{display:"flex",gap:6,marginBottom:14,overflowX:"auto"}}>{Object.entries(TYPES).map(function(entry){ var id=entry[0],m=entry[1]; return <button key={id} onClick={function(){setType(id);}} style={{padding:"5px 12px",borderRadius:20,border:"1.5px solid "+(type===id?C.blue:C.border),background:type===id?C.blue:C.card,color:type===id?"#fff":C.muted,fontFamily:"'Inter',sans-serif",fontSize:11,fontWeight:700,cursor:"pointer",whiteSpace:"nowrap",flexShrink:0}}>{m.icon} {m.label}</button>; })}</div><textarea value={text} onChange={function(e){setText(e.target.value);}} placeholder="Que esta pasando en tu pais?" style={{width:"100%",background:C.bg,border:"1.5px solid "+(text?C.blue:C.border),borderRadius:12,padding:"12px 14px",color:C.text,fontFamily:"'Inter',sans-serif",fontSize:16,resize:"none",minHeight:90,outline:"none",boxSizing:"border-box",marginBottom:12}}/>{media?(<div style={{position:"relative",marginBottom:12,borderRadius:12,overflow:"hidden",border:"1.5px solid "+C.border}}>{media.kind==="image"?<img src={media.src} alt="preview" style={{width:"100%",maxHeight:220,objectFit:"cover",display:"block"}}/>:<video src={media.src} controls style={{width:"100%",maxHeight:220,display:"block"}}/>}<button onClick={function(){setMedia(null);}} style={{position:"absolute",top:8,right:8,background:"rgba(0,0,0,0.6)",border:"none",borderRadius:9999,width:28,height:28,cursor:"pointer",color:"#fff",fontSize:14}}>X</button></div>):(<div style={{display:"flex",gap:8,marginBottom:14}}>{[[ICONS.photo,"Foto","image/*","image"],[ICONS.video,"Video","video/*","video"],[ICONS.camera,"Camara","image/*","image"]].map(function(item,idx){ return (<label key={idx} style={{flex:1}}><div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:6,padding:"10px",background:C.bg,border:"1.5px solid "+C.border,borderRadius:12,cursor:"pointer"}}><span style={{fontSize:18}}>{item[0]}</span><span style={{fontSize:11,fontFamily:"'Inter',sans-serif",color:C.muted,fontWeight:700}}>{item[1]}</span></div><input type="file" accept={item[2]} style={{display:"none"}} onChange={function(e){handleFile(e,item[3]);}}/></label>); })}</div>)}<button onClick={submit} disabled={!canPost} style={{width:"100%",padding:"13px",background:canPost?C.yellow:C.border,color:canPost?C.text:C.muted,border:"none",borderRadius:100,cursor:canPost?"pointer":"not-allowed",fontFamily:"'Inter',sans-serif",fontSize:14,fontWeight:700}}>{loading?"Publicando...":"Publicar"}</button></div></div></div>);
 }
 
 function Search(props) {
@@ -1151,7 +1237,7 @@ function App() {
 
   var requireAuth=function(action){ if(!userId||!window._supaToken||window._supaToken===SUPA_KEY){ setSessionExpired(true); return false; } return true; };
   var toggleLike=function(postId,postOwnerId){ var pid=String(postId); if(!requireAuth()) return; setLikedPosts(function(s){ var isLiked=s.includes(pid); if(isLiked) api.unlikePost(userId,postId).catch(function(){}); else { api.likePost(userId,postId).catch(function(){}); if(postOwnerId&&postOwnerId!==userId) api.addNotification(postOwnerId,userName||"Alguien","like",postId).catch(function(){}); } return isLiked?s.filter(function(x){return x!==pid;}):[].concat(s,[pid]); }); };
-  var toggleSave=function(postId){ if(!requireAuth()) return; setSavedPosts(function(s){ var isSaved=s.includes(postId); if(isSaved) api.unsavePost(userId,postId).catch(function(){}); else api.savePost(userId,postId).catch(function(){}); return isSaved?s.filter(function(x){return x!==postId;}):[].concat(s,[postId]); }); };
+  var toggleSave=function(postId){ if(!requireAuth()) return; var pid=String(postId); setSavedPosts(function(s){ var isSaved=s.includes(pid); if(isSaved) api.unsavePost(userId,postId).catch(function(){}); else api.savePost(userId,postId).catch(function(){}); return isSaved?s.filter(function(x){return x!==pid;}):[].concat(s,[pid]); }); };
   var toggleFollow=function(name){ if(!requireAuth()) return; setFollowing(function(f){ var isFollowing=f.includes(name); if(isFollowing) api.unfollow(userId,name).catch(function(){}); else api.follow(userId,name).catch(function(){}); return isFollowing?f.filter(function(x){return x!==name;}):[].concat(f,[name]); }); };
 
   var handleDone=function(city,name,photo,token,uid){ try { var c=city||"madrid",n=name||"",p=photo||null,t=token||"",u=uid||""; setUserCity(c); if(n) setUserName(n); if(p) setUserPhoto(p); setUserId(u); if(t){ window._supaToken=t; } try { localStorage.setItem("epale_session",JSON.stringify({city:c,name:n,photo:p,token:t,uid:u})); } catch(e){} if(u&&t&&!n){ api.getProfile(u).then(function(profiles){ var prof=Array.isArray(profiles)&&profiles[0]; if(prof&&prof.name){ setUserName(prof.name); if(prof.city) setUserCity(prof.city); try { localStorage.setItem("epale_session",JSON.stringify({city:prof.city||c,name:prof.name,photo:prof.photo_url||p,token:t,uid:u})); } catch(e){} } }).catch(function(){}); } setScreen("feed"); } catch(e){} };
