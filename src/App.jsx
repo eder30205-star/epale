@@ -219,7 +219,7 @@ var VERIFIED_NAMES=["Epale","Epale Madrid","Venezuela Miami","VE Bogota","Vzla S
 var isVerified=function(name){ return VERIFIED_NAMES.includes(name); };
 var SAMPLE_USERS=[];
 
-var TENOR_KEY = "AIzaSyAyimkuYQYF_FXVALexPZnueVGQdqOn6Pc"; // Free Tenor API key
+var TENOR_KEY = "AIzaSyC0OjRVsmYE0O2IqzJq4I7syFXD5mzHhGo"; // Tenor API v2 key
 
 function GifPicker(props) {
   var onSelect=props.onSelect, onClose=props.onClose;
@@ -231,8 +231,8 @@ function GifPicker(props) {
   var fetchGifs=function(q,pos){
     setLoading(true);
     var url=q
-      ? "https://tenor.googleapis.com/v2/search?q="+encodeURIComponent(q)+"&key="+TENOR_KEY+"&limit=20&media_filter=gif&contentfilter=medium"+(pos?"&pos="+pos:"")
-      : "https://tenor.googleapis.com/v2/featured?key="+TENOR_KEY+"&limit=20&media_filter=gif&contentfilter=medium"+(pos?"&pos="+pos:"");
+      ? "https://tenor.googleapis.com/v2/search?q="+encodeURIComponent(q)+"&key="+TENOR_KEY+"&client_key=epaleapp&limit=20&media_filter=gif&contentfilter=medium"+(pos?"&pos="+pos:"")
+      : "https://tenor.googleapis.com/v2/featured?key="+TENOR_KEY+"&client_key=epaleapp&limit=20&media_filter=gif&contentfilter=medium"+(pos?"&pos="+pos:"");
     fetch(url).then(function(r){return r.json();}).then(function(data){
       if(data.results){
         setGifs(function(g){ return pos?g.concat(data.results):data.results; });
@@ -264,7 +264,12 @@ function GifPicker(props) {
         <div style={{overflowY:"auto",flex:1,WebkitOverflowScrolling:"touch",padding:"0 12px 20px"}}>
           {loading&&gifs.length===0?(
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
-              {[1,2,3,4,5,6].map(function(i){ return <div key={i} style={{height:120,borderRadius:10,background:C.border,animation:"epale-shimmer 1.4s infinite"}}/>; })}
+              {[1,2,3,4,5,6].map(function(i){ return <div key={i} style={{height:120,borderRadius:10,background:C.border}}/>; })}
+            </div>
+          ):gifs.length===0&&!loading?(
+            <div style={{textAlign:"center",padding:"40px 20px"}}>
+              <div style={{fontSize:40,marginBottom:8}}>{"🔍"}</div>
+              <div style={{fontSize:14,color:C.muted,fontFamily:"'Inter',sans-serif"}}>{query?"Sin resultados para "+query:"Escribe para buscar GIFs"}</div>
             </div>
           ):(
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
@@ -306,7 +311,7 @@ function EmojiPicker(props) {
   var emojis=searchResults||EMOJIS[cat]||[];
 
   return (
-    <div style={{position:"absolute",bottom:"100%",left:0,right:0,zIndex:500,background:C.card,border:"1px solid "+C.border,borderRadius:16,boxShadow:"0 -4px 24px rgba(0,0,0,0.15)",overflow:"hidden",marginBottom:4}}>
+    <div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:500,background:C.card,borderRadius:"20px 20px 0 0",boxShadow:"0 -4px 24px rgba(0,0,0,0.2)",overflow:"hidden",maxHeight:"50vh",display:"flex",flexDirection:"column"}}>
       {/* Search bar */}
       <div style={{padding:"10px 12px 6px",borderBottom:"1px solid "+C.border}}>
         <input value={search} onChange={function(e){setSearch(e.target.value);}} placeholder="Buscar emoji..." style={{width:"100%",padding:"8px 12px",background:C.bg,border:"1px solid "+C.border,borderRadius:20,fontFamily:"'Inter',sans-serif",fontSize:14,color:C.text,outline:"none",boxSizing:"border-box"}}/>
@@ -319,7 +324,7 @@ function EmojiPicker(props) {
         })}
       </div>}
       {/* Emoji grid */}
-      <div style={{display:"grid",gridTemplateColumns:"repeat(8,1fr)",gap:2,padding:"8px",maxHeight:200,overflowY:"auto",WebkitOverflowScrolling:"touch"}}>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(8,1fr)",gap:2,padding:"8px",flex:1,overflowY:"auto",WebkitOverflowScrolling:"touch"}}>
         {emojis.map(function(e,i){
           return <button key={i} onClick={function(){onSelect(e);}} style={{background:"none",border:"none",cursor:"pointer",fontSize:22,padding:"6px",borderRadius:8,textAlign:"center",lineHeight:1,fontFamily:"Segoe UI Emoji, Apple Color Emoji, Noto Color Emoji, sans-serif"}} onMouseEnter={function(ev){ev.target.style.background=C.bg;}} onMouseLeave={function(ev){ev.target.style.background="none";}}>{e}</button>;
         })}
