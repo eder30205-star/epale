@@ -68,7 +68,9 @@ var api = {
   upsertProfile: function(id, name, city, username) { return fetchAuth(SUPA_URL+"/rest/v1/profiles",{method:"POST",headers:{"Content-Type":"application/json","apikey":SUPA_KEY,"Authorization":"Bearer "+getToken(),"Prefer":"resolution=merge-duplicates"},body:JSON.stringify({id:id,name:name,city:city,username:username})}).then(function(r){return r.json();}).catch(function(){}); },
   getProfile: function(id) { return fetchAuth(SUPA_URL+"/rest/v1/profiles?id=eq."+id+"&select=*",{headers:{"apikey":SUPA_KEY,"Authorization":"Bearer "+getToken()}}).then(function(r){return r.json();}); },
   getPosts: function(city,before) {
-    var url=SUPA_URL+"/rest/v1/posts?city=eq."+city+"&select=*&order=created_at.desc&limit=30";
+    var url=city==="global"
+      ? SUPA_URL+"/rest/v1/posts?select=*&order=created_at.desc&limit=30"
+      : SUPA_URL+"/rest/v1/posts?city=eq."+city+"&select=*&order=created_at.desc&limit=30";
     if(before) url+="&created_at=lt."+encodeURIComponent(before);
     return fetch(url,{headers:{"apikey":SUPA_KEY}}).then(function(r){return r.json()});
   },
@@ -131,8 +133,9 @@ var T={es:{forYou:"Para ti",following:"Siguiendo",todos:"Todos",post:"Post",trab
 var ICONS={heart:"\u2764\uFE0F",heartEmpty:"\uD83E\uDD0D",comment:"\uD83D\uDCAC",bookmark:"\uD83D\uDD16",phone:"\uD83D\uDCF1",dollar:"\uD83D\uDCB5",fire:"\uD83D\uDD25",pencil:"\u270F\uFE0F",briefcase:"\uD83D\uDCBC",house:"\uD83C\uDFE0",wrench:"\uD83D\uDD27",handshake:"\uD83E\uDD1D",bell:"\uD83D\uDD14",gear:"\u2699\uFE0F",eye:"\uD83D\uDC41\uFE0F",photo:"\uD83D\uDDBC\uFE0F",video:"\uD83C\uDFAC",camera:"\uD83D\uDCF7",notepad:"\uD83D\uDCDD",check:"\u2705",key:"\uD83D\uDD11",email:"\uD83D\uDCE7",group:"\uD83D\uDC65",flag_ve:"\uD83C\uDDFB\uD83C\uDDEA",share:"\u2197\uFE0F",like_on:"\u2764\uFE0F",like_off:"\uD83E\uDD0D"};
 var _theme=LIGHT; var C=LIGHT;
 const CITIES=[{id:"madrid",name:"Espana",flag:"ES",pop:"280K venezolanos"},{id:"miami",name:"USA",flag:"US",pop:"350K venezolanos"},{id:"bogota",name:"Colombia",flag:"CO",pop:"600K venezolanos"},{id:"santiago",name:"Chile",flag:"CL",pop:"150K venezolanos"},{id:"lima",name:"Peru",flag:"PE",pop:"130K venezolanos"},{id:"buenos",name:"Argentina",flag:"AR",pop:"90K venezolanos"},{id:"quito",name:"Ecuador",flag:"EC",pop:"70K venezolanos"},{id:"panama",name:"Panama",flag:"PA",pop:"55K venezolanos"},{id:"caracas",name:"Venezuela",flag:"VE",pop:"Capital"},{id:"portugal",name:"Portugal",flag:"PT",pop:"40K venezolanos"},{id:"italia",name:"Italia",flag:"IT",pop:"35K venezolanos"},{id:"canada",name:"Canada",flag:"CA",pop:"30K venezolanos"}];
-const CITY_FLAGS={madrid:"ES",miami:"US",bogota:"CO",santiago:"CL",lima:"PE",buenos:"AR",quito:"EC",panama:"PA",caracas:"VE",portugal:"PT",italia:"IT",canada:"CA"};
-const toFlag=function(code){ if(!code) return ""; var a=code.toUpperCase().charCodeAt(0)-65+127462; var b=code.toUpperCase().charCodeAt(1)-65+127462; return String.fromCodePoint(a)+String.fromCodePoint(b); };
+const CITY_FLAGS_EXTRA={"global":"🌍"};
+const CITY_FLAGS={madrid:"ES",miami:"US",bogota:"CO",santiago:"CL",lima:"PE",buenos:"AR",quito:"EC",panama:"PA",caracas:"VE",portugal:"PT",italia:"IT",canada:"CA",global:"🌍"};
+const toFlag=function(code){ if(!code) return ""; if(code==="🌍"||code==="global") return "🌍"; if(code.length>2) return ""; var a=code.toUpperCase().charCodeAt(0)-65+127462; var b=code.toUpperCase().charCodeAt(1)-65+127462; return String.fromCodePoint(a)+String.fromCodePoint(b); };
 const getCity=function(id){ return CITIES.find(function(c){ return c.id===id; })||CITIES[0]; };
 const TYPES={post:{label:"Post",icon:ICONS.pencil,badgeBg:null},job:{label:"Trabajo",icon:ICONS.briefcase,badgeBg:"#ffcc00",badgeFg:"#1a1a1a"},housing:{label:"Vivienda",icon:ICONS.house,badgeBg:"#1a4fa0",badgeFg:"#fff"},service:{label:"Servicio",icon:ICONS.wrench,badgeBg:"#1a7a3c",badgeFg:"#fff"},help:{label:"Ayuda",icon:ICONS.handshake,badgeBg:"#cc2200",badgeFg:"#fff"},evento:{label:"Evento",icon:ICONS.bell,badgeBg:"#7b2d8b",badgeFg:"#fff"}};
 const GR=["linear-gradient(135deg,#ffcc00,#1a4fa0)","linear-gradient(135deg,#1a4fa0,#cc2200)","linear-gradient(135deg,#cc2200,#ffcc00)","linear-gradient(135deg,#1a7a3c,#1a4fa0)","linear-gradient(135deg,#ffcc00,#cc2200)","linear-gradient(135deg,#1a4fa0,#1a7a3c)"];
@@ -813,8 +816,8 @@ function CountryFeed(props) {
       userName=props.userName||"", userId=props.userId||"", lang=props.lang||"es",
       onOpenProfile=props.onOpenProfile||function(){};
   var TR=T[lang]||T.es;
-  var cityObj=getCity(cityId);
-  var [posts,setPosts]=useState(SEED.filter(function(p){return p.city===cityId;}));
+  var cityObj=cityId==="global"?{id:"global",name:"Global",flag:"🌍",pop:"Todo el mundo"}:getCity(cityId);
+  var [posts,setPosts]=useState(cityId==="global"?SEED:SEED.filter(function(p){return p.city===cityId;}));
   var [filter,setFilter]=useState("all");
   var [showComposer,setShowComposer]=useState(false);
 
@@ -829,8 +832,9 @@ function CountryFeed(props) {
         });
       }
     }).catch(function(){});
+    var channelOpts=cityId==="global"?{event:"INSERT",schema:"public",table:"posts"}:{event:"INSERT",schema:"public",table:"posts",filter:"city=eq."+cityId};
     var channel=supabase.channel("cf:"+cityId)
-      .on("postgres_changes",{event:"INSERT",schema:"public",table:"posts",filter:"city=eq."+cityId},function(payload){
+      .on("postgres_changes",channelOpts,function(payload){
         var p=payload.new; if(!p||!p.id) return;
         var np={id:p.id,city:p.city,type:p.type||"post",name:p.name||"Anonimo",av:p.name||"?",content:p.content,likes:p.likes||0,comments:p.comments||0,time:p.created_at||"reciente"};
         setPosts(function(cur){ if(cur.find(function(x){return String(x.id)===String(p.id);})) return cur; return [np].concat(cur); });
@@ -841,19 +845,18 @@ function CountryFeed(props) {
   var addPost=function(p){
     var displayName=userName||"Tu";
     if(userId){
-      api.createPost(userId,cityId,p.type,p.content,displayName).then(function(){
-        setTimeout(function(){
-          api.getPosts(cityId,null).then(function(data){
-            if(Array.isArray(data)&&data.length>0){
-              var mapped=data.map(function(q){ return {id:q.id,city:q.city,type:q.type||"post",name:q.name||"Anonimo",av:q.name||"?",photo_url:q.name===displayName?props.userPhoto:null,content:q.content,likes:q.likes||0,comments:q.comments||0,time:q.created_at||"reciente",_created_at:q.created_at}; });
-              setPosts(function(current){
-                var seen={}; 
-                return mapped.concat(current).filter(function(p){ var k=String(p.id); if(seen[k]) return false; seen[k]=true; return true; });
-              });
-            }
-          }).catch(function(){});
-        },500);
-      }).catch(function(){});
+      var citiesToPost=cityId==="global"?CITIES.map(function(c){return c.id;}):[cityId];
+      citiesToPost.forEach(function(cid){
+        api.createPost(userId,cid,p.type,p.content,displayName).catch(function(){});
+      });
+      setTimeout(function(){
+        api.getPosts(cityId,null).then(function(data){
+          if(Array.isArray(data)&&data.length>0){
+            var mapped=data.map(function(q){ return {id:q.id,city:q.city,type:q.type||"post",name:q.name||"Anonimo",av:q.name||"?",photo_url:q.name===displayName?props.userPhoto:null,content:q.content,likes:q.likes||0,comments:q.comments||0,time:q.created_at||"reciente",_created_at:q.created_at}; });
+            setPosts(function(current){ var seen={}; return mapped.concat(current).filter(function(p){ var k=String(p.id); if(seen[k]) return false; seen[k]=true; return true; }); });
+          }
+        }).catch(function(){});
+      },500);
     }
   };
 
@@ -896,10 +899,10 @@ function CountryFeed(props) {
             display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0
           }}>{"←"}</button>
           <div style={{flex:1,display:"flex",alignItems:"center",gap:10,minWidth:0}}>
-            <span style={{fontSize:32,lineHeight:1}}>{toFlag(CITY_FLAGS[cityId])}</span>
+            <span style={{fontSize:32,lineHeight:1}}>{cityId==="global"?"🌍":toFlag(CITY_FLAGS[cityId])}</span>
             <div style={{minWidth:0}}>
-              <div style={{fontSize:18,fontFamily:"'Syne',sans-serif",color:C.text,fontWeight:700,lineHeight:1.2}}>{cityObj.name}</div>
-              <div style={{fontSize:12,color:C.muted,fontFamily:"'Inter',sans-serif",marginTop:2}}>{cityObj.pop}</div>
+              <div style={{fontSize:18,fontFamily:"'Syne',sans-serif",color:C.text,fontWeight:700,lineHeight:1.2}}>{cityId==="global"?"Global":cityObj.name}</div>
+              <div style={{fontSize:12,color:C.muted,fontFamily:"'Inter',sans-serif",marginTop:2}}>{cityId==="global"?"Todos los venezolanos del mundo":cityObj.pop}</div>
             </div>
           </div>
           <button onClick={function(){setShowComposer(true);}} style={{
@@ -1054,10 +1057,11 @@ function Feed(props) {
 
   useEffect(function(){ var handler=function(){ setIsMobile(window.innerWidth<768); }; window.addEventListener("resize",handler); return function(){ window.removeEventListener("resize",handler); }; },[]);
   var cityObj=getCity(activeCity);
-  var cityButtons=CITIES.map(function(c){
+  var globalBtn=<button key="global" onClick={function(){setOpenCity("global");}} style={{padding:"5px 12px",borderRadius:100,border:"1.5px solid "+C.border,background:C.card,color:C.muted,fontFamily:"'Inter',sans-serif",fontSize:10,fontWeight:700,cursor:"pointer",whiteSpace:"nowrap",flexShrink:0}}>{"🌍 Global"}</button>;
+  var cityButtons=[globalBtn].concat(CITIES.map(function(c){
     var isHome=c.id===userCity;
     return (<button key={c.id} onClick={function(){ if(isHome) return; setOpenCity(c.id); }} style={{padding:"5px 12px",borderRadius:100,border:"1.5px solid "+(isHome?C.yellow:C.border),background:isHome?C.yellow:C.card,color:isHome?"#1a1a1a":C.muted,fontFamily:"'Inter',sans-serif",fontSize:10,fontWeight:700,cursor:isHome?"default":"pointer",whiteSpace:"nowrap",flexShrink:0}}>{toFlag(CITY_FLAGS[c.id])} {c.name}{isHome?" 🏠":""}</button>);
-  });
+  }));
   var typeButtons=Object.entries(TYPES).map(function(entry){ var id=entry[0],m=entry[1]; return (<button key={id} onClick={function(){setFilter(id);}} style={{padding:"5px 12px",borderRadius:100,border:"1.5px solid "+(filter===id?C.blue:C.border),background:filter===id?C.blue:C.card,color:filter===id?"#fff":C.muted,fontFamily:"'Inter',sans-serif",fontSize:10,fontWeight:700,cursor:"pointer",whiteSpace:"nowrap",flexShrink:0}}>{m.icon} {m.label}</button>); });
   var tabButtons=[["forYou",TR.forYou],["following",TR.siguiendo]].map(function(item){ var id=item[0],label=item[1]; return (<button key={id} onClick={function(){setFeedTab(id);}} style={{background:"none",border:"none",cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:13,fontWeight:feedTab===id?700:500,color:feedTab===id?C.text:C.muted,paddingBottom:2,borderBottom:feedTab===id?"2px solid "+C.text:"2px solid transparent"}}>{label}</button>); });
   var allFiltered=posts.filter(function(p){ return filter==="all"||p.type===filter; });
