@@ -137,185 +137,185 @@ const getCity=function(id){ return CITIES.find(function(c){ return c.id===id; })
 const TYPES={post:{label:"Post",icon:ICONS.pencil,badgeBg:null},job:{label:"Trabajo",icon:ICONS.briefcase,badgeBg:"#ffcc00",badgeFg:"#1a1a1a"},housing:{label:"Vivienda",icon:ICONS.house,badgeBg:"#1a4fa0",badgeFg:"#fff"},service:{label:"Servicio",icon:ICONS.wrench,badgeBg:"#1a7a3c",badgeFg:"#fff"},help:{label:"Ayuda",icon:ICONS.handshake,badgeBg:"#cc2200",badgeFg:"#fff"},evento:{label:"Evento",icon:ICONS.bell,badgeBg:"#7b2d8b",badgeFg:"#fff"}};
 const GR=["linear-gradient(135deg,#ffcc00,#1a4fa0)","linear-gradient(135deg,#1a4fa0,#cc2200)","linear-gradient(135deg,#cc2200,#ffcc00)","linear-gradient(135deg,#1a7a3c,#1a4fa0)","linear-gradient(135deg,#ffcc00,#cc2200)","linear-gradient(135deg,#1a4fa0,#1a7a3c)"];
 const SEED=[
-  {id:101,city:"madrid",type:"post",name:"Carlos Useche",av:"CU",content:"epale!! acabo de instalar esto y ya veo como 10 conocidos mios aqui jajaja el mundillo venezolano es pequeñisimo 😂",likes:89,comments:23,time:"12min",_comments:[
+  {id:101,city:"madrid",type:"post",name:"Carlos Useche",av:"CU",content:"epale!! acabo de instalar esto y ya veo como 10 conocidos mios aqui jajaja el mundillo venezolano es pequeñisimo 😂",likes:12,comments:4,time:"12min",_comments:[
     {id:1011,user_name:"Andreina C",content:"jajaja verdad!! yo tambien vi gente que no veia desde el cole"},
     {id:1012,user_name:"Luis G",content:"el grupito venezolano siempre se encuentra en todos lados 😂"},
     {id:1013,user_name:"Maria F",content:"yo vi a mi ex de la universidad aqui y casi me da un infarto jajaja"},
     {id:1014,user_name:"Carlos Useche",content:"jajajaja eso es lo mejor de esto!!"},
   ]},
-  {id:102,city:"madrid",type:"post",name:"Andreina C",av:"AC",content:"alguien sabe si hay venezolanos por la zona de vallecas? llevo 8 meses aqui y todavia no he encontrado casi nadie de venezuela cerca",likes:34,comments:12,time:"28min",_comments:[
+  {id:102,city:"madrid",type:"post",name:"Andreina C",av:"AC",content:"alguien sabe si hay venezolanos por la zona de vallecas? llevo 8 meses aqui y todavia no he encontrado casi nadie de venezuela cerca",likes:5,comments:3,time:"28min",_comments:[
     {id:1021,user_name:"Maria F",content:"yo estoy en vallecas!! mandame un mensaje"},
     {id:1022,user_name:"Luis G",content:"hay un grupo de whatsapp de venezolanos en vallecas busca en facebook"},
     {id:1023,user_name:"Katiuska B",content:"yo tambien!! somos mas de los que creemos por aqui"},
   ]},
-  {id:103,city:"madrid",type:"post",name:"Luis G",av:"LG",content:"que fue?? esto es como un twitter pero venezolano?? ya lo compartí en el grupo del trabajo a ver cuantos se meten jajaja",likes:156,comments:18,time:"45min",_comments:[
+  {id:103,city:"madrid",type:"post",name:"Luis G",av:"LG",content:"que fue?? esto es como un twitter pero venezolano?? ya lo compartí en el grupo del trabajo a ver cuantos se meten jajaja",likes:23,comments:3,time:"45min",_comments:[
     {id:1031,user_name:"Carlos Useche",content:"exacto!! y puedes ver venezolanos en todos los paises"},
     {id:1032,user_name:"Katiuska B",content:"ya me meti por tu culpa jajaja"},
     {id:1033,user_name:"Maria F",content:"ya somos 4 del grupo aqui 😂"},
   ]},
-  {id:104,city:"madrid",type:"post",name:"Maria Fernanda",av:"MF",content:"3 años en madrid y todavia cuando huelo caraotas me da un ataque de nostalgia terrible. alguien mas o solo yo?? 😭",likes:445,comments:89,time:"1h",_comments:[
+  {id:104,city:"madrid",type:"post",name:"Maria Fernanda",av:"MF",content:"3 años en madrid y todavia cuando huelo caraotas me da un ataque de nostalgia terrible. alguien mas o solo yo?? 😭",likes:67,comments:4,time:"1h",_comments:[
     {id:1041,user_name:"Andreina C",content:"yo con el olor a cafe con leche me pasa lo mismo 😭"},
     {id:1042,user_name:"Carlos Useche",content:"las hallacas en diciembre me destruyen emocionalmente jajaja"},
     {id:1043,user_name:"Katiuska B",content:"yo llore en el supermercado cuando encontre harina pan la primera vez aqui"},
     {id:1044,user_name:"Luis G",content:"normal!! eso nunca se va"},
   ]},
-  {id:105,city:"madrid",type:"post",name:"Katiuska B",av:"KB",content:"oe alguien puede explicarme como funciona lo de los paises? puedo ver lo que publican en miami tambien o solo veo españa?",likes:23,comments:8,time:"2h",_comments:[
+  {id:105,city:"madrid",type:"post",name:"Katiuska B",av:"KB",content:"oe alguien puede explicarme como funciona lo de los paises? puedo ver lo que publican en miami tambien o solo veo españa?",likes:3,comments:3,time:"2h",_comments:[
     {id:1051,user_name:"Luis G",content:"si!! toca la banderita de miami arriba y ves ese feed"},
     {id:1052,user_name:"Carlos Useche",content:"exacto cada pais tiene su propio feed"},
     {id:1053,user_name:"Katiuska B",content:"aaaah que buenoo gracias!!"},
   ]},
 
-  {id:201,city:"miami",type:"post",name:"Valentina R",av:"VR",content:"5 años aqui y sigo llorando con el himno nacional. no se si eso es bueno o malo pero no lo puedo evitar 😅🇻🇪",likes:1203,comments:178,time:"8min",_comments:[
+  {id:201,city:"miami",type:"post",name:"Valentina R",av:"VR",content:"5 años aqui y sigo llorando con el himno nacional. no se si eso es bueno o malo pero no lo puedo evitar 😅🇻🇪",likes:89,comments:4,time:"8min",_comments:[
     {id:2011,user_name:"Andres M",content:"eso nunca se va y no deberia irse. eso nos mantiene conectados"},
     {id:2012,user_name:"Gaby F",content:"yo igual!! 7 años y sigo igual 😭"},
     {id:2013,user_name:"Jorge L",content:"el himno de venezuela es el mas bonito del mundo punto"},
     {id:2014,user_name:"Paty G",content:"llorando leyendo esto jajaja"},
   ]},
-  {id:202,city:"miami",type:"post",name:"Andres M",av:"AM",content:"doral es literalmente venezuela norte. hoy desayune arepas, almorcé pabellon y cené tequeños. sin salir del condado 😂",likes:2341,comments:312,time:"22min",_comments:[
+  {id:202,city:"miami",type:"post",name:"Andres M",av:"AM",content:"doral es literalmente venezuela norte. hoy desayune arepas, almorcé pabellon y cené tequeños. sin salir del condado 😂",likes:134,comments:4,time:"22min",_comments:[
     {id:2021,user_name:"Jorge L",content:"jajajaja verdad!! hasta el acento cambia en doral"},
     {id:2022,user_name:"Valentina R",content:"yo vivo en doral y es exactamente asi 😂"},
     {id:2023,user_name:"Gaby F",content:"doral = maracaibo norte jajaja"},
     {id:2024,user_name:"Paty G",content:"tengo que ir a doral ya!!"},
   ]},
-  {id:203,city:"miami",type:"post",name:"Paty G",av:"PG",content:"hola!! soy nueva aqui. alguien me puede recomendar grupos o gente interesante pa seguir? llegue hace 4 meses a miami y todavia estoy ubicandome",likes:67,comments:34,time:"1h",_comments:[
+  {id:203,city:"miami",type:"post",name:"Paty G",av:"PG",content:"hola!! soy nueva aqui. alguien me puede recomendar grupos o gente interesante pa seguir? llegue hace 4 meses a miami y todavia estoy ubicandome",likes:8,comments:3,time:"1h",_comments:[
     {id:2031,user_name:"Jorge L",content:"bienvenida!! sigueme y te presento gente"},
     {id:2032,user_name:"Andres M",content:"hay grupos en facebook de venezolanos en miami tambien"},
     {id:2033,user_name:"Valentina R",content:"cualquier pregunta me preguntas! yo llevo 5 años aqui"},
   ]},
-  {id:204,city:"miami",type:"post",name:"Jorge L",av:"JL",content:"oye esto esta buenisimo. ya lo mande al grupo de venezolanos del building y en 10 minutos ya habian 6 registrados jajaja somos asi",likes:890,comments:145,time:"3h",_comments:[
+  {id:204,city:"miami",type:"post",name:"Jorge L",av:"JL",content:"oye esto esta buenisimo. ya lo mande al grupo de venezolanos del building y en 10 minutos ya habian 6 registrados jajaja somos asi",likes:45,comments:3,time:"3h",_comments:[
     {id:2041,user_name:"Andres M",content:"jajaja la velocidad venezolana para el chisme y las apps nuevas 😂"},
     {id:2042,user_name:"Gaby F",content:"nosotros somos muy rapidos para esto jajaja"},
     {id:2043,user_name:"Valentina R",content:"ya le mande a mi grupo tambien jajaja"},
   ]},
-  {id:205,city:"miami",type:"post",name:"Gaby F",av:"GF",content:"extraño venezuela todos los dias. pero tambien ya no me imagino viviendo sin la seguridad de aqui. es una contradiccion con la que uno aprende a vivir",likes:3456,comments:567,time:"5h",_comments:[
+  {id:205,city:"miami",type:"post",name:"Gaby F",av:"GF",content:"extraño venezuela todos los dias. pero tambien ya no me imagino viviendo sin la seguridad de aqui. es una contradiccion con la que uno aprende a vivir",likes:178,comments:4,time:"5h",_comments:[
     {id:2051,user_name:"Valentina R",content:"esto lo resume todo. exactamente como me siento"},
     {id:2052,user_name:"Andres M",content:"la contradiccion eterna del venezolano en el exterior 😔"},
     {id:2053,user_name:"Paty G",content:"4 meses aqui y ya lo entiendo perfectamente"},
     {id:2054,user_name:"Jorge L",content:"el dia que eso se resuelva en venezuela volvemos todos"},
   ]},
 
-  {id:301,city:"bogota",type:"post",name:"Nelson B",av:"NB",content:"4 años en bogota y puedo decir con propiedad: los colombianos son lo maximo. nos han recibido increible. gracias colombia 🇨🇴❤️",likes:1234,comments:234,time:"15min",_comments:[
+  {id:301,city:"bogota",type:"post",name:"Nelson B",av:"NB",content:"4 años en bogota y puedo decir con propiedad: los colombianos son lo maximo. nos han recibido increible. gracias colombia 🇨🇴❤️",likes:56,comments:3,time:"15min",_comments:[
     {id:3011,user_name:"Diana M",content:"100% de acuerdo. colombia nos abrio las puertas"},
     {id:3012,user_name:"Rafa T",content:"verdad!! aunque algunos bogotanos son frios al principio luego son un amor"},
     {id:3013,user_name:"Luisa Ma",content:"gracias por esto. me da esperanza para cuando llegue"},
   ]},
-  {id:302,city:"bogota",type:"post",name:"Diana M",av:"DM",content:"me acabo de enterar que hay mas de 500mil venezolanos en colombia. QUINIENTOS MIL. eso es una ciudad entera. y no nos conocemos entre nosotros??",likes:4567,comments:678,time:"40min",_comments:[
+  {id:302,city:"bogota",type:"post",name:"Diana M",av:"DM",content:"me acabo de enterar que hay mas de 500mil venezolanos en colombia. QUINIENTOS MIL. eso es una ciudad entera. y no nos conocemos entre nosotros??",likes:234,comments:3,time:"40min",_comments:[
     {id:3021,user_name:"Nelson B",content:"por eso existe esto!! para que nos encontremos"},
     {id:3022,user_name:"Rafa T",content:"una ciudad entera dispersa por todo un pais. impresionante"},
     {id:3023,user_name:"Luisa Ma",content:"ahora si nos vamos a conocer 🙌"},
   ]},
-  {id:303,city:"bogota",type:"post",name:"Luisa Ma",av:"LM",content:"pregunta pa los que llevan tiempo: como hicieron pa conseguir el primer trabajo aqui? estoy llegando la semana que viene y estoy un poco perdida",likes:234,comments:189,time:"2h",_comments:[
+  {id:303,city:"bogota",type:"post",name:"Luisa Ma",av:"LM",content:"pregunta pa los que llevan tiempo: como hicieron pa conseguir el primer trabajo aqui? estoy llegando la semana que viene y estoy un poco perdida",likes:19,comments:3,time:"2h",_comments:[
     {id:3031,user_name:"Nelson B",content:"linkedIn y grupos de facebook. el voz a voz funciona mucho aqui"},
     {id:3032,user_name:"Diana M",content:"mandame mensaje cuando llegues te oriento con gusto"},
     {id:3033,user_name:"Rafa T",content:"y no te desanimes si el primero no es lo que buscas. todos empezamos desde abajo"},
   ]},
-  {id:304,city:"bogota",type:"post",name:"Rafa T",av:"RT",content:"que chimbo el frio de bogota al principio jajaja vine de maracaibo con ropa de playa y casi me muero. ya me adapte pero uff",likes:890,comments:123,time:"4h",_comments:[
+  {id:304,city:"bogota",type:"post",name:"Rafa T",av:"RT",content:"que chimbo el frio de bogota al principio jajaja vine de maracaibo con ropa de playa y casi me muero. ya me adapte pero uff",likes:78,comments:2,time:"4h",_comments:[
     {id:3041,user_name:"Diana M",content:"jajajaja yo igual!! vine con chancletas 😭"},
     {id:3042,user_name:"Nelson B",content:"el primer invierno bogotano es un trauma jajaja"},
   ]},
 
-  {id:401,city:"santiago",type:"post",name:"Raul J",av:"RJ",content:"me dieron la residencia definitiva. llore. de verdad. despues de 3 años de tramites y papeles y idas y venidas. ya soy residente definitivo en chile 🥹",likes:5678,comments:1234,time:"20min",_comments:[
+  {id:401,city:"santiago",type:"post",name:"Raul J",av:"RJ",content:"me dieron la residencia definitiva. llore. de verdad. despues de 3 años de tramites y papeles y idas y venidas. ya soy residente definitivo en chile 🥹",likes:312,comments:4,time:"20min",_comments:[
     {id:4011,user_name:"Nathaly G",content:"felicidades!! te lo mereces tanto 🥹❤️"},
     {id:4012,user_name:"Pedro A",content:"que alegria!! cuantos años tardaste en total?"},
     {id:4013,user_name:"Raul J",content:"3 años y medio desde que llegue hasta hoy"},
     {id:4014,user_name:"Nathaly G",content:"y valio cada segundo. feliz por ti 🎉"},
   ]},
-  {id:402,city:"santiago",type:"post",name:"Nathaly G",av:"NG",content:"alguien mas piensa que el acento chileno es el mas dificil de entender al principio?? yo dure meses sin entender nada jajajaja",likes:2345,comments:456,time:"1h",_comments:[
+  {id:402,city:"santiago",type:"post",name:"Nathaly G",av:"NG",content:"alguien mas piensa que el acento chileno es el mas dificil de entender al principio?? yo dure meses sin entender nada jajajaja",likes:145,comments:3,time:"1h",_comments:[
     {id:4021,user_name:"Raul J",content:"jajajaja yo pedia que repitieran todo el primer año"},
     {id:4022,user_name:"Pedro A",content:"el 'po' al final de todo me volvio loco jajaja"},
     {id:4023,user_name:"Nathaly G",content:"ya ahora yo tambien digo 'po' y no me doy cuenta 😂"},
   ]},
-  {id:403,city:"santiago",type:"post",name:"Pedro A",av:"PA",content:"oye pregunta para los de miami: como esta la cosa por alla? estoy evaluando opciones y tengo familia alla. cualquier info sirve",likes:178,comments:134,time:"3h",_comments:[
+  {id:403,city:"santiago",type:"post",name:"Pedro A",av:"PA",content:"oye pregunta para los de miami: como esta la cosa por alla? estoy evaluando opciones y tengo familia alla. cualquier info sirve",likes:11,comments:2,time:"3h",_comments:[
     {id:4031,user_name:"Raul J",content:"yo estuve en miami antes de venir a chile. caro pero muchas oportunidades"},
     {id:4032,user_name:"Nathaly G",content:"depende de lo que busques. miami es diferente a chile en todo"},
   ]},
 
-  {id:501,city:"lima",type:"post",name:"Rafael M",av:"RM",content:"3 años en lima. la ciudad mas caótica que he vivido y al mismo tiempo la que mas me ha enseñado. rara la vida 🇵🇪",likes:445,comments:67,time:"30min",_comments:[
+  {id:501,city:"lima",type:"post",name:"Rafael M",av:"RM",content:"3 años en lima. la ciudad mas caótica que he vivido y al mismo tiempo la que mas me ha enseñado. rara la vida 🇵🇪",likes:34,comments:3,time:"30min",_comments:[
     {id:5011,user_name:"Simon P",content:"caótica es poco jajaja pero uno le agarra cariño"},
     {id:5012,user_name:"Caro V",content:"que bueno escuchar esto. estoy llegando la semana que viene"},
     {id:5013,user_name:"Rafael M",content:"bienvenida!! cualquier pregunta aqui estamos"},
   ]},
-  {id:502,city:"lima",type:"post",name:"Simon P",av:"SP",content:"esta app la necesitaba. eso es todo. nos vemos por aca 👋",likes:1234,comments:89,time:"2h",_comments:[
+  {id:502,city:"lima",type:"post",name:"Simon P",av:"SP",content:"esta app la necesitaba. eso es todo. nos vemos por aca 👋",likes:67,comments:2,time:"2h",_comments:[
     {id:5021,user_name:"Rafael M",content:"jajaja bienvenido!!"},
     {id:5022,user_name:"Caro V",content:"jajaja el post mas corto y mas verdadero 😂"},
   ]},
-  {id:503,city:"lima",type:"post",name:"Caro V",av:"CV",content:"llegue hace 2 semanas. alguien que lleve tiempo en lima me puede decir cuales son las zonas mas tranquilas pa vivir? gracias de antemano",likes:89,comments:45,time:"4h",_comments:[
+  {id:503,city:"lima",type:"post",name:"Caro V",av:"CV",content:"llegue hace 2 semanas. alguien que lleve tiempo en lima me puede decir cuales son las zonas mas tranquilas pa vivir? gracias de antemano",likes:7,comments:3,time:"4h",_comments:[
     {id:5031,user_name:"Rafael M",content:"miraflores y san isidro son las mas seguras pero caras. surco tambien esta bien"},
     {id:5032,user_name:"Simon P",content:"yo vivo en surco y esta genial"},
     {id:5033,user_name:"Caro V",content:"gracias!! voy a ver surco entonces"},
   ]},
 
-  {id:601,city:"buenos",type:"post",name:"Gabi C",av:"GC",content:"vivir en un pais con inflacion siendo venezolano es una experiencia... unica. ya sabes como funciona esto. te adaptas rapido jajaja 😂🇦🇷",likes:3456,comments:567,time:"1h",_comments:[
+  {id:601,city:"buenos",type:"post",name:"Gabi C",av:"GC",content:"vivir en un pais con inflacion siendo venezolano es una experiencia... unica. ya sabes como funciona esto. te adaptas rapido jajaja 😂🇦🇷",likes:189,comments:3,time:"1h",_comments:[
     {id:6011,user_name:"Eduardo V",content:"jajajaja somos expertos en crisis economicas 😂"},
     {id:6012,user_name:"Gabi C",content:"exacto!! nos prepararon bien sin querer"},
     {id:6013,user_name:"Eduardo V",content:"el venezolano sobrevive en cualquier economia del mundo jajaja"},
   ]},
-  {id:602,city:"buenos",type:"post",name:"Eduardo V",av:"EV",content:"el mate me costo horrores acostumbrarme. amargo, caliente, sin azucar. pero ya no puedo vivir sin el. la integracion tiene sus ventajas 🧉",likes:1890,comments:234,time:"3h",_comments:[
+  {id:602,city:"buenos",type:"post",name:"Eduardo V",av:"EV",content:"el mate me costo horrores acostumbrarme. amargo, caliente, sin azucar. pero ya no puedo vivir sin el. la integracion tiene sus ventajas 🧉",likes:98,comments:2,time:"3h",_comments:[
     {id:6021,user_name:"Gabi C",content:"yo todavia no lo logro jajaja como lo hiciste??"},
     {id:6022,user_name:"Eduardo V",content:"la presion social jajaja todos toman mate en la oficina y uno se adapta"},
   ]},
 
-  {id:701,city:"quito",type:"post",name:"Luisa F",av:"LF",content:"quito a 2800 metros sobre el nivel del mar. llegue y no podia ni caminar rapido sin que me faltara el aire. a los 3 meses ya subia cerros. el cuerpo todo lo puede 💪",likes:567,comments:89,time:"2h",_comments:[
+  {id:701,city:"quito",type:"post",name:"Luisa F",av:"LF",content:"quito a 2800 metros sobre el nivel del mar. llegue y no podia ni caminar rapido sin que me faltara el aire. a los 3 meses ya subia cerros. el cuerpo todo lo puede 💪",likes:45,comments:2,time:"2h",_comments:[
     {id:7011,user_name:"Jose H",content:"jajaja yo igual!! el mal de altura al principio es real"},
     {id:7012,user_name:"Luisa F",content:"lo peor es que no te avisa. te quedas sin aire de la nada"},
   ]},
-  {id:702,city:"quito",type:"post",name:"Jose H",av:"JH",content:"somos poquitos los venezolanos en ecuador comparado con colombia pero aqui estamos. saludos a todos desde quito 🇪🇨🇻🇪",likes:345,comments:56,time:"5h",_comments:[
+  {id:702,city:"quito",type:"post",name:"Jose H",av:"JH",content:"somos poquitos los venezolanos en ecuador comparado con colombia pero aqui estamos. saludos a todos desde quito 🇪🇨🇻🇪",likes:23,comments:4,time:"5h",_comments:[
     {id:7021,user_name:"Luisa F",content:"aqui!! saludos pana 🙌"},
     {id:7022,user_name:"Jose H",content:"que bueno!! de donde eres?"},
     {id:7023,user_name:"Luisa F",content:"de valencia. y tu?"},
     {id:7024,user_name:"Jose H",content:"de caracas!! un placer 🤝"},
   ]},
 
-  {id:801,city:"panama",type:"post",name:"Roberto D",av:"RD",content:"panama es chiquito pero tiene de todo. y la comunidad venezolana aqui es muy unida. si llegas aqui busca tu gente que te ayudan",likes:456,comments:78,time:"1h",_comments:[
+  {id:801,city:"panama",type:"post",name:"Roberto D",av:"RD",content:"panama es chiquito pero tiene de todo. y la comunidad venezolana aqui es muy unida. si llegas aqui busca tu gente que te ayudan",likes:34,comments:2,time:"1h",_comments:[
     {id:8011,user_name:"Carmen B",content:"que bueno escuchar esto!! estoy considerando panama"},
     {id:8012,user_name:"Roberto D",content:"cualquier pregunta me preguntas con gusto"},
   ]},
-  {id:802,city:"panama",type:"post",name:"Carmen B",av:"CB",content:"nueva en la app!! alguien me puede explicar como funciona esto de publicar por tipo? para que sirve cada categoria?",likes:123,comments:34,time:"4h",_comments:[
+  {id:802,city:"panama",type:"post",name:"Carmen B",av:"CB",content:"nueva en la app!! alguien me puede explicar como funciona esto de publicar por tipo? para que sirve cada categoria?",likes:6,comments:2,time:"4h",_comments:[
     {id:8021,user_name:"Roberto D",content:"trabajo es pa ofertas de empleo, vivienda pa alquileres, ayuda pa cuando necesitas orientacion"},
     {id:8022,user_name:"Carmen B",content:"aaaah perfecto!! gracias pana 🙌"},
   ]},
 
-  {id:901,city:"caracas",type:"post",name:"Maria A",av:"MA",content:"buenos dias desde caracas. el avila amanecio precioso hoy. para los que estan lejos: la ciudad sigue siendo bella. los queremos mucho desde aqui 🏔️",likes:8901,comments:2345,time:"2h",_comments:[
+  {id:901,city:"caracas",type:"post",name:"Maria A",av:"MA",content:"buenos dias desde caracas. el avila amanecio precioso hoy. para los que estan lejos: la ciudad sigue siendo bella. los queremos mucho desde aqui 🏔️",likes:445,comments:3,time:"2h",_comments:[
     {id:9011,user_name:"Daniela S",content:"me hiciste llorar 😭❤️ gracias por esto"},
     {id:9012,user_name:"Luis M",content:"el avila es lo mas hermoso. gracias por recordarnos"},
     {id:9013,user_name:"Maria A",content:"siempre!! venezuela en el corazon de todos"},
   ]},
-  {id:902,city:"caracas",type:"post",name:"Daniela S",av:"DS",content:"que chimbo y que bonito a la vez ver a venezolanos en todo el mundo. orgullosa de nuestra gente aunque las circunstancias sean las que son 🥺❤️",likes:12345,comments:1890,time:"5h",_comments:[
+  {id:902,city:"caracas",type:"post",name:"Daniela S",av:"DS",content:"que chimbo y que bonito a la vez ver a venezolanos en todo el mundo. orgullosa de nuestra gente aunque las circunstancias sean las que son 🥺❤️",likes:567,comments:2,time:"5h",_comments:[
     {id:9021,user_name:"Maria A",content:"somos duros pana. resistimos todo"},
     {id:9022,user_name:"Luis M",content:"orgullo venezolano siempre 🇻🇪"},
   ]},
-  {id:903,city:"caracas",type:"post",name:"Luis M",av:"LM",content:"pregunta pa los de afuera: extrañan mas la comida, la familia o el clima? yo digo que extrañan las tres pero cual mas?",likes:15678,comments:3456,time:"8h",_comments:[
+  {id:903,city:"caracas",type:"post",name:"Luis M",av:"LM",content:"pregunta pa los de afuera: extrañan mas la comida, la familia o el clima? yo digo que extrañan las tres pero cual mas?",likes:678,comments:3,time:"8h",_comments:[
     {id:9031,user_name:"Maria A",content:"la familia sin duda. la comida la puedo hacer aqui. el clima me adapto. pero la familia no tiene reemplazo 😭"},
     {id:9032,user_name:"Daniela S",content:"la familia 100%. lo demas se consigue o se adapta"},
     {id:9033,user_name:"Luis M",content:"todos dicen lo mismo. la familia primero siempre"},
   ]},
 
-  {id:1001,city:"portugal",type:"post",name:"Carlos V",av:"CV",content:"lisboa es increible. los portugueses tienen algo especial. y el idioma se aprende rapido si eres venezolano. somos muy parecidos 🇵🇹",likes:567,comments:89,time:"3h",_comments:[
+  {id:1001,city:"portugal",type:"post",name:"Carlos V",av:"CV",content:"lisboa es increible. los portugueses tienen algo especial. y el idioma se aprende rapido si eres venezolano. somos muy parecidos 🇵🇹",likes:34,comments:2,time:"3h",_comments:[
     {id:10011,user_name:"Isabel R",content:"verdad!! yo aprendi en 3 meses basicamente"},
     {id:10012,user_name:"Carlos V",content:"el español y el portugues son primos hermanos jajaja"},
   ]},
-  {id:1002,city:"portugal",type:"post",name:"Isabel R",av:"IR",content:"6 meses en portugal y todavia me pierdo en el metro de lisboa jajaja alguien mas o solo yo?? 😅",likes:345,comments:67,time:"7h",_comments:[
+  {id:1002,city:"portugal",type:"post",name:"Isabel R",av:"IR",content:"6 meses en portugal y todavia me pierdo en el metro de lisboa jajaja alguien mas o solo yo?? 😅",likes:19,comments:2,time:"7h",_comments:[
     {id:10021,user_name:"Carlos V",content:"jajajaja yo dure un año perdiendome!! es normal"},
     {id:10022,user_name:"Isabel R",content:"menos mal!! pensé que era solo yo 😅"},
   ]},
 
-  {id:1101,city:"italia",type:"post",name:"Sofia M",av:"SM",content:"llegue a roma sin saber una palabra de italiano. hoy me defiendo. el cerebro venezolano se adapta a todo jajaja 🇮🇹🇻🇪",likes:678,comments:123,time:"4h",_comments:[
+  {id:1101,city:"italia",type:"post",name:"Sofia M",av:"SM",content:"llegue a roma sin saber una palabra de italiano. hoy me defiendo. el cerebro venezolano se adapta a todo jajaja 🇮🇹🇻🇪",likes:45,comments:3,time:"4h",_comments:[
     {id:11011,user_name:"Marco V",content:"cuanto tiempo tardaste en aprenderlo?"},
     {id:11012,user_name:"Sofia M",content:"como 8 meses para defenderme. 2 años para sentirme comoda"},
     {id:11013,user_name:"Marco V",content:"gracias!! me da esperanza jajaja"},
   ]},
-  {id:1102,city:"italia",type:"post",name:"Marco V",av:"MV",content:"venezolanos en italia donde estan?? yo en milan hace 2 años y somos poquitos pero aqui estamos. saludense 👋",likes:234,comments:67,time:"9h",_comments:[
+  {id:1102,city:"italia",type:"post",name:"Marco V",av:"MV",content:"venezolanos en italia donde estan?? yo en milan hace 2 años y somos poquitos pero aqui estamos. saludense 👋",likes:12,comments:3,time:"9h",_comments:[
     {id:11021,user_name:"Sofia M",content:"roma aqui!! 🙋"},
     {id:11022,user_name:"Marco V",content:"oye!! cuanto tiempo llevas?"},
     {id:11023,user_name:"Sofia M",content:"3 años ya. el tiempo vuela"},
   ]},
 
-  {id:1201,city:"canada",type:"post",name:"Pedro M",av:"PM",content:"menos 20 grados ayer en toronto. MENOS VEINTE. yo que soy de maracaibo. todavia no entiendo como sobrevivo esto cada invierno 😂❄️🇨🇦",likes:789,comments:145,time:"3h",_comments:[
+  {id:1201,city:"canada",type:"post",name:"Pedro M",av:"PM",content:"menos 20 grados ayer en toronto. MENOS VEINTE. yo que soy de maracaibo. todavia no entiendo como sobrevivo esto cada invierno 😂❄️🇨🇦",likes:56,comments:3,time:"3h",_comments:[
     {id:12011,user_name:"Ana R",content:"jajajaja yo de barquisimeto y en vancouver igual!! el primer invierno es un shock"},
     {id:12012,user_name:"Pedro M",content:"el primer año compre 3 abrigos creyendo que uno era suficiente jajaja"},
     {id:12013,user_name:"Ana R",content:"jajaja nadie te prepara para esto!!"},
   ]},
-  {id:1202,city:"canada",type:"post",name:"Ana R",av:"AR",content:"recien llegada a vancouver. buscando venezolanos por la costa oeste de canada. hay alguien por aqui??",likes:123,comments:45,time:"7h",_comments:[
+  {id:1202,city:"canada",type:"post",name:"Ana R",av:"AR",content:"recien llegada a vancouver. buscando venezolanos por la costa oeste de canada. hay alguien por aqui??",likes:8,comments:2,time:"7h",_comments:[
     {id:12021,user_name:"Pedro M",content:"yo estoy en toronto pero hay venezolanos en vancouver! busca en facebook grupos venezolanos bc"},
     {id:12022,user_name:"Ana R",content:"gracias!! ya voy a buscar 🙏"},
   ]},
@@ -1090,6 +1090,12 @@ function Feed(props) {
   var [dollarPar,setDollarPar]=useState("800,00");
   var [dollarProm,setDollarProm]=useState("");
   var [dollarUpdated,setDollarUpdated]=useState("estimado");
+  var [memberCount,setMemberCount]=useState(null);
+  useEffect(function(){
+    fetch(SUPA_URL+"/rest/v1/profiles?select=id",{headers:{"apikey":SUPA_KEY,"Prefer":"count=exact"}})
+      .then(function(r){ var count=r.headers.get("content-range"); if(count) setMemberCount(parseInt(count.split("/")[1])||null); })
+      .catch(function(){});
+  },[]);
   useEffect(function(){
     api.getDollarRate().then(function(data){
       if(!Array.isArray(data)) return;
@@ -1132,6 +1138,7 @@ function Feed(props) {
         <div style={{fontSize:18,fontWeight:800,color:"#60a5fa",fontFamily:"'Syne',sans-serif"}}>{"Bs "+dollarProm}</div>
       </div>:null}
     </div>
+    {memberCount?<div style={{padding:"8px 14px",borderTop:"1px solid rgba(255,255,255,0.07)",display:"flex",alignItems:"center",gap:8}}><span style={{fontSize:13}}>{"👥"}</span><span style={{fontSize:12,color:"rgba(255,255,255,0.5)",fontFamily:"'Inter',sans-serif"}}><strong style={{color:"#ffcc00"}}>{memberCount.toLocaleString()}</strong> venezolanos en Epale</span></div>:null}
     {filtered[0]?(<div style={{padding:"8px 14px",borderTop:"1px solid rgba(255,255,255,0.07)",display:"flex",gap:8,alignItems:"center"}}><span style={{fontSize:13}}>{ICONS.fire}</span><span style={{fontSize:11,color:"rgba(255,255,255,0.4)",fontFamily:"'Inter',sans-serif"}}>Trending:</span><span style={{fontSize:12,color:"rgba(255,255,255,0.8)",fontFamily:"'Inter',sans-serif",fontWeight:600,flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{filtered[0].content.slice(0,80)}...</span></div>):null}
   </div>);
   var postsList=postsLoading?[1,2,3,4].map(function(i){return <PostSkeleton key={i}/>;})
