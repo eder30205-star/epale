@@ -99,11 +99,9 @@ var api = {
   changePassword: function(newPassword) { return fetchAuth(SUPA_URL+"/auth/v1/user",{method:"PUT",headers:{"Content-Type":"application/json","apikey":SUPA_KEY,"Authorization":"Bearer "+getToken()},body:JSON.stringify({password:newPassword})}).then(function(r){return r.json();}).catch(function(){ return {error:{message:"Error"}}; }); },
   resetPassword: function(email) { return fetch(SUPA_URL+"/auth/v1/recover",{method:"POST",headers:{"Content-Type":"application/json","apikey":SUPA_KEY},body:JSON.stringify({email:email})}).then(function(r){return r.json();}); },
   getDollarRate: function() {
-    return Promise.all([
-      fetch("https://ve.dolarapi.com/v1/dolares/oficial",{headers:{"Accept":"application/json"}}).then(function(r){return r.json();}).catch(function(){return null;}),
-      fetch("https://ve.dolarapi.com/v1/dolares/paralelo",{headers:{"Accept":"application/json"}}).then(function(r){return r.json();}).catch(function(){return null;}),
-      fetch("https://ve.dolarapi.com/v1/dolares/promedio",{headers:{"Accept":"application/json"}}).then(function(r){return r.json();}).catch(function(){return null;})
-    ]);
+    return fetch("https://ve.dolarapi.com/v1/dolares",{headers:{"Accept":"application/json"}})
+      .then(function(r){return r.json();})
+      .catch(function(){return [];});
   },
   getProfileByName: function(name) {
     return fetch(SUPA_URL+"/rest/v1/profiles?name=eq."+encodeURIComponent(name)+"&select=*",{headers:{"apikey":SUPA_KEY,"Authorization":"Bearer "+getToken()}}).then(function(r){return r.json();});
@@ -821,9 +819,15 @@ function Feed(props) {
         if(mapped.length>0) oldestCursorRef.current=mapped[mapped.length-1]._created_at;
         if(data.length<30) setHasMore(false);
         setPosts(function(current){
-          var localOnly=[];
           var seedFiltered=SEED.filter(function(s){ return !mapped.find(function(m){return String(m.id)===String(s.id);}); });
-          return localOnly.concat(mapped).concat(seedFiltered);
+          var all=mapped.concat(seedFiltered);
+          // Dedup by id — remove any duplicates
+          var seen={}; 
+          return all.filter(function(p){ 
+            var k=String(p.id); 
+            if(seen[k]) return false; 
+            seen[k]=true; return true; 
+          });
         });
       } else { setHasMore(false); }
       setPostsLoading(false);
@@ -837,7 +841,9 @@ function Feed(props) {
         var newPost={id:p.id,city:p.city,type:p.type||"post",name:p.name||"Anonimo",av:p.name||"?",photo_url:p.name===userName?userPhoto:null,content:p.content,likes:p.likes||0,comments:p.comments||0,time:p.created_at||"reciente"};
         setPosts(function(current){
           if(current.find(function(x){ return String(x.id)===String(p.id); })) return current;
-          return [newPost].concat(current);
+          // Also remove any SEED post with same content to avoid near-duplicates
+          var filtered=current.filter(function(x){ return !(x._seed&&x.content===newPost.content); });
+          return [newPost].concat(filtered);
         });
       })
       .subscribe();
@@ -896,26 +902,25 @@ function Feed(props) {
   var [dollarProm,setDollarProm]=useState("");
   var [dollarUpdated,setDollarUpdated]=useState("estimado");
   useEffect(function(){
-    api.getDollarRate().then(function(results){
-      var oficial=results[0], paralelo=results[1], promedio=results[2];
+    api.getDollarRate().then(function(data){
+      if(!Array.isArray(data)) return;
       var fmt=function(v){ return parseFloat(v||0).toLocaleString("es-VE",{minimumFractionDigits:2,maximumFractionDigits:2}); };
-      if(oficial&&oficial.promedio) {
-        setDollarBCV(fmt(oficial.promedio));
-        if(oficial.fechaActualizacion) {
-          try {
-            var raw=oficial.fechaActualizacion;
-            var d=new Date(raw);
-            if(!isNaN(d.getTime())) {
-              // Format as "12 jun 2026, 10:30"
-              setDollarUpdated(d.toLocaleString("es-VE",{day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"}));
-            } else {
-              setDollarUpdated(raw);
-            }
-          } catch(e){ setDollarUpdated(oficial.fechaActualizacion); }
+      data.forEach(function(d){
+        var fuente=(d.fuente||"").toUpperCase();
+        var val=d.promedio||d.venta||d.compra||0;
+        if(!val) return;
+        if(fuente==="BCV") {
+          setDollarBCV(fmt(val));
+          if(d.fechaActualizacion){
+            try {
+              var dt=new Date(d.fechaActualizacion);
+              setDollarUpdated(isNaN(dt)?d.fechaActualizacion:dt.toLocaleDateString("es-VE",{day:"2-digit",month:"short",year:"numeric"}));
+            } catch(e){ setDollarUpdated(d.fechaActualizacion); }
+          }
         }
-      }
-      if(paralelo&&paralelo.promedio) setDollarPar(fmt(paralelo.promedio));
-      if(promedio&&promedio.promedio) setDollarProm(fmt(promedio.promedio));
+        if(fuente==="PARALELO"||fuente.includes("PARALELO")) setDollarPar(fmt(val));
+        if(fuente==="PROMEDIO"||fuente.includes("PROMEDIO")) setDollarProm(fmt(val));
+      });
     }).catch(function(){});
   },[]);
   var dollarWidget=(<div style={{background:"#0d0d0d",borderRadius:14,overflow:"hidden",marginBottom:16}}>
@@ -1436,19 +1441,23 @@ function App() {
   var [userBio,setUserBio]=useState("");
   var [userId,setUserId]=useState(function(){
     try {
-      // Primary: read from Supabase SDK stored session (most reliable)
+      // Read from Supabase SDK session — this is always the real logged-in user
       var s=localStorage.getItem("sb-zkydbsymcnnbepvmbchr-auth-token");
       var d=s?JSON.parse(s):null;
       if(d&&d.access_token&&d.user&&d.user.id){
         window._supaToken=d.access_token;
+        // If epale_session uid doesn't match, clear it — it's stale
+        try {
+          var s2=localStorage.getItem("epale_session");
+          var d2=s2?JSON.parse(s2):null;
+          if(d2&&d2.uid&&d2.uid!==d.user.id){
+            localStorage.removeItem("epale_session");
+          }
+        } catch(e){}
         return d.user.id;
       }
-      // Fallback: epale_session
-      var s2=localStorage.getItem("epale_session");
-      var d2=s2?JSON.parse(s2):null;
-      if(d2&&d2.token&&d2.token.length>10){ window._supaToken=d2.token; }
-      return d2&&d2.uid?d2.uid:"";
-    } catch(e){ return ""; }
+    } catch(e){}
+    return "";
   });
   var [showProfile,setShowProfile]=useState(false);
   var [following,setFollowing]=useState([]);
@@ -1555,7 +1564,7 @@ function App() {
       {showSearch?<Search onClose={function(){setShowSearch(false);}} following={following} onFollow={toggleFollow} onOpenProfile={function(n){ setShowSearch(false); if(n!==userName) setViewingUser(n); else setShowProfile(true); }} userName={userName}/>:null}
       {viewingUser?<UserProfile name={viewingUser} onClose={function(){setViewingUser(null);}} following={following} onFollow={toggleFollow} currentUserName={userName}/>:null}
       <Feed userCity={userCity} onProfile={function(){setShowProfile(true);}} following={following} onFollow={toggleFollow} userPhoto={userPhoto} userName={userName} userId={userId} savedPosts={savedPosts} onSave={toggleSave} likedPosts={likedPosts} onLike={toggleLike} lang={lang} userBio={userBio} likedLoaded={likedLoaded} onOpenProfile={function(n){ if(n!==userName) setViewingUser(n); else setShowProfile(true); }}/>
-      <div className="epale-mobile-nav" style={{position:"fixed",bottom:0,left:0,right:0,minHeight:60,paddingBottom:"env(safe-area-inset-bottom)",background:C.card,borderTop:"1px solid "+C.border,alignItems:"center",justifyContent:"space-around",zIndex:90,maxWidth:"100%",margin:"0 auto"}}>
+      <div className="epale-mobile-nav" style={{position:"fixed",bottom:0,left:0,right:0,minHeight:60,paddingBottom:"env(safe-area-inset-bottom)",background:C.card,borderTop:"1px solid "+C.border,alignItems:"center",justifyContent:"space-around",zIndex:90,maxWidth:"100%",margin:"0 auto",display:isMobileApp?"flex":"none"}}>
         {[{id:"feed",icon:ICONS.fire,label:"Inicio"},{id:"search",icon:ICONS.comment,label:"Buscar"},{id:"post",icon:ICONS.pencil,label:"",action:true},{id:"notifs",icon:ICONS.bell,label:"Avisos",badge:unreadNotifs},{id:"me",icon:ICONS.group,label:"Yo"}].map(function(tab){
           var isActive=activeTab===tab.id;
           return (<button key={tab.id} onClick={function(){ if(tab.id==="me"){ setShowProfile(true); return; } if(tab.id==="search"){ setShowSearch(true); return; } if(tab.id==="post"){ document.dispatchEvent(new CustomEvent("epale:openComposer")); return; } if(tab.id==="notifs"){ setShowProfile(true); return; } setActiveTab(tab.id); }} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:2,background:tab.action?C.yellow:"none",border:"none",cursor:"pointer",padding:tab.action?"8px 16px":"6px 10px",borderRadius:tab.action?12:8,minWidth:48,position:"relative"}}>
