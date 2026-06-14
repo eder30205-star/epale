@@ -216,9 +216,9 @@ function PostSkeleton() {
 
 
 var VERIFIED_NAMES=["RE","Epale","Epale Madrid","Venezuela Miami","VE Bogota","Vzla Santiago","VE Buenos Aires","Tech Lisboa","Canada VE Jobs"];
-var FOUNDER_NAMES=["RE"];
-var isVerified=function(name){ return VERIFIED_NAMES.includes(name); };
-var isFounder=function(name){ return FOUNDER_NAMES.includes(name); };
+var FOUNDER_NAMES=["RE","Re","re","Rede","rede"];
+var isVerified=function(name){ return VERIFIED_NAMES.map(function(n){return n.toLowerCase();}).includes((name||"").toLowerCase()); };
+var isFounder=function(name){ return FOUNDER_NAMES.map(function(n){return n.toLowerCase();}).includes((name||"").toLowerCase()); };
 var SAMPLE_USERS=[];
 
 var TENOR_KEY = "AIzaSyC0OjRVsmYE0O2IqzJq4I7syFXD5mzHhGo"; // Tenor API v2 key
