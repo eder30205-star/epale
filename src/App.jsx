@@ -215,6 +215,9 @@ function PostSkeleton() {
 
 
 
+var VERIFIED_NAMES=["Epale","Epale Madrid","Venezuela Miami","VE Bogota","Vzla Santiago","VE Buenos Aires","Tech Lisboa","Canada VE Jobs"];
+var isVerified=function(name){ return VERIFIED_NAMES.includes(name); };
+
 var TENOR_KEY = "AIzaSyAyimkuYQYF_FXVALexPZnueVGQdqOn6Pc"; // Free Tenor API key
 
 function GifPicker(props) {
