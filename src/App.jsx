@@ -215,7 +215,7 @@ function PostSkeleton() {
 
 
 
-var VERIFIED_NAMES=["Epale","Epale Madrid","Venezuela Miami","VE Bogota","Vzla Santiago","VE Buenos Aires","Tech Lisboa","Canada VE Jobs"];
+var VERIFIED_NAMES=["RE","Epale","Epale Madrid","Venezuela Miami","VE Bogota","Vzla Santiago","VE Buenos Aires","Tech Lisboa","Canada VE Jobs"];
 var isVerified=function(name){ return VERIFIED_NAMES.includes(name); };
 var SAMPLE_USERS=[];
 
@@ -424,7 +424,7 @@ function PostCard(props) {
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                 <span onClick={function(){ if(props.onOpenProfile) props.onOpenProfile(post.name); }} style={{fontWeight:700,fontSize:15,fontFamily:"'Syne',sans-serif",color:C.text,cursor:"pointer",display:"inline-flex",alignItems:"center",gap:4}}>{post.name}{isVerified(post.name)?<span style={{fontSize:13,color:C.blue}} title="Cuenta verificada">{"✓"}</span>:null}</span>
                 <div style={{display:"flex",alignItems:"center",gap:8}}>
-                  {post.name!=="Tu"&&post.name!==userName&&(!post.user_id||post.user_id!==props.userId)&&onFollow?(<button onClick={function(){onFollow(post.name);}} style={{padding:"8px 14px",minHeight:36,borderRadius:100,border:"1.5px solid "+(following.includes(post.name)?C.border:C.blue),background:"transparent",color:following.includes(post.name)?C.muted:C.blue,fontFamily:"'Inter',sans-serif",fontSize:12,fontWeight:700,cursor:"pointer"}}>{following.includes(post.name)?TR.siguiendo:TR.seguir}</button>):null}
+                  {post.name!=="Tu"&&post.name!==userName&&post.name!==""&&(!post.user_id||post.user_id!==props.userId)&&onFollow?(<button onClick={function(){onFollow(post.name);}} style={{padding:"8px 14px",minHeight:36,borderRadius:100,border:"1.5px solid "+(following.includes(post.name)?C.border:C.blue),background:"transparent",color:following.includes(post.name)?C.muted:C.blue,fontFamily:"'Inter',sans-serif",fontSize:12,fontWeight:700,cursor:"pointer"}}>{following.includes(post.name)?TR.siguiendo:TR.seguir}</button>):null}
                   <button onClick={function(){setShowMenu(function(m){return !m;});}} style={{background:"none",border:"none",cursor:"pointer",color:C.muted,fontSize:20,padding:"4px 10px",minWidth:44,minHeight:44,display:"flex",alignItems:"center",justifyContent:"center"}}>...</button>
                 </div>
               </div>
@@ -450,8 +450,8 @@ function PostCard(props) {
                 </button>
               </>
             ):null}
-            {post.name!=="Tu"&&post.name!==userName&&onFollow?(<button onClick={function(){onFollow(post.name);setShowMenu(false);}} style={{width:"100%",padding:"12px 16px",background:"none",border:"none",borderBottom:"1px solid "+C.border,cursor:"pointer",textAlign:"left",fontFamily:"'Inter',sans-serif",fontSize:14,color:C.text,display:"flex",alignItems:"center",gap:10}}><span>{following.includes(post.name)?"Dejar de seguir":TR.seguir}</span></button>):null}
-            {post.name!=="Tu"&&post.name!==userName?(<button onClick={function(){setBlocked(true);setShowMenu(false);}} style={{width:"100%",padding:"12px 16px",background:"none",border:"none",borderBottom:"1px solid "+C.border,cursor:"pointer",textAlign:"left",fontFamily:"'Inter',sans-serif",fontSize:14,color:C.red,display:"flex",alignItems:"center",gap:10}}><span>Bloquear usuario</span></button>):null}
+            {post.name!=="Tu"&&post.name!==userName&&post.name!==""&&onFollow?(<button onClick={function(){onFollow(post.name);setShowMenu(false);}} style={{width:"100%",padding:"12px 16px",background:"none",border:"none",borderBottom:"1px solid "+C.border,cursor:"pointer",textAlign:"left",fontFamily:"'Inter',sans-serif",fontSize:14,color:C.text,display:"flex",alignItems:"center",gap:10}}><span>{following.includes(post.name)?"Dejar de seguir":TR.seguir}</span></button>):null}
+            {post.name!=="Tu"&&post.name!==userName&&post.name!==""?(<button onClick={function(){setBlocked(true);setShowMenu(false);}} style={{width:"100%",padding:"12px 16px",background:"none",border:"none",borderBottom:"1px solid "+C.border,cursor:"pointer",textAlign:"left",fontFamily:"'Inter',sans-serif",fontSize:14,color:C.red,display:"flex",alignItems:"center",gap:10}}><span>Bloquear usuario</span></button>):null}
             <button onClick={function(){setShowFlag(true);setShowMenu(false);}} style={{width:"100%",padding:"12px 16px",background:"none",border:"none",borderBottom:"1px solid "+C.border,cursor:"pointer",textAlign:"left",fontFamily:"'Inter',sans-serif",fontSize:14,color:C.red,display:"flex",alignItems:"center",gap:10}}><span>Reportar publicacion</span></button>
             <button onClick={function(){setShowMenu(false);}} style={{width:"100%",padding:"12px 16px",background:"none",border:"none",cursor:"pointer",textAlign:"left",fontFamily:"'Inter',sans-serif",fontSize:14,color:C.muted}}>Cancelar</button>
           </div>):null}
