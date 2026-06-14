@@ -1,4 +1,4 @@
-// Epale v2.1 — 2026-06-12
+// Epale v2.1 - 2026-06-12
 import { useState, useEffect } from "react";
 import React from "react";
 import { createClient } from "@supabase/supabase-js";
@@ -234,9 +234,7 @@ function Skeleton(props) {
 function PostSkeleton() {
   return (
     <div style={{background:C.card,borderBottom:"1px solid "+C.border,padding:"14px 14px 12px"}}>
-      <style>{"
-        @keyframes epale-shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
-      "}</style>
+      <style dangerouslySetInnerHTML={{__html:"@keyframes epale-shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }"}}/>
       <div style={{display:"flex",gap:12,marginBottom:12}}>
         <div style={{width:42,height:42,borderRadius:9999,background:C.border,flexShrink:0}}/>
         <div style={{flex:1}}>
