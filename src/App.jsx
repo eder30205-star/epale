@@ -641,7 +641,19 @@ function CountryFeed(props) {
   var addPost=function(p){
     var displayName=userName||"Tu";
     if(userId){
-      api.createPost(userId,cityId,p.type,p.content,displayName).catch(function(){});
+      api.createPost(userId,cityId,p.type,p.content,displayName).then(function(){
+        setTimeout(function(){
+          api.getPosts(cityId,null).then(function(data){
+            if(Array.isArray(data)&&data.length>0){
+              var mapped=data.map(function(q){ return {id:q.id,city:q.city,type:q.type||"post",name:q.name||"Anonimo",av:q.name||"?",photo_url:q.name===displayName?props.userPhoto:null,content:q.content,likes:q.likes||0,comments:q.comments||0,time:q.created_at||"reciente",_created_at:q.created_at}; });
+              setPosts(function(current){
+                var seen={}; 
+                return mapped.concat(current).filter(function(p){ var k=String(p.id); if(seen[k]) return false; seen[k]=true; return true; });
+              });
+            }
+          }).catch(function(){});
+        },500);
+      }).catch(function(){});
     }
   };
 
@@ -857,8 +869,20 @@ function Feed(props) {
     var citiesToPost=p.city==="all"?CITIES.map(function(c){return c.id;}):[p.city];
     citiesToPost.forEach(function(cityId){
       if(currentUserId){
-        // Just write to DB — realtime subscription delivers it to feed instantly
-        api.createPost(currentUserId,cityId,p.type,p.content,displayName).catch(function(){});
+        api.createPost(currentUserId,cityId,p.type,p.content,displayName).then(function(){
+          // Re-fetch after 500ms to guarantee post appears even if realtime fails
+          setTimeout(function(){
+            api.getPosts(cityId,null).then(function(data){
+              if(Array.isArray(data)&&data.length>0){
+                var mapped=data.map(function(p){ return {id:p.id,city:p.city,type:p.type||"post",name:p.name||"Anonimo",av:p.name||"?",photo_url:p.name===displayName?userPhoto:null,content:p.content,likes:p.likes||0,comments:p.comments||0,time:p.created_at||"reciente",_created_at:p.created_at}; });
+                setPosts(function(current){
+                  var seen={}; 
+                  return mapped.concat(current).filter(function(p){ var k=String(p.id); if(seen[k]) return false; seen[k]=true; return true; });
+                });
+              }
+            }).catch(function(){});
+          },500);
+        }).catch(function(){});
       }
     });
   };
