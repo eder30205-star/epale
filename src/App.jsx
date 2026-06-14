@@ -1042,8 +1042,7 @@ function Search(props) {
           <div style={{textAlign:"center",padding:"60px 20px"}}>
             <div style={{fontSize:56,marginBottom:16}}>{"🔍"}</div>
             <div style={{fontSize:17,fontFamily:"'Syne',sans-serif",color:C.text,marginBottom:8}}>Busca en Epale</div>
-            <div style={{fontSize:14,color:C.muted,fontFamily:"'Inter',sans-serif",lineHeight:1.6}}>Encuentra venezolanos, posts,{"
-"}trabajos y eventos</div>
+            <div style={{fontSize:14,color:C.muted,fontFamily:"'Inter',sans-serif",lineHeight:1.6}}>Encuentra venezolanos, posts,{" "}trabajos y eventos</div>
           </div>
         ):tab==="people"?(
           userResults.length===0?(
@@ -1374,8 +1373,7 @@ class ErrorBoundary extends React.Component {
           <div style={{display:"flex",height:4,position:"absolute",top:0,left:0,right:0}}><div style={{flex:1,background:"#ffcc00"}}/><div style={{flex:1,background:"#0066ff"}}/><div style={{flex:1,background:"#ff2d2d"}}/></div>
           <div style={{fontSize:56,marginBottom:16}}>{"🇻🇪"}</div>
           <div style={{fontSize:24,fontFamily:"'Syne',sans-serif",color:"#fff",fontWeight:700,marginBottom:8}}>Algo salio mal</div>
-          <div style={{fontSize:15,color:"rgba(255,255,255,0.5)",fontFamily:"'Inter',sans-serif",marginBottom:32,lineHeight:1.6}}>La app tuvo un problema inesperado.{"
-"}Tus datos estan seguros.</div>
+          <div style={{fontSize:15,color:"rgba(255,255,255,0.5)",fontFamily:"'Inter',sans-serif",marginBottom:32,lineHeight:1.6}}>La app tuvo un problema inesperado.{" "}Tus datos estan seguros.</div>
           <button onClick={function(){ window.location.reload(); }} style={{padding:"14px 32px",background:"#ffcc00",color:"#1a1a1a",border:"none",borderRadius:100,cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:15,fontWeight:700,marginBottom:16}}>Recargar Epale</button>
           <button onClick={function(){ try{localStorage.clear();}catch(e){} window.location.reload(); }} style={{padding:"12px 24px",background:"transparent",color:"rgba(255,255,255,0.4)",border:"1px solid rgba(255,255,255,0.15)",borderRadius:100,cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:13}}>Limpiar datos y recargar</button>
         </div>
