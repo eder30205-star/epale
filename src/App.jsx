@@ -136,46 +136,7 @@ const toFlag=function(code){ if(!code) return ""; var a=code.toUpperCase().charC
 const getCity=function(id){ return CITIES.find(function(c){ return c.id===id; })||CITIES[0]; };
 const TYPES={post:{label:"Post",icon:ICONS.pencil,badgeBg:null},job:{label:"Trabajo",icon:ICONS.briefcase,badgeBg:"#ffcc00",badgeFg:"#1a1a1a"},housing:{label:"Vivienda",icon:ICONS.house,badgeBg:"#1a4fa0",badgeFg:"#fff"},service:{label:"Servicio",icon:ICONS.wrench,badgeBg:"#1a7a3c",badgeFg:"#fff"},help:{label:"Ayuda",icon:ICONS.handshake,badgeBg:"#cc2200",badgeFg:"#fff"},evento:{label:"Evento",icon:ICONS.bell,badgeBg:"#7b2d8b",badgeFg:"#fff"}};
 const GR=["linear-gradient(135deg,#ffcc00,#1a4fa0)","linear-gradient(135deg,#1a4fa0,#cc2200)","linear-gradient(135deg,#cc2200,#ffcc00)","linear-gradient(135deg,#1a7a3c,#1a4fa0)","linear-gradient(135deg,#ffcc00,#cc2200)","linear-gradient(135deg,#1a4fa0,#1a7a3c)"];
-const SEED=[
-{id:1,city:"madrid",type:"job",name:"Carlos Mendez",av:"CM",content:"Restaurante venezolano en Lavapies busca cocinero con experiencia. Contrato en regla, 1.200 euros/mes. Escribir al WhatsApp.",likes:34,comments:12,time:"5 min"},
-{id:2,city:"madrid",type:"post",name:"Andreina Soto",av:"AS",content:"Tres anos en Madrid y por fin siento que tengo un hogar aqui. No fue facil pero tampoco imposible. Para los recien llegados: si se puede.",likes:189,comments:47,time:"18 min"},
-{id:3,city:"madrid",type:"housing",name:"Luis Herrera",av:"LH",content:"Alquilo habitacion en piso compartido, zona Carabanchel. 400 euros/mes todo incluido. Ambiente venezolano.",likes:21,comments:18,time:"32 min"},
-{id:4,city:"madrid",type:"post",name:"Mariela Campos",av:"MC",content:"Alguien sabe donde consigo harina PAN en Madrid que no cueste un ojo de la cara? Pregunto para un amigo (soy yo).",likes:312,comments:89,time:"45 min"},
-{id:5,city:"madrid",type:"service",name:"Pedro Rivas",av:"PR",content:"Abogado venezolano con 8 anos en Espana. Tramites de extranjeria, NIE, residencia. Primera consulta gratuita.",likes:56,comments:23,time:"1h"},
-{id:6,city:"madrid",type:"help",name:"Yolanda Torres",av:"YT",content:"Llevo dos semanas buscando trabajo en Madrid, tengo carrera en administracion y 5 anos de experiencia. Agradezco cualquier oportunidad.",likes:67,comments:34,time:"2h"},
-{id:7,city:"madrid",type:"post",name:"Roberto Diaz",av:"RD",content:"El frio de Madrid en invierno me recuerda por que Venezuela siempre sera mi paraiso. Pero este pais me ha dado tanto.",likes:445,comments:112,time:"3h"},
-{id:8,city:"madrid",type:"post",name:"Freddy Castillo",av:"FC",content:"Vamos a organizar una rumba venezolana este sabado en Usera. Cachapas, caraotas, musica de los 2000. Avisense!",likes:567,comments:203,time:"4h"},
-{id:9,city:"miami",type:"post",name:"Miguel Angel",av:"MA",content:"Miami tiene algo que ninguna ciudad tiene: te hace sentir que todo es posible. Llegue con poco y hoy tengo mi propio negocio.",likes:892,comments:234,time:"22 min"},
-{id:10,city:"miami",type:"job",name:"Alejandra Nunez",av:"AN",content:"Hair salon en Doral busca estilista venezolana con experiencia. Excelente comision mas clientela establecida.",likes:43,comments:19,time:"41 min"},
-{id:11,city:"miami",type:"housing",name:"Carolina Perez",av:"CP",content:"Busco roommate venezolana en Doral o Kendall. Cuarto disponible, 750 dolares/mes utilities incluidas.",likes:31,comments:27,time:"1h"},
-{id:12,city:"miami",type:"post",name:"Daniel Romero",av:"DR",content:"Doral ya deberia llamarse Venezuela Norte. Aqui encuentras arepas, mandoca, chicha... lo unico que falta es el calor de verdad.",likes:1204,comments:345,time:"2h"},
-{id:13,city:"miami",type:"post",name:"Valentina Ramos",av:"VR",content:"5 anos en Miami y todavia lloro con el Himno Nacional. La nostalgia nunca se va del todo. Pero hoy mi hija habla ingles y espanol perfecto.",likes:2341,comments:567,time:"4h"},
-{id:14,city:"bogota",type:"post",name:"Valentina Cruz",av:"VC",content:"Bogota tiene 7 millones de personas y yo ya reconozco venezolanos en el metro con solo mirarlos. Algo en la sonrisa, la manera de saludar.",likes:567,comments:145,time:"3 min"},
-{id:15,city:"bogota",type:"job",name:"Comercio Chapinero",av:"CC",content:"Tienda de ropa en Chapinero busca vendedor. Horario partido, sueldo minimo mas comision. Venezolanos bienvenidos.",likes:34,comments:28,time:"19 min"},
-{id:16,city:"bogota",type:"post",name:"Nelson Perez",av:"NP",content:"Somos 500 mil venezolanos en Colombia. La diaspora mas grande. Organizados somos una fuerza. Desorganizados somos ruido.",likes:4567,comments:1234,time:"3h"},
-{id:17,city:"bogota",type:"post",name:"Diana Morales",av:"DM",content:"Para los venezolanos que llegan solos a Bogota: busquen su gente. Hay grupos, comunidad, personas que ya pasaron por lo mismo.",likes:6789,comments:1567,time:"5h"},
-{id:18,city:"santiago",type:"post",name:"Nathaly Gomez",av:"NG",content:"Santiago tiene las mejores montanas nevadas de fondo. Venezuela me dio el alma y Chile me esta dando las alas.",likes:234,comments:67,time:"11 min"},
-{id:19,city:"santiago",type:"post",name:"Raul Jimenez",av:"RJ",content:"Hoy me dieron la ciudadania chilena. Llore. No porque deje de ser venezolano, sino porque despues de tanto sacrificio alguien dice: bienvenido.",likes:5678,comments:1234,time:"2h"},
-{id:20,city:"lima",type:"post",name:"Rafael Mora",av:"RM",content:"Tres anos en Lima. La ciudad que mas me ha retado y mas me ha hecho crecer. Los peruanos en el fondo son bien buenos.",likes:445,comments:123,time:"7 min"},
-{id:21,city:"lima",type:"post",name:"Simon Pacheco",av:"SP",content:"Cinco palabras para los venezolanos en Lima: ustedes ya son peruanos tambien. Esta ciudad los adopto.",likes:2345,comments:567,time:"5h"},
-{id:80,city:"portugal",type:"post",name:"Carlos Vidal",av:"CV",content:"Lisboa me recibio con los brazos abiertos. Los portugueses tienen algo especial, una calidez que me recuerda a Venezuela. Ya van 2 anos aqui.",likes:345,comments:89,time:"1h"},
-{id:81,city:"portugal",type:"job",name:"Tech Lisboa",av:"TL",content:"Empresa de tecnologia en Lisboa busca desarrolladores venezolanos. React, Python. Visa patrocinada. Excelente ambiente.",likes:67,comments:34,time:"3h"},
-{id:82,city:"italia",type:"post",name:"Gabriela Funes",av:"GF",content:"Roma es una ciudad que te cambia para siempre. Llege sin saber italiano y hoy trabajo en un restaurante del centro historico.",likes:456,comments:123,time:"2h"},
-{id:83,city:"italia",type:"service",name:"Abog. Milano",av:"AM",content:"Abogado venezolano en Milan. Permisos de residencia, ciudadania italiana por descendencia. Consulta gratuita.",likes:89,comments:45,time:"4h"},
-{id:84,city:"canada",type:"post",name:"Pedro Montoya",av:"PM",content:"Toronto en invierno es otro nivel de frio. Pero la calidad de vida, las oportunidades y la seguridad hacen que valga cada grado bajo cero.",likes:567,comments:145,time:"1h"},
-{id:85,city:"canada",type:"job",name:"Canada VE Jobs",av:"CJ",content:"Buscamos venezolanos con experiencia en construccion para trabajar en Calgary. Visa de trabajo disponible. Salario muy competitivo.",likes:123,comments:67,time:"2h"},
-{id:90,city:"madrid",type:"evento",name:"Epale Madrid",av:"EM",content:"Gran Rumba Venezolana este sabado en Usera! Cachapas, caraotas, pepitos y musica venezolana de los 2000. Entrada libre. 8pm en adelante.",likes:234,comments:89,time:"1h"},
-{id:91,city:"miami",type:"evento",name:"Venezuela Miami",av:"VM",content:"Festival Venezuela en Miami este domingo en Doral. Gastronomia, cultura, musica en vivo. Traigan a la familia. Entrada gratuita.",likes:567,comments:145,time:"2h"},
-{id:92,city:"bogota",type:"evento",name:"VE Bogota",av:"VB",content:"Encuentro de venezolanos en Bogota este fin de semana. Arepas, empanadas y mucha nostalgia. Todos bienvenidos en el Parque El Virrey.",likes:389,comments:112,time:"3h"},
-{id:93,city:"santiago",type:"evento",name:"Vzla Santiago",av:"VS",content:"Noche venezolana en Santiago! Este viernes en Barrio Italia. DJ, comida tipica y concurso de joropo. No se lo pierdan.",likes:445,comments:134,time:"4h"},
-{id:94,city:"buenos",type:"evento",name:"VE Buenos Aires",av:"VA",content:"Primer festival venezolano en Buenos Aires. Palermo, sabado 3pm. Gaita, salsa, comida y mucho pabillon criollo.",likes:678,comments:201,time:"5h"},
-{id:22,city:"caracas",type:"post",name:"Luis Miguel",av:"LM",content:"Buenos dias desde Caracas. El Avila amanecio despejado hoy. Para los que estan lejos: la ciudad sigue siendo bella aunque este herida.",likes:8901,comments:2345,time:"2 min"},
-{id:23,city:"caracas",type:"post",name:"Gabriela Castro",av:"GC",content:"Hoy hubo luz todo el dia en mi barrio. Eso en Caracas es noticia. A veces la felicidad es corriente electrica continua.",likes:12345,comments:3456,time:"48 min"},
-{id:24,city:"caracas",type:"post",name:"Profesora Ana",av:"PA",content:"Doy clases en escuela publica de Petare. 28 alumnos, ningun libro, tres meses sin sueldo. Sigo yendo porque alguien tiene que ir.",likes:34567,comments:8901,time:"3h"},
-{id:25,city:"miami",type:"post",name:"Maria Garcia",av:"MG",content:"Orlando tiene algo especial para los venezolanos. La comunidad aqui es muy unida y siempre hay alguien que te ayuda cuando llegas.",likes:234,comments:67,time:"15 min"},
-{id:26,city:"miami",type:"job",name:"Empresa VE-FL",av:"EV",content:"Buscamos repartidores en Orlando area. Horario flexible, pago semanal. Venezolanos bienvenidos, no requiere experiencia.",likes:45,comments:23,time:"1h"}
-];
-const SAMPLE_USERS=[{name:"Carlos Mendez",av:"CM",city:"madrid",bio:"Maracucho en Madrid"},{name:"Andreina Lopez",av:"AL",city:"miami",bio:"Caraquena en Miami"},{name:"Jose Rodriguez",av:"JR",city:"santiago",bio:"Del Zulia para el mundo"},{name:"Valentina Cruz",av:"VC",city:"bogota",bio:"Venezolana en Colombia"},{name:"Rafael Mora",av:"RM",city:"lima",bio:"Tres anos en Lima"}];
+const SEED=[];
 const waShare=function(post,cityId){ var txt=post.name+" en Epale "+cityId+": "+post.content.slice(0,100)+"... Unete: https://epaleapp.online/"+cityId; return "https://wa.me/?text="+encodeURIComponent(txt); };
 const waInvite=function(cityId){ var txt="Epale pana! Estoy en Epale, la red de venezolanos en "+cityId+". Unete: https://epaleapp.online/"+cityId; return "https://wa.me/?text="+encodeURIComponent(txt); };
 var formatTime=function(ts){ if(!ts) return ""; if(typeof ts==="string"&&!ts.includes("T")&&!ts.includes("-")) return ts; var tsFixed=(typeof ts==="string"&&ts.includes("T")&&!ts.includes("Z")&&!ts.includes("+"))?ts+"Z":ts; var d=new Date(tsFixed); if(isNaN(d.getTime())) return ts; var now=new Date(); var diff=Math.floor((now-d)/1000); if(diff<0) diff=0; if(diff<60) return "ahora"; if(diff<3600) return Math.floor(diff/60)+"min"; if(diff<86400) return Math.floor(diff/3600)+"h"; if(diff<604800) return Math.floor(diff/86400)+"d"; return d.getDate()+"/"+(d.getMonth()+1)+"/"+d.getFullYear(); };
@@ -289,9 +250,9 @@ function GifPicker(props) {
         <div style={{display:"flex",justifyContent:"center",padding:"10px 0 4px"}}><div style={{width:36,height:4,borderRadius:2,background:C.border}}/></div>
         {/* Header */}
         <div style={{padding:"8px 16px 10px",display:"flex",gap:10,alignItems:"center"}}>
-          <span style={{fontSize:20}}>🎞</span>
+          <span style={{fontSize:20}}>{"🎞"}</span>
           <input autoFocus value={query} onChange={function(e){setQuery(e.target.value);}} placeholder="Buscar GIFs..." style={{flex:1,padding:"10px 14px",background:C.bg,border:"1.5px solid "+(query?C.blue:C.border),borderRadius:100,fontFamily:"'Inter',sans-serif",fontSize:16,color:C.text,outline:"none"}}/>
-          {query?<button onClick={function(){setQuery("");}} style={{background:"none",border:"none",cursor:"pointer",color:C.muted,fontSize:18,minWidth:36}}>✕</button>:null}
+          {query?<button onClick={function(){setQuery("");}} style={{background:"none",border:"none",cursor:"pointer",color:C.muted,fontSize:18,minWidth:36}}>{"✕"}</button>:null}
         </div>
         {/* Powered by Tenor */}
         <div style={{padding:"0 16px 6px",fontSize:10,color:C.muted,fontFamily:"'Inter',sans-serif"}}>Powered by Tenor</div>
@@ -315,7 +276,7 @@ function GifPicker(props) {
               })}
             </div>
           )}
-          {page&&!loading?<button onClick={function(){fetchGifs(query,page);}} style={{width:"100%",padding:"12px",background:"none",border:"1px solid "+C.border,borderRadius:12,cursor:"pointer",color:C.muted,fontFamily:"'Inter',sans-serif",fontSize:13,marginTop:10}}>Cargar más</button>:null}
+          {page&&!loading?<button onClick={function(){fetchGifs(query,page);}} style={{width:"100%",padding:"12px",background:"none",border:"1px solid "+C.border,borderRadius:12,cursor:"pointer",color:C.muted,fontFamily:"'Inter',sans-serif",fontSize:13,marginTop:10}}>Cargar {"más"}</button>:null}
         </div>
       </div>
     </div>
@@ -390,10 +351,10 @@ function VideoEmbed(props) {
   );
   return (
     <div onClick={function(){setPlaying(true);}} style={{borderRadius:12,overflow:"hidden",marginBottom:10,cursor:"pointer",position:"relative",background:"#000"}}>
-      {video.thumb?<img src={video.thumb} alt="video" style={{width:"100%",height:200,objectFit:"cover",display:"block",opacity:0.8}}/>:<div style={{height:160,background:C.border,display:"flex",alignItems:"center",justifyContent:"center"}}><span style={{fontSize:48}}>🎬</span></div>}
+      {video.thumb?<img src={video.thumb} alt="video" style={{width:"100%",height:200,objectFit:"cover",display:"block",opacity:0.8}}/>:<div style={{height:160,background:C.border,display:"flex",alignItems:"center",justifyContent:"center"}}><span style={{fontSize:48}}>{"🎬"}</span></div>}
       <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
         <div style={{width:60,height:60,borderRadius:9999,background:"rgba(0,0,0,0.7)",display:"flex",alignItems:"center",justifyContent:"center"}}>
-          <span style={{fontSize:28,marginLeft:4}}>▶</span>
+          <span style={{fontSize:28,marginLeft:4}}>{"▶"}</span>
         </div>
       </div>
       <div style={{position:"absolute",bottom:8,left:10,background:"rgba(0,0,0,0.6)",borderRadius:6,padding:"2px 8px"}}>
@@ -451,7 +412,7 @@ function PostCard(props) {
             <Av t={post.av||post.name} i={idx} s={42} photo={post.name===userName?userPhoto:(post.photo_url||null)}/>
             <div style={{flex:1}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                <span onClick={function(){ if(props.onOpenProfile) props.onOpenProfile(post.name); }} style={{fontWeight:700,fontSize:15,fontFamily:"'Syne',sans-serif",color:C.text,cursor:"pointer",display:"inline-flex",alignItems:"center",gap:4}}>{post.name}{isVerified(post.name)?<span style={{fontSize:13,color:C.blue}} title="Cuenta verificada">✓</span>:null}</span>
+                <span onClick={function(){ if(props.onOpenProfile) props.onOpenProfile(post.name); }} style={{fontWeight:700,fontSize:15,fontFamily:"'Syne',sans-serif",color:C.text,cursor:"pointer",display:"inline-flex",alignItems:"center",gap:4}}>{post.name}{isVerified(post.name)?<span style={{fontSize:13,color:C.blue}} title="Cuenta verificada">{"✓"}</span>:null}</span>
                 <div style={{display:"flex",alignItems:"center",gap:8}}>
                   {post.name!=="Tu"&&post.name!==userName&&(!post.user_id||post.user_id!==props.userId)&&onFollow?(<button onClick={function(){onFollow(post.name);}} style={{padding:"8px 14px",minHeight:36,borderRadius:100,border:"1.5px solid "+(following.includes(post.name)?C.border:C.blue),background:"transparent",color:following.includes(post.name)?C.muted:C.blue,fontFamily:"'Inter',sans-serif",fontSize:12,fontWeight:700,cursor:"pointer"}}>{following.includes(post.name)?TR.siguiendo:TR.seguir}</button>):null}
                   <button onClick={function(){setShowMenu(function(m){return !m;});}} style={{background:"none",border:"none",cursor:"pointer",color:C.muted,fontSize:20,padding:"4px 10px",minWidth:44,minHeight:44,display:"flex",alignItems:"center",justifyContent:"center"}}>...</button>
@@ -466,7 +427,7 @@ function PostCard(props) {
                 <button onClick={function(){
                   setEditing(true); setEditText(postContent); setShowMenu(false);
                 }} style={{width:"100%",padding:"12px 16px",background:"none",border:"none",borderBottom:"1px solid "+C.border,cursor:"pointer",textAlign:"left",fontFamily:"'Inter',sans-serif",fontSize:14,color:C.text,display:"flex",alignItems:"center",gap:10}}>
-                  <span>✏️ Editar publicacion</span>
+                  <span>{"✏️"} Editar publicacion</span>
                 </button>
                 <button onClick={function(){
                   if(!window.confirm("Eliminar esta publicacion?")) return;
@@ -553,7 +514,7 @@ function PostCard(props) {
                   <div style={{fontSize:10,fontWeight:700,color:C.blue,fontFamily:"'Inter',sans-serif"}}>{"@"+cName.toLowerCase().replace(/\s/g,"")}</div>
                   <div style={{display:"flex",alignItems:"center",gap:6}}>
                     {cTime?<span style={{fontSize:9,color:C.muted,fontFamily:"'Inter',sans-serif"}}>{cTime}</span>:null}
-                    <button onClick={function(){ var handle="@"+cName.toLowerCase().replace(/\s/g,"")+" "; setComment(handle); setTimeout(function(){ if(commentInputRef.current){ commentInputRef.current.focus(); commentInputRef.current.setSelectionRange(handle.length,handle.length); } },50); }} style={{background:"none",border:"none",cursor:"pointer",color:C.blue,fontFamily:"'Inter',sans-serif",fontSize:10,padding:0,fontWeight:600}}>↩ Responder</button>
+                    <button onClick={function(){ var handle="@"+cName.toLowerCase().replace(/\s/g,"")+" "; setComment(handle); setTimeout(function(){ if(commentInputRef.current){ commentInputRef.current.focus(); commentInputRef.current.setSelectionRange(handle.length,handle.length); } },50); }} style={{background:"none",border:"none",cursor:"pointer",color:C.blue,fontFamily:"'Inter',sans-serif",fontSize:10,padding:0,fontWeight:600}}>{"↩"} Responder</button>
                   </div>
                 </div>
                 <div style={{fontSize:13,color:C.text,fontFamily:"'Inter',sans-serif",marginTop:2}}>{cText}</div>
@@ -564,9 +525,9 @@ function PostCard(props) {
         <div style={{position:"relative"}}>
           {showCommentEmoji&&<EmojiPicker onSelect={function(e){ setComment(function(c){return c+e;}); if(commentInputRef.current) commentInputRef.current.focus(); }} onClose={function(){setShowCommentEmoji(false);}}/>}
           <div style={{display:"flex",gap:8,alignItems:"center",marginTop:4}}>
-            <button onClick={function(){setShowCommentEmoji(function(v){return !v;});}} style={{background:"none",border:"none",cursor:"pointer",fontSize:22,padding:"0 4px",flexShrink:0,opacity:0.7,minWidth:36,minHeight:44,display:"flex",alignItems:"center",justifyContent:"center"}}>😊</button>
+            <button onClick={function(){setShowCommentEmoji(function(v){return !v;});}} style={{background:"none",border:"none",cursor:"pointer",fontSize:22,padding:"0 4px",flexShrink:0,opacity:0.7,minWidth:36,minHeight:44,display:"flex",alignItems:"center",justifyContent:"center"}}>{"😊"}</button>
             <input ref={commentInputRef} value={comment} onChange={function(e){setComment(e.target.value);}} onKeyDown={function(e){if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendComment();setShowCommentEmoji(false);}}} onFocus={function(){setShowCommentEmoji(false);}} placeholder="Comenta..." style={{flex:1,padding:"12px 14px",background:C.bg,border:"1px solid "+(comment.startsWith("@")?C.blue:C.border),borderRadius:20,fontFamily:"'Inter',sans-serif",fontSize:16,color:C.text,outline:"none"}}/>
-            <button onClick={function(){sendComment();setShowCommentEmoji(false);}} style={{background:C.blue,border:"none",borderRadius:9999,width:44,height:44,cursor:"pointer",color:"#fff",fontSize:18,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>↑</button>
+            <button onClick={function(){sendComment();setShowCommentEmoji(false);}} style={{background:C.blue,border:"none",borderRadius:9999,width:44,height:44,cursor:"pointer",color:"#fff",fontSize:18,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{"↑"}</button>
           </div>
         </div>
       </div>):null}
@@ -758,7 +719,7 @@ function CountryFeed(props) {
             <div style={{fontSize:56,marginBottom:16}}>{toFlag(CITY_FLAGS[cityId])}</div>
             <div style={{fontSize:16,fontFamily:"'Syne',sans-serif",color:C.text,marginBottom:8}}>{cityObj.name}</div>
             <div style={{fontSize:14,fontFamily:"'Inter',sans-serif",lineHeight:1.6}}>Se el primero en publicar aqui</div>
-            <button onClick={function(){setShowComposer(true);}} style={{marginTop:20,padding:"12px 28px",background:C.yellow,border:"none",borderRadius:100,cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:14,fontWeight:700,color:"#1a1a1a"}}>✏️ Escribir</button>
+            <button onClick={function(){setShowComposer(true);}} style={{marginTop:20,padding:"12px 28px",background:C.yellow,border:"none",borderRadius:100,cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:14,fontWeight:700,color:"#1a1a1a"}}>{"✏️"} Escribir</button>
           </div>
         ):filtered.map(function(p,i){
           return <PostCard key={p.id} post={p} idx={i} cityObj={cityObj}
@@ -926,7 +887,7 @@ function Feed(props) {
   var dollarWidget=(<div style={{background:"#0d0d0d",borderRadius:14,overflow:"hidden",marginBottom:16}}>
     <div style={{padding:"10px 14px",display:"flex",alignItems:"center",gap:8}}>
       <span style={{fontSize:16}}>{ICONS.dollar}</span>
-      <span style={{fontSize:12,color:"rgba(255,255,255,0.4)",fontFamily:"'Inter',sans-serif",fontWeight:600}}>Dólar Venezuela</span>
+      <span style={{fontSize:12,color:"rgba(255,255,255,0.4)",fontFamily:"'Inter',sans-serif",fontWeight:600}}>D{"ó"}lar Venezuela</span>
       <span style={{fontSize:10,color:"rgba(255,255,255,0.25)",fontFamily:"'Inter',sans-serif",marginLeft:"auto"}}>{"Act: "+(dollarUpdated||"...")}</span>
     </div>
     <div style={{display:"flex",borderTop:"1px solid rgba(255,255,255,0.07)"}}>
@@ -949,7 +910,7 @@ function Feed(props) {
     :filtered.length===0?(
       feedTab==="following"?(
         <div style={{textAlign:"center",padding:"60px 20px"}}>
-          <div style={{fontSize:48,marginBottom:12}}>👥</div>
+          <div style={{fontSize:48,marginBottom:12}}>{"👥"}</div>
           <div style={{fontSize:17,fontFamily:"'Syne',sans-serif",color:C.text,marginBottom:8}}>Tu feed esta vacio</div>
           <div style={{fontSize:14,color:C.muted,fontFamily:"'Inter',sans-serif",marginBottom:20,lineHeight:1.6}}>Sigue a personas para ver sus posts aqui</div>
           <button onClick={function(){setFeedTab("forYou");}} style={{padding:"12px 24px",background:C.yellow,border:"none",borderRadius:100,cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:14,fontWeight:700,color:"#1a1a1a"}}>Ver posts populares</button>
@@ -1000,23 +961,23 @@ function Composer(props) {
     {showGif&&<GifPicker onSelect={function(gif){ setMedia({src:gif.src,preview:gif.preview,kind:"gif"}); setShowGif(false); }} onClose={function(){setShowGif(false);}}/>}<div onClick={function(e){e.stopPropagation();}} style={{width:"100%",maxWidth:560,background:C.card,borderRadius:22,padding:"0 0 36px",maxHeight:"90vh",overflowY:"auto",margin:"0 16px"}}><div style={{display:"flex",justifyContent:"center",padding:"12px 0 4px"}}><div style={{width:36,height:4,borderRadius:2,background:C.border}}/></div><div style={{padding:"4px 20px 0"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}><div style={{display:"flex",alignItems:"center",gap:10}}><Av t={userName||"?"} i={0} s={38} photo={userPhoto}/><span style={{fontSize:15,fontFamily:"'Syne',sans-serif",color:C.text,fontWeight:700}}>Nueva publicacion</span></div><button onClick={function(){setShowCityPicker(function(v){return !v;});}} style={{background:C.bg,border:"1.5px solid "+C.border,borderRadius:100,padding:"5px 12px",cursor:"pointer",display:"flex",alignItems:"center",gap:6}}><span style={{fontSize:14}}>{selectedCity==="all"?ICONS.group:toFlag(CITY_FLAGS[selectedCity])}</span><span style={{fontSize:12,color:C.blue,fontFamily:"'Inter',sans-serif",fontWeight:700}}>{selectedCity==="all"?"Todos los paises":selectedCityObj.name}</span><span style={{fontSize:10,color:C.muted}}>{"v"}</span></button></div>{showCityPicker?(<div style={{background:C.bg,borderRadius:14,border:"1px solid "+C.border,padding:"8px",marginBottom:12,display:"flex",flexWrap:"wrap",gap:6}}><button onClick={function(){setSelectedCity("all");setShowCityPicker(false);}} style={{padding:"5px 10px",borderRadius:100,border:"1.5px solid "+(selectedCity==="all"?C.yellow:C.border),background:selectedCity==="all"?C.yellow:C.card,color:C.text,fontFamily:"'Inter',sans-serif",fontSize:11,fontWeight:700,cursor:"pointer"}}>Todos los paises</button>{CITIES.map(function(c){ return (<button key={c.id} onClick={function(){setSelectedCity(c.id);setShowCityPicker(false);}} style={{padding:"5px 10px",borderRadius:100,border:"1.5px solid "+(selectedCity===c.id?C.blue:C.border),background:selectedCity===c.id?C.blue:C.card,color:selectedCity===c.id?"#fff":C.text,fontFamily:"'Inter',sans-serif",fontSize:11,fontWeight:600,cursor:"pointer",display:"flex",alignItems:"center",gap:4}}><span>{toFlag(CITY_FLAGS[c.id])}</span><span>{c.name}</span></button>); })}</div>):null}<div style={{display:"flex",gap:6,marginBottom:14,overflowX:"auto"}}>{Object.entries(TYPES).map(function(entry){ var id=entry[0],m=entry[1]; return <button key={id} onClick={function(){setType(id);}} style={{padding:"5px 12px",borderRadius:20,border:"1.5px solid "+(type===id?C.blue:C.border),background:type===id?C.blue:C.card,color:type===id?"#fff":C.muted,fontFamily:"'Inter',sans-serif",fontSize:11,fontWeight:700,cursor:"pointer",whiteSpace:"nowrap",flexShrink:0}}>{m.icon} {m.label}</button>; })}</div><div style={{position:"relative",marginBottom:12}}>
           {showEmoji&&<EmojiPicker onSelect={function(e){ setText(function(t){return t+e;}); setShowEmoji(false); if(textareaRef.current) textareaRef.current.focus(); }} onClose={function(){setShowEmoji(false);}}/>}
           <textarea ref={textareaRef} value={text} onChange={function(e){setText(e.target.value);}} onFocus={function(){setShowEmoji(false);}} placeholder="Que esta pasando en tu pais?" style={{width:"100%",background:C.bg,border:"1.5px solid "+(text?C.blue:C.border),borderRadius:12,padding:"12px 14px 12px 14px",color:C.text,fontFamily:"'Inter',sans-serif",fontSize:16,resize:"none",minHeight:90,outline:"none",boxSizing:"border-box"}}/>
-          <button onClick={function(){setShowEmoji(function(v){return !v;});}} style={{position:"absolute",bottom:10,right:12,background:"none",border:"none",cursor:"pointer",fontSize:22,opacity:0.7,padding:0}}>😊</button>
+          <button onClick={function(){setShowEmoji(function(v){return !v;});}} style={{position:"absolute",bottom:10,right:12,background:"none",border:"none",cursor:"pointer",fontSize:22,opacity:0.7,padding:0}}>{"😊"}</button>
         </div>{media?(<div style={{position:"relative",marginBottom:12,borderRadius:12,overflow:"hidden",border:"1.5px solid "+C.border}}>{media.kind==="image"?<img src={media.src} alt="preview" style={{width:"100%",maxHeight:220,objectFit:"cover",display:"block"}}/>:<video src={media.src} controls style={{width:"100%",maxHeight:220,display:"block"}}/>}<button onClick={function(){setMedia(null);}} style={{position:"absolute",top:8,right:8,background:"rgba(0,0,0,0.6)",border:"none",borderRadius:9999,width:28,height:28,cursor:"pointer",color:"#fff",fontSize:14}}>X</button></div>):(<div style={{marginBottom:14}}>
             <div style={{display:"flex",gap:8,marginBottom:8}}>
               {[[ICONS.photo,"Foto","image/*","image"],[ICONS.video,"Video","video/*","video"],[ICONS.camera,"Camara","image/*","image"]].map(function(item,idx){ return (<label key={idx} style={{flex:1}}><div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:6,padding:"10px",background:C.bg,border:"1.5px solid "+C.border,borderRadius:12,cursor:"pointer"}}><span style={{fontSize:18}}>{item[0]}</span><span style={{fontSize:11,fontFamily:"'Inter',sans-serif",color:C.muted,fontWeight:700}}>{item[1]}</span></div><input type="file" accept={item[2]} style={{display:"none"}} onChange={function(e){handleFile(e,item[3]);}}/></label>); })}
             </div>
             <div style={{display:"flex",gap:8}}>
               <button onClick={function(){setShowGif(true);}} style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",gap:6,padding:"10px",background:C.bg,border:"1.5px solid "+C.border,borderRadius:12,cursor:"pointer"}}>
-                <span style={{fontSize:18}}>🎞</span><span style={{fontSize:11,fontFamily:"'Inter',sans-serif",color:C.muted,fontWeight:700}}>GIF</span>
+                <span style={{fontSize:18}}>{"🎞"}</span><span style={{fontSize:11,fontFamily:"'Inter',sans-serif",color:C.muted,fontWeight:700}}>GIF</span>
               </button>
               <button onClick={function(){setShowVideoInput(function(v){return !v;});}} style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",gap:6,padding:"10px",background:showVideoInput?C.blue:C.bg,border:"1.5px solid "+(showVideoInput?C.blue:C.border),borderRadius:12,cursor:"pointer"}}>
-                <span style={{fontSize:18}}>🔗</span><span style={{fontSize:11,fontFamily:"'Inter',sans-serif",color:showVideoInput?"#fff":C.muted,fontWeight:700}}>Video link</span>
+                <span style={{fontSize:18}}>{"🔗"}</span><span style={{fontSize:11,fontFamily:"'Inter',sans-serif",color:showVideoInput?"#fff":C.muted,fontWeight:700}}>Video link</span>
               </button>
             </div>
             {showVideoInput&&(
               <div style={{marginTop:8}}>
                 <input value={videoLink} onChange={function(e){setVideoLink(e.target.value);}} placeholder="Pega link de YouTube, TikTok o Instagram..." style={{width:"100%",padding:"10px 14px",background:C.bg,border:"1.5px solid "+(videoLink?C.blue:C.border),borderRadius:10,color:C.text,fontFamily:"'Inter',sans-serif",fontSize:14,outline:"none",boxSizing:"border-box"}}/>
-                {videoLink&&parseVideoUrl(videoLink)&&<div style={{marginTop:6,padding:"8px 12px",background:C.bg,borderRadius:8,border:"1px solid "+C.green,fontSize:12,color:C.green,fontFamily:"'Inter',sans-serif"}}>✓ {parseVideoUrl(videoLink).type==="youtube"?"YouTube detectado":parseVideoUrl(videoLink).type==="tiktok"?"TikTok detectado":"Instagram detectado"}</div>}
+                {videoLink&&parseVideoUrl(videoLink)&&<div style={{marginTop:6,padding:"8px 12px",background:C.bg,borderRadius:8,border:"1px solid "+C.green,fontSize:12,color:C.green,fontFamily:"'Inter',sans-serif"}}>{"✓"} {parseVideoUrl(videoLink).type==="youtube"?"YouTube detectado":parseVideoUrl(videoLink).type==="tiktok"?"TikTok detectado":"Instagram detectado"}</div>}
                 {videoLink&&!parseVideoUrl(videoLink)&&<div style={{marginTop:6,padding:"8px 12px",background:C.bg,borderRadius:8,border:"1px solid "+C.red,fontSize:12,color:C.red,fontFamily:"'Inter',sans-serif"}}>Link no reconocido. Usa YouTube, TikTok o Instagram.</div>}
               </div>
             )}
@@ -1059,7 +1020,7 @@ function Search(props) {
       <div style={{background:C.card,borderBottom:"1px solid "+C.border,padding:"12px 16px",display:"flex",gap:10,alignItems:"center"}}>
         <button onClick={onClose} style={{background:"none",border:"none",cursor:"pointer",color:C.blue,fontSize:20,minWidth:44,minHeight:44,display:"flex",alignItems:"center",justifyContent:"center"}}>{"←"}</button>
         <input autoFocus value={query} onChange={function(e){setQuery(e.target.value);}} placeholder="Buscar personas y posts..." style={{flex:1,padding:"12px 16px",background:C.bg,border:"1.5px solid "+(query?C.blue:C.border),borderRadius:100,fontFamily:"'Inter',sans-serif",fontSize:16,color:C.text,outline:"none"}}/>
-        {query?<button onClick={function(){setQuery("");}} style={{background:"none",border:"none",cursor:"pointer",color:C.muted,fontSize:18,minWidth:44,minHeight:44,display:"flex",alignItems:"center",justifyContent:"center"}}>✕</button>:null}
+        {query?<button onClick={function(){setQuery("");}} style={{background:"none",border:"none",cursor:"pointer",color:C.muted,fontSize:18,minWidth:44,minHeight:44,display:"flex",alignItems:"center",justifyContent:"center"}}>{"✕"}</button>:null}
       </div>
       {/* Tabs */}
       {query.length>=2&&<div style={{display:"flex",background:C.card,borderBottom:"1px solid "+C.border}}>
@@ -1072,14 +1033,14 @@ function Search(props) {
           <div style={{padding:"20px 0"}}>{[1,2,3].map(function(i){return <PostSkeleton key={i}/>;})}</div>
         ):error?(
           <div style={{textAlign:"center",padding:"60px 20px"}}>
-            <div style={{fontSize:40,marginBottom:12}}>⚠️</div>
+            <div style={{fontSize:40,marginBottom:12}}>{"⚠️"}</div>
             <div style={{fontSize:15,color:C.text,fontFamily:"'Syne',sans-serif",marginBottom:8}}>Error de conexion</div>
             <div style={{fontSize:13,color:C.muted,fontFamily:"'Inter',sans-serif",marginBottom:20}}>{error}</div>
             <button onClick={function(){setQuery(query+" ");setTimeout(function(){setQuery(query);},10);}} style={{padding:"10px 24px",background:C.blue,color:"#fff",border:"none",borderRadius:100,cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:13,fontWeight:700}}>Reintentar</button>
           </div>
         ):query.length<2?(
           <div style={{textAlign:"center",padding:"60px 20px"}}>
-            <div style={{fontSize:56,marginBottom:16}}>🔍</div>
+            <div style={{fontSize:56,marginBottom:16}}>{"🔍"}</div>
             <div style={{fontSize:17,fontFamily:"'Syne',sans-serif",color:C.text,marginBottom:8}}>Busca en Epale</div>
             <div style={{fontSize:14,color:C.muted,fontFamily:"'Inter',sans-serif",lineHeight:1.6}}>Encuentra venezolanos, posts,{"
 "}trabajos y eventos</div>
@@ -1087,7 +1048,7 @@ function Search(props) {
         ):tab==="people"?(
           userResults.length===0?(
             <div style={{textAlign:"center",padding:"60px 20px"}}>
-              <div style={{fontSize:48,marginBottom:12}}>👤</div>
+              <div style={{fontSize:48,marginBottom:12}}>{"👤"}</div>
               <div style={{fontSize:15,fontFamily:"'Syne',sans-serif",color:C.text}}>Nadie con "{query}"</div>
             </div>
           ):userResults.map(function(u,i){
@@ -1098,7 +1059,7 @@ function Search(props) {
                 <div style={{flex:1,minWidth:0}}>
                   <div style={{display:"flex",alignItems:"center",gap:4}}>
                     <div style={{fontWeight:700,fontSize:15,fontFamily:"'Syne',sans-serif",color:C.text}}>{u.name}</div>
-                    {isVerified(u.name)?<span style={{fontSize:13,color:C.blue}}>✓</span>:null}
+                    {isVerified(u.name)?<span style={{fontSize:13,color:C.blue}}>{"✓"}</span>:null}
                   </div>
                   <div style={{fontSize:12,color:C.blue,fontFamily:"'Inter',sans-serif"}}>{toFlag(CITY_FLAGS[u.city])} {getCity(u.city).name}</div>
                   {u.bio?<div style={{fontSize:12,color:C.muted,fontFamily:"'Inter',sans-serif",marginTop:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{u.bio}</div>:null}
@@ -1110,7 +1071,7 @@ function Search(props) {
         ):(
           postResults.length===0?(
             <div style={{textAlign:"center",padding:"60px 20px"}}>
-              <div style={{fontSize:48,marginBottom:12}}>📭</div>
+              <div style={{fontSize:48,marginBottom:12}}>{"📭"}</div>
               <div style={{fontSize:15,fontFamily:"'Syne',sans-serif",color:C.text}}>Sin posts para "{query}"</div>
             </div>
           ):postResults.map(function(p,i){
@@ -1121,9 +1082,9 @@ function Search(props) {
                   <div>
                     <div style={{display:"flex",alignItems:"center",gap:4}}>
                       <div style={{fontWeight:700,fontSize:13,fontFamily:"'Syne',sans-serif",color:C.text}}>{p.name}</div>
-                      {isVerified(p.name)?<span style={{fontSize:11,color:C.blue}}>✓</span>:null}
+                      {isVerified(p.name)?<span style={{fontSize:11,color:C.blue}}>{"✓"}</span>:null}
                     </div>
-                    <div style={{fontSize:10,color:C.blue,fontFamily:"'Inter',sans-serif"}}>{toFlag(CITY_FLAGS[p.city])} {getCity(p.city).name} · {formatTime(p.time||p.created_at)}</div>
+                    <div style={{fontSize:10,color:C.blue,fontFamily:"'Inter',sans-serif"}}>{toFlag(CITY_FLAGS[p.city])} {getCity(p.city).name} {"·"} {formatTime(p.time||p.created_at)}</div>
                   </div>
                 </div>
                 <p style={{fontSize:14,lineHeight:1.6,color:C.text,fontFamily:"'Inter',sans-serif",margin:0}}>{p.content}</p>
@@ -1346,7 +1307,7 @@ function Onboarding(props) {
     <div style={{position:"fixed",inset:0,zIndex:400,background:C.bg,maxWidth:480,margin:"0 auto",overflowY:"auto"}}>
       <div style={{display:"flex",height:4}}><div style={{flex:1,background:C.yellow}}/><div style={{flex:1,background:C.blue}}/><div style={{flex:1,background:C.red}}/></div>
       <div style={{padding:"32px 20px 20px",textAlign:"center"}}>
-        <div style={{fontSize:56,marginBottom:12}}>🇻🇪</div>
+        <div style={{fontSize:56,marginBottom:12}}>{"🇻🇪"}</div>
         <div style={{fontSize:24,fontFamily:"'Syne',sans-serif",color:C.text,fontWeight:700,marginBottom:8}}>Bienvenido a Epale!</div>
         <div style={{fontSize:15,color:C.muted,fontFamily:"'Inter',sans-serif",lineHeight:1.6,marginBottom:28}}>Sigue a venezolanos en {getCity(userCity).name} para comenzar tu feed</div>
       </div>
@@ -1366,7 +1327,7 @@ function Onboarding(props) {
               <div style={{flex:1,minWidth:0}}>
                 <div style={{display:"flex",alignItems:"center",gap:4}}>
                   <div style={{fontWeight:700,fontSize:15,fontFamily:"'Syne',sans-serif",color:C.text}}>{uName}</div>
-                  {isVerified(uName)?<span style={{fontSize:13,color:C.blue}}>✓</span>:null}
+                  {isVerified(uName)?<span style={{fontSize:13,color:C.blue}}>{"✓"}</span>:null}
                 </div>
                 <div style={{fontSize:12,color:C.blue,fontFamily:"'Inter',sans-serif"}}>{toFlag(CITY_FLAGS[uCity])} {getCity(uCity).name}</div>
                 {uBio?<div style={{fontSize:12,color:C.muted,fontFamily:"'Inter',sans-serif",marginTop:2}}>{uBio}</div>:null}
@@ -1411,7 +1372,7 @@ class ErrorBoundary extends React.Component {
       return (
         <div style={{minHeight:"100vh",background:"#0a0a0a",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"40px 24px",textAlign:"center"}}>
           <div style={{display:"flex",height:4,position:"absolute",top:0,left:0,right:0}}><div style={{flex:1,background:"#ffcc00"}}/><div style={{flex:1,background:"#0066ff"}}/><div style={{flex:1,background:"#ff2d2d"}}/></div>
-          <div style={{fontSize:56,marginBottom:16}}>🇻🇪</div>
+          <div style={{fontSize:56,marginBottom:16}}>{"🇻🇪"}</div>
           <div style={{fontSize:24,fontFamily:"'Syne',sans-serif",color:"#fff",fontWeight:700,marginBottom:8}}>Algo salio mal</div>
           <div style={{fontSize:15,color:"rgba(255,255,255,0.5)",fontFamily:"'Inter',sans-serif",marginBottom:32,lineHeight:1.6}}>La app tuvo un problema inesperado.{"
 "}Tus datos estan seguros.</div>
