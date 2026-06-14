@@ -1435,28 +1435,40 @@ function App() {
     } catch(e){}
     return "auth";
   });
-  var [userCity,setUserCity]=useState(function(){ try { var s=localStorage.getItem("epale_session"); var d=s?JSON.parse(s):null; return d&&d.city?d.city:"madrid"; } catch(e){ return "madrid"; } });
+  var [userCity,setUserCity]=useState(function(){
+    try {
+      var s=localStorage.getItem("epale_session");
+      var d=s?JSON.parse(s):null;
+      if(d&&d.city) return d.city;
+    } catch(e){}
+    return "miami";
+  });
   var [userName,setUserName]=useState("");
   var [userPhoto,setUserPhoto]=useState(null);
   var [userBio,setUserBio]=useState("");
   var [userId,setUserId]=useState(function(){
     try {
-      // Read from Supabase SDK session — this is always the real logged-in user
-      var s=localStorage.getItem("sb-zkydbsymcnnbepvmbchr-auth-token");
-      var d=s?JSON.parse(s):null;
-      if(d&&d.access_token&&d.user&&d.user.id){
-        window._supaToken=d.access_token;
-        // If epale_session uid doesn't match, clear it — it's stale
+      // Scan ALL localStorage keys to find Supabase auth token
+      var supaSession=null;
+      for(var i=0;i<localStorage.length;i++){
+        var k=localStorage.key(i);
+        if(k&&k.startsWith("sb-")&&k.endsWith("-auth-token")){
+          try{ supaSession=JSON.parse(localStorage.getItem(k)); break; }catch(e){}
+        }
+      }
+      if(supaSession&&supaSession.access_token&&supaSession.user&&supaSession.user.id){
+        window._supaToken=supaSession.access_token;
+        // Always clear epale_session if uid doesn't match — it's from a different account
         try {
-          var s2=localStorage.getItem("epale_session");
-          var d2=s2?JSON.parse(s2):null;
-          if(d2&&d2.uid&&d2.uid!==d.user.id){
+          var es=JSON.parse(localStorage.getItem("epale_session")||"{}");
+          if(es.uid&&es.uid!==supaSession.user.id){
+            console.log("Epale: stale session detected, clearing epale_session");
             localStorage.removeItem("epale_session");
           }
         } catch(e){}
-        return d.user.id;
+        return supaSession.user.id;
       }
-    } catch(e){}
+    } catch(e){ console.error("userId init error:",e); }
     return "";
   });
   var [showProfile,setShowProfile]=useState(false);
