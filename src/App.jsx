@@ -1854,7 +1854,28 @@ function App() {
   var handleDone=function(city,name,photo,token,uid){ try { var c=city||"madrid",n=name||"",p=photo||null,t=token||"",u=uid||""; setUserCity(c); if(n) setUserName(n); if(p&&p.length>5) setUserPhoto(p); setUserId(u); if(t){ window._supaToken=t; } try { localStorage.setItem("epale_session",JSON.stringify({city:c,name:n,photo:p,token:t,uid:u})); } catch(e){} if(u&&t&&!n){ api.getProfile(u).then(function(profiles){ var prof=Array.isArray(profiles)&&profiles[0]; if(prof&&prof.name){ setUserName(prof.name); if(prof.city) setUserCity(prof.city); try { localStorage.setItem("epale_session",JSON.stringify({city:prof.city||c,name:prof.name,photo:prof.photo_url||p,token:t,uid:u})); } catch(e){} } }).catch(function(){}); } setScreen("feed"); } catch(e){} };
   var setDarkSaved=function(v){ setDark(v); try{localStorage.setItem("epale_dark",v?"1":"0");}catch(e){} };
   var setLangSaved=function(v){ setLang(v); try{localStorage.setItem("epale_lang",v);}catch(e){} };
-  var handleLogout=function(){ try { localStorage.removeItem("epale_session"); } catch(e){} window._supaToken=null; setShowProfile(false); setSessionExpired(false); setScreen("auth"); };
+  var handleLogout=function(){
+    try { localStorage.removeItem("epale_session"); } catch(e){}
+    // Clear ALL Supabase tokens
+    try {
+      for(var i=localStorage.length-1;i>=0;i--){
+        var k=localStorage.key(i);
+        if(k&&(k.startsWith("sb-")||k.startsWith("supabase"))) localStorage.removeItem(k);
+      }
+    } catch(e){}
+    window._supaToken=null;
+    supabase.auth.signOut().catch(function(){});
+    setShowProfile(false);
+    setSessionExpired(false);
+    setUserId("");
+    setUserName("");
+    setUserPhoto(null);
+    setUserBio("");
+    setFollowing([]);
+    setSavedPosts([]);
+    setLikedPosts([]);
+    setScreen("auth");
+  };
 
   if(screen==="auth") return <><OfflineBanner/><Auth key={dark?"dark":"light"} onDone={handleDone}/></>;
 
