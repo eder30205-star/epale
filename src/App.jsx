@@ -763,47 +763,74 @@ function UserProfile(props) {
   var isFollowing=following.includes(name);
   var cityObj=profile&&profile.city?getCity(profile.city):CITIES[0];
 
+  var [photoZoom,setPhotoZoom]=useState(false);
+  var [visible,setVisible]=useState(false);
+  React.useEffect(function(){ setTimeout(function(){ setVisible(true); },10); },[]);
+  var photoUrl=profile&&profile.photo_url?profile.photo_url:null;
+
   return (
-    <div style={{position:"fixed",inset:0,zIndex:300,background:C.bg,maxWidth:480,margin:"0 auto",overflowY:"auto"}}>
-      <div style={{display:"flex",height:4}}><div style={{flex:1,background:C.yellow}}/><div style={{flex:1,background:C.blue}}/><div style={{flex:1,background:C.red}}/></div>
-      <div style={{position:"sticky",top:0,zIndex:10,background:C.card,borderBottom:"1px solid "+C.border,padding:"14px 16px",display:"flex",alignItems:"center",gap:12}}>
-        <button onClick={onClose} style={{background:C.bg,border:"none",borderRadius:9999,minWidth:44,minHeight:44,width:44,height:44,cursor:"pointer",color:C.blue,fontSize:20,display:"flex",alignItems:"center",justifyContent:"center"}}>{"←"}</button>
-        <div style={{fontSize:16,fontFamily:"'Syne',sans-serif",color:C.text,fontWeight:700,flex:1}}>{name}</div>
-        {name!==currentUserName?<button onClick={function(){onFollow(name);}} style={{padding:"8px 20px",borderRadius:100,border:"1.5px solid "+(isFollowing?C.border:C.blue),background:isFollowing?"transparent":C.blue,color:isFollowing?C.muted:"#fff",fontFamily:"'Inter',sans-serif",fontSize:12,fontWeight:700,cursor:"pointer"}}>{isFollowing?TR.siguiendo:TR.seguir}</button>:null}
-      </div>
-      <div style={{background:C.card,borderBottom:"1px solid "+C.border,marginBottom:8}}>
-        <div style={{height:80,background:"linear-gradient(135deg,#ffcc00,#0066ff,#ff2d2d)"}}/>
-        <div style={{padding:"0 16px 16px",position:"relative"}}>
-          <div style={{position:"absolute",top:-30,left:16,padding:2,borderRadius:9999,background:C.card}}>
-            <Av t={name} i={0} s={60} photo={profile&&profile.photo_url?profile.photo_url:null}/>
-          </div>
-          <div style={{paddingTop:38}}>
-            <div style={{fontSize:18,fontFamily:"'Syne',sans-serif",color:C.text,fontWeight:700}}>{name}</div>
-            <div style={{fontSize:11,color:C.blue,fontFamily:"'Inter',sans-serif",fontWeight:600,marginTop:2}}>{toFlag(CITY_FLAGS[cityObj.id])} {cityObj.name}</div>
-            {profile&&profile.bio?<div style={{fontSize:13,color:C.muted,fontFamily:"'Inter',sans-serif",marginTop:6,lineHeight:1.5}}>{profile.bio}</div>:null}
-          </div>
-          <div style={{display:"flex",marginTop:12,borderTop:"1px solid "+C.border,paddingTop:12}}>
-            <div style={{flex:1,textAlign:"center"}}><div style={{fontSize:18,fontWeight:800,fontFamily:"'Syne',sans-serif",color:C.blue}}>{posts.length}</div><div style={{fontSize:10,color:C.muted,fontFamily:"'Inter',sans-serif",marginTop:1}}>Posts</div></div>
+    <div style={{position:"fixed",inset:0,zIndex:300,display:"flex",alignItems:"flex-end",justifyContent:"center",background:"rgba(0,0,0,0.5)"}}>
+      {/* Photo zoom overlay */}
+      {photoZoom&&<div onClick={function(){setPhotoZoom(false);}} style={{position:"fixed",inset:0,zIndex:400,background:"rgba(0,0,0,0.92)",display:"flex",alignItems:"center",justifyContent:"center"}}>
+        <div style={{animation:"epale-zoom-in 0.2s ease-out",textAlign:"center"}}>
+          {photoUrl
+            ?<img src={photoUrl} alt={name} style={{width:260,height:260,borderRadius:9999,objectFit:"cover",border:"3px solid rgba(255,255,255,0.2)",boxShadow:"0 8px 40px rgba(0,0,0,0.6)"}}/>
+            :<div style={{width:260,height:260,borderRadius:9999,background:"linear-gradient(135deg,#ffcc00,#0066ff)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:80,fontWeight:800,color:"#fff"}}>{(name||"?")[0].toUpperCase()}</div>
+          }
+          <div style={{marginTop:16,fontSize:20,fontFamily:"'Syne',sans-serif",color:"#fff",fontWeight:700}}>{name}</div>
+          <div style={{fontSize:12,color:"rgba(255,255,255,0.5)",fontFamily:"'Inter',sans-serif",marginTop:4}}>{toFlag(CITY_FLAGS[cityObj.id])} {cityObj.name}</div>
+        </div>
+        <style dangerouslySetInnerHTML={{__html:"@keyframes epale-zoom-in { from { transform:scale(0.5); opacity:0; } to { transform:scale(1); opacity:1; } }"}}/> 
+      </div>}
+
+      {/* Profile panel */}
+      <div style={{width:"100%",maxWidth:480,background:C.bg,borderRadius:"20px 20px 0 0",maxHeight:"92vh",overflowY:"auto",transform:visible?"translateY(0)":"translateY(100%)",transition:"transform 0.3s cubic-bezier(0.34,1.56,0.64,1)",WebkitOverflowScrolling:"touch"}}>
+        <div style={{display:"flex",height:4,borderRadius:"20px 20px 0 0",overflow:"hidden"}}><div style={{flex:1,background:C.yellow}}/><div style={{flex:1,background:C.blue}}/><div style={{flex:1,background:C.red}}/></div>
+        {/* Handle bar */}
+        <div style={{display:"flex",justifyContent:"center",padding:"10px 0 4px"}}><div style={{width:36,height:4,borderRadius:2,background:C.border}}/></div>
+        {/* Header */}
+        <div style={{position:"sticky",top:0,zIndex:10,background:C.card,borderBottom:"1px solid "+C.border,padding:"10px 16px",display:"flex",alignItems:"center",gap:12}}>
+          <button onClick={function(){ setVisible(false); setTimeout(onClose,300); }} style={{background:C.bg,border:"none",borderRadius:9999,minWidth:44,minHeight:44,width:44,height:44,cursor:"pointer",color:C.blue,fontSize:20,display:"flex",alignItems:"center",justifyContent:"center"}}>{"←"}</button>
+          <div style={{fontSize:16,fontFamily:"'Syne',sans-serif",color:C.text,fontWeight:700,flex:1}}>{name}{isFounder(name)?<span style={{marginLeft:8,display:"inline-flex",alignItems:"center",gap:3,background:"linear-gradient(135deg,#ffd700,#ff8c00)",borderRadius:20,padding:"1px 7px",fontSize:10,fontWeight:800,color:"#fff"}}>{"⚡ Founder"}</span>:isVerified(name)?<span style={{marginLeft:6,display:"inline-flex",alignItems:"center",justifyContent:"center",width:16,height:16,background:C.blue,borderRadius:9999,fontSize:10,color:"#fff",fontWeight:800}}>{"✓"}</span>:null}</div>
+          {name!==currentUserName?<button onClick={function(){onFollow(name);}} style={{padding:"8px 20px",borderRadius:100,border:"1.5px solid "+(isFollowing?C.border:C.blue),background:isFollowing?"transparent":C.blue,color:isFollowing?C.muted:"#fff",fontFamily:"'Inter',sans-serif",fontSize:12,fontWeight:700,cursor:"pointer"}}>{isFollowing?TR.siguiendo:TR.seguir}</button>:null}
+        </div>
+        {/* Cover + avatar */}
+        <div style={{background:C.card,borderBottom:"1px solid "+C.border,marginBottom:8}}>
+          <div style={{height:100,background:"linear-gradient(135deg,#ffcc00,#0066ff,#ff2d2d)"}}/>
+          <div style={{padding:"0 16px 16px",position:"relative"}}>
+            <div onClick={function(){setPhotoZoom(true);}} style={{position:"absolute",top:-36,left:16,padding:3,borderRadius:9999,background:C.card,cursor:"pointer",transition:"transform 0.2s",boxShadow:"0 2px 12px rgba(0,0,0,0.15)"}}>
+              <Av t={name} i={0} s={72} photo={photoUrl}/>
+              <div style={{position:"absolute",bottom:6,right:6,width:20,height:20,borderRadius:9999,background:"rgba(0,0,0,0.6)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:10}}>{"🔍"}</div>
+            </div>
+            <div style={{paddingTop:44}}>
+              <div style={{fontSize:20,fontFamily:"'Syne',sans-serif",color:C.text,fontWeight:700}}>{name}</div>
+              <div style={{fontSize:12,color:C.blue,fontFamily:"'Inter',sans-serif",fontWeight:600,marginTop:2}}>{toFlag(CITY_FLAGS[cityObj.id])} {cityObj.name}</div>
+              {profile&&profile.bio?<div style={{fontSize:13,color:C.muted,fontFamily:"'Inter',sans-serif",marginTop:6,lineHeight:1.5}}>{profile.bio}</div>:null}
+            </div>
+            <div style={{display:"flex",marginTop:14,borderTop:"1px solid "+C.border,paddingTop:12,gap:4}}>
+              <div style={{flex:1,textAlign:"center"}}><div style={{fontSize:20,fontWeight:800,fontFamily:"'Syne',sans-serif",color:C.blue}}>{posts.length}</div><div style={{fontSize:10,color:C.muted,fontFamily:"'Inter',sans-serif",marginTop:1}}>Posts</div></div>
+            </div>
           </div>
         </div>
-      </div>
-      <div style={{paddingBottom:40}}>
-        {loading?<div style={{textAlign:"center",padding:"40px",color:C.muted,fontFamily:"'Inter',sans-serif"}}>Cargando...</div>
-        :posts.length===0?<div style={{textAlign:"center",padding:"40px"}}><div style={{fontSize:40,marginBottom:8}}>{ICONS.notepad}</div><div style={{fontSize:14,color:C.muted,fontFamily:"'Inter',sans-serif"}}>Sin publicaciones aun</div></div>
-        :posts.map(function(p,i){
-          var t2=TYPES[p.type]||TYPES.post;
-          return (
-            <div key={p.id} style={{background:C.card,borderBottom:"1px solid "+C.border,padding:"14px 16px"}}>
-              {t2.badgeBg?<div style={{display:"inline-flex",background:t2.badgeBg,borderRadius:20,padding:"3px 10px",marginBottom:6}}><span style={{fontSize:10,fontWeight:700,color:t2.badgeFg,fontFamily:"'Inter',sans-serif"}}>{t2.icon} {t2.label}</span></div>:null}
-              <p style={{fontSize:14,lineHeight:1.6,color:C.text,fontFamily:"'Inter',sans-serif",margin:"0 0 8px"}}>{p.content}</p>
-              <div style={{display:"flex",gap:12,fontSize:11,color:C.muted,fontFamily:"'Inter',sans-serif",alignItems:"center"}}>
-                <span style={{color:C.red}}>{ICONS.like_on} {p.likes||0}</span>
-                <span>{ICONS.comment} {p.comments||0}</span>
-                <span style={{marginLeft:"auto"}}>{formatTime(p.created_at||p.time)}</span>
+        {/* Posts */}
+        <div style={{paddingBottom:40}}>
+          {loading?[1,2,3].map(function(i){return <PostSkeleton key={i}/>;})
+          :posts.length===0?<div style={{textAlign:"center",padding:"40px"}}><div style={{fontSize:40,marginBottom:8}}>{ICONS.notepad}</div><div style={{fontSize:14,color:C.muted,fontFamily:"'Inter',sans-serif"}}>Sin publicaciones aun</div></div>
+          :posts.map(function(p,i){
+            var t2=TYPES[p.type]||TYPES.post;
+            return (
+              <div key={p.id} style={{background:C.card,borderBottom:"1px solid "+C.border,padding:"14px 16px"}}>
+                {t2.badgeBg?<div style={{display:"inline-flex",background:t2.badgeBg,borderRadius:20,padding:"3px 10px",marginBottom:6}}><span style={{fontSize:10,fontWeight:700,color:t2.badgeFg,fontFamily:"'Inter',sans-serif"}}>{t2.icon} {t2.label}</span></div>:null}
+                <p style={{fontSize:14,lineHeight:1.6,color:C.text,fontFamily:"'Inter',sans-serif",margin:"0 0 8px"}}>{p.content}</p>
+                <div style={{display:"flex",gap:12,fontSize:11,color:C.muted,fontFamily:"'Inter',sans-serif",alignItems:"center"}}>
+                  <span style={{color:C.red}}>{ICONS.like_on} {p.likes||0}</span>
+                  <span>{ICONS.comment} {p.comments||0}</span>
+                  <span style={{marginLeft:"auto"}}>{formatTime(p.created_at||p.time)}</span>
+                </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
     </div>
   );
