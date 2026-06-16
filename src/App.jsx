@@ -1456,12 +1456,19 @@ function Profile(props) {
       <div style={{margin:"0 14px 8px"}}><button onClick={onLogout} style={{width:"100%",padding:"14px",background:C.card,border:"1px solid "+C.border,borderRadius:14,color:C.red,cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:13,fontWeight:700}}>{currentLang==="en"?"Sign out":"Cerrar Sesion"}</button></div>
       <div style={{margin:"0 14px 40px"}}>
         <button onClick={function(){
-          if(!window.confirm(currentLang==="en"?"Delete your account? This cannot be undone. All your posts and data will be permanently deleted.":"Eliminar tu cuenta? Esta accion no se puede deshacer. Todos tus posts y datos seran eliminados permanentemente.")) return;
+          if(!window.confirm(currentLang==="en"?"Delete your account? This cannot be undone.":"Eliminar tu cuenta? Esta accion no se puede deshacer.")) return;
           if(!window.confirm(currentLang==="en"?"Are you absolutely sure?":"Estas completamente seguro?")) return;
-          api.deleteAccount(props.userId).then(function(){
-            try{ localStorage.clear(); }catch(e){}
-            window.location.reload();
-          }).catch(function(){ alert("Error al eliminar cuenta. Intenta de nuevo."); });
+          // Get userId from multiple sources
+          var uid=props.userId;
+          if(!uid){ try{ var s=localStorage.getItem("epale_session"); var d=s?JSON.parse(s):null; uid=d&&d.uid?d.uid:""; }catch(e){} }
+          if(!uid){ try{ for(var i=0;i<localStorage.length;i++){ var k=localStorage.key(i); if(k&&k.startsWith("sb-")&&k.endsWith("-auth-token")){ var sd=JSON.parse(localStorage.getItem(k)); if(sd&&sd.user&&sd.user.id){ uid=sd.user.id; break; } } } }catch(e){} }
+          console.log("Deleting account uid:", uid);
+          if(!uid){ alert("Error: no se pudo obtener tu ID. Intenta cerrar sesion y volver a entrar."); return; }
+          api.deleteAccount(uid).then(function(res){
+            console.log("Delete result:", res);
+            if(res&&res.success){ try{ localStorage.clear(); }catch(e){} window.location.reload(); }
+            else { alert("Error: "+(res&&res.error?res.error:"desconocido")); }
+          }).catch(function(e){ console.error(e); alert("Error al eliminar cuenta."); });
         }} style={{width:"100%",padding:"14px",background:"transparent",border:"1px solid rgba(207,10,10,0.3)",borderRadius:14,color:"rgba(207,10,10,0.6)",cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:12,fontWeight:600}}>
           {currentLang==="en"?"Delete my account":"Eliminar mi cuenta"}
         </button>
