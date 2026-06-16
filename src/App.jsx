@@ -114,19 +114,12 @@ var api = {
   deletePost: function(postId) {
     return fetchAuth(SUPA_URL+"/rest/v1/posts?id=eq."+postId,{method:"DELETE",headers:{"apikey":SUPA_KEY,"Authorization":"Bearer "+getToken()}}).then(function(r){return r.ok;}).catch(function(){ return false; });
   },
-  deleteAccount: async function(userId) {
-    var h={"apikey":SUPA_KEY,"Authorization":"Bearer "+getToken(),"Content-Type":"application/json"};
-    // Delete all user data in order
-    await fetch(SUPA_URL+"/rest/v1/notifications?user_id=eq."+userId,{method:"DELETE",headers:h}).catch(function(){});
-    await fetch(SUPA_URL+"/rest/v1/saved_posts?user_id=eq."+userId,{method:"DELETE",headers:h}).catch(function(){});
-    await fetch(SUPA_URL+"/rest/v1/likes?user_id=eq."+userId,{method:"DELETE",headers:h}).catch(function(){});
-    await fetch(SUPA_URL+"/rest/v1/follows?follower_id=eq."+userId,{method:"DELETE",headers:h}).catch(function(){});
-    await fetch(SUPA_URL+"/rest/v1/comments?user_id=eq."+userId,{method:"DELETE",headers:h}).catch(function(){});
-    await fetch(SUPA_URL+"/rest/v1/posts?user_id=eq."+userId,{method:"DELETE",headers:h}).catch(function(){});
-    await fetch(SUPA_URL+"/rest/v1/profiles?id=eq."+userId,{method:"DELETE",headers:h}).catch(function(){});
-    // Sign out
-    await supabase.auth.signOut().catch(function(){});
-    return true;
+  deleteAccount: function(userId) {
+    return fetch("https://zkydbsymcnnbepvmbchr.supabase.co/functions/v1/delete-account",{
+      method:"POST",
+      headers:{"Content-Type":"application/json","Authorization":"Bearer "+getToken()},
+      body:JSON.stringify({userId:userId})
+    }).then(function(r){return r.json();}).catch(function(){ return {error:"Network error"}; });
   },
   editPost: function(postId, content) {
     return fetchAuth(SUPA_URL+"/rest/v1/posts?id=eq."+postId,{method:"PATCH",headers:{"Content-Type":"application/json","apikey":SUPA_KEY,"Authorization":"Bearer "+getToken(),"Prefer":"return=representation"},body:JSON.stringify({content:content})}).then(function(r){return r.json();}).catch(function(){ return null; });
