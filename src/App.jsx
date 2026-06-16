@@ -115,11 +115,17 @@ var api = {
     return fetchAuth(SUPA_URL+"/rest/v1/posts?id=eq."+postId,{method:"DELETE",headers:{"apikey":SUPA_KEY,"Authorization":"Bearer "+getToken()}}).then(function(r){return r.ok;}).catch(function(){ return false; });
   },
   deleteAccount: function(userId) {
+    var body=JSON.stringify({userId:userId});
+    console.log("deleteAccount called with userId:", userId, "body:", body);
     return fetch("https://zkydbsymcnnbepvmbchr.supabase.co/functions/v1/delete-account",{
       method:"POST",
-      headers:{"Content-Type":"application/json","Authorization":"Bearer "+getToken()},
-      body:JSON.stringify({userId:userId})
-    }).then(function(r){return r.json();}).catch(function(){ return {error:"Network error"}; });
+      headers:{
+        "Content-Type":"application/json",
+        "Authorization":"Bearer "+getToken(),
+        "apikey":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpreWRic3ltY25uYmVwdm1iY2hyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDk4MzQ4MDAsImV4cCI6MjAyNTQxMDgwMH0.SHKBbGSqMM7DFnTFRlmh5I_P8CJfJDHbqXXklqF1Fxk"
+      },
+      body:body
+    }).then(function(r){ return r.json(); }).catch(function(e){ console.error("deleteAccount error:",e); return {error:"Network error"}; });
   },
   editPost: function(postId, content) {
     return fetchAuth(SUPA_URL+"/rest/v1/posts?id=eq."+postId,{method:"PATCH",headers:{"Content-Type":"application/json","apikey":SUPA_KEY,"Authorization":"Bearer "+getToken(),"Prefer":"return=representation"},body:JSON.stringify({content:content})}).then(function(r){return r.json();}).catch(function(){ return null; });
