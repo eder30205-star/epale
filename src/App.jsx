@@ -114,6 +114,20 @@ var api = {
   deletePost: function(postId) {
     return fetchAuth(SUPA_URL+"/rest/v1/posts?id=eq."+postId,{method:"DELETE",headers:{"apikey":SUPA_KEY,"Authorization":"Bearer "+getToken()}}).then(function(r){return r.ok;}).catch(function(){ return false; });
   },
+  deleteAccount: async function(userId) {
+    var h={"apikey":SUPA_KEY,"Authorization":"Bearer "+getToken(),"Content-Type":"application/json"};
+    // Delete all user data in order
+    await fetch(SUPA_URL+"/rest/v1/notifications?user_id=eq."+userId,{method:"DELETE",headers:h}).catch(function(){});
+    await fetch(SUPA_URL+"/rest/v1/saved_posts?user_id=eq."+userId,{method:"DELETE",headers:h}).catch(function(){});
+    await fetch(SUPA_URL+"/rest/v1/likes?user_id=eq."+userId,{method:"DELETE",headers:h}).catch(function(){});
+    await fetch(SUPA_URL+"/rest/v1/follows?follower_id=eq."+userId,{method:"DELETE",headers:h}).catch(function(){});
+    await fetch(SUPA_URL+"/rest/v1/comments?user_id=eq."+userId,{method:"DELETE",headers:h}).catch(function(){});
+    await fetch(SUPA_URL+"/rest/v1/posts?user_id=eq."+userId,{method:"DELETE",headers:h}).catch(function(){});
+    await fetch(SUPA_URL+"/rest/v1/profiles?id=eq."+userId,{method:"DELETE",headers:h}).catch(function(){});
+    // Sign out
+    await supabase.auth.signOut().catch(function(){});
+    return true;
+  },
   editPost: function(postId, content) {
     return fetchAuth(SUPA_URL+"/rest/v1/posts?id=eq."+postId,{method:"PATCH",headers:{"Content-Type":"application/json","apikey":SUPA_KEY,"Authorization":"Bearer "+getToken(),"Prefer":"return=representation"},body:JSON.stringify({content:content})}).then(function(r){return r.json();}).catch(function(){ return null; });
   },
@@ -1440,7 +1454,19 @@ function Profile(props) {
         })}
       </div>
       <div style={{margin:"0 14px 10px"}}><a href={waInvite(userCity)} target="_blank" rel="noreferrer" style={{textDecoration:"none"}}><div style={{background:C.wa,borderRadius:14,padding:"14px 18px",display:"flex",alignItems:"center",gap:12}}><span style={{fontSize:22}}>{ICONS.phone}</span><div style={{flex:1}}><div style={{fontWeight:700,color:"#fff",fontFamily:"'Inter',sans-serif",fontSize:13}}>Invitar venezolanos a Epale</div><div style={{fontSize:11,color:"rgba(255,255,255,0.8)",fontFamily:"'Inter',sans-serif"}}>Comparte con tus panas en {cityObj.name}</div></div></div></a></div>
-      <div style={{margin:"0 14px 40px"}}><button onClick={onLogout} style={{width:"100%",padding:"14px",background:C.card,border:"1px solid "+C.border,borderRadius:14,color:C.red,cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:13,fontWeight:700}}>{currentLang==="en"?"Sign out":"Cerrar Sesion"}</button></div>
+      <div style={{margin:"0 14px 8px"}}><button onClick={onLogout} style={{width:"100%",padding:"14px",background:C.card,border:"1px solid "+C.border,borderRadius:14,color:C.red,cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:13,fontWeight:700}}>{currentLang==="en"?"Sign out":"Cerrar Sesion"}</button></div>
+      <div style={{margin:"0 14px 40px"}}>
+        <button onClick={function(){
+          if(!window.confirm(currentLang==="en"?"Delete your account? This cannot be undone. All your posts and data will be permanently deleted.":"Eliminar tu cuenta? Esta accion no se puede deshacer. Todos tus posts y datos seran eliminados permanentemente.")) return;
+          if(!window.confirm(currentLang==="en"?"Are you absolutely sure?":"Estas completamente seguro?")) return;
+          api.deleteAccount(props.userId).then(function(){
+            try{ localStorage.clear(); }catch(e){}
+            window.location.reload();
+          }).catch(function(){ alert("Error al eliminar cuenta. Intenta de nuevo."); });
+        }} style={{width:"100%",padding:"14px",background:"transparent",border:"1px solid rgba(207,10,10,0.3)",borderRadius:14,color:"rgba(207,10,10,0.6)",cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:12,fontWeight:600}}>
+          {currentLang==="en"?"Delete my account":"Eliminar mi cuenta"}
+        </button>
+      </div>
     </div></div>
   );
 }
