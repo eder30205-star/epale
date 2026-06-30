@@ -602,6 +602,7 @@ function PostCard(props) {
   var [open,setOpen]=useState(false);
   var [comment,setComment]=useState("");
   var [comments,setComments]=useState(post._comments||[]);
+  var [commentCount,setCommentCount]=useState(post.comments||0);
   var commentInputRef=React.useRef(null);
   var [showCommentEmoji,setShowCommentEmoji]=useState(false);
   var [showMenu,setShowMenu]=useState(false);
@@ -615,12 +616,24 @@ function PostCard(props) {
   var [showFlag,setShowFlag]=useState(false);
   var [flagDone,setFlagDone]=useState(false);
   var t=TYPES[post.type]||TYPES.post;
+  var [sendingComment,setSendingComment]=useState(false);
   var sendComment=function(){
-    if(!comment.trim()) return;
-    var newC={id:Date.now(),post_id:String(post.id),user_name:userName,content:comment,created_at:new Date().toISOString()};
-    setComments(function(c){return c.concat([newC]);}); setComment("");
+    if(!comment.trim()||sendingComment) return;
+    setSendingComment(true);
+    var commentText=comment;
+    var newC={id:"local-"+Date.now(),post_id:String(post.id),user_name:userName,content:commentText,created_at:new Date().toISOString(),_local:true};
+    setComments(function(c){
+      // Prevent duplicate: don't add if an identical local comment was just added
+      if(c.find(function(x){return x._local&&x.content===commentText&&x.user_name===userName;})) return c;
+      return c.concat([newC]);
+    });
+    setComment("");
+    setCommentCount(function(n){return (n||0)+1;});
     var uid=props.userId||(function(){ try{var d=JSON.parse(localStorage.getItem("epale_session")); return d&&d.uid?d.uid:"";}catch(e){return "";} })();
-    if(uid){ api.addComment(post.id,uid,userName,comment).catch(function(){}); if(post.user_id&&post.user_id!==uid) api.addNotification(post.user_id,userName||"Alguien","comment",post.id).catch(function(){}); }
+    if(uid){
+      api.addComment(post.id,uid,userName,commentText).then(function(){ setSendingComment(false); }).catch(function(){ setSendingComment(false); });
+      if(post.user_id&&post.user_id!==uid) api.addNotification(post.user_id,userName||"Alguien","comment",post.id).catch(function(){});
+    } else { setSendingComment(false); }
   };
   if(deleted) return null;
   return (
@@ -705,7 +718,7 @@ function PostCard(props) {
               {likedLocal?ICONS.like_on:ICONS.like_off} {likes.toLocaleString()}
             </button>
             <button onClick={function(){setOpen(function(o){return !o;});}} style={{display:"flex",alignItems:"center",gap:6,padding:"10px 14px",minHeight:44,background:open?"#e8f0fc":C.bg,border:"1px solid "+(open?"#b3c8ff":C.border),borderRadius:100,cursor:"pointer",color:open?C.blue:C.muted,fontFamily:"'Inter',sans-serif",fontSize:13}}>
-              {ICONS.comment} {(post.comments+comments.length).toLocaleString()}
+              {ICONS.comment} {commentCount.toLocaleString()}
             </button>
             <button onClick={function(){if(onSave) onSave(post.id);}} style={{display:"flex",alignItems:"center",gap:6,padding:"10px 14px",minHeight:44,background:saved?C.card:C.bg,border:"1px solid "+(saved?C.yellow:C.border),borderRadius:100,cursor:"pointer",color:saved?C.yellow:C.muted,fontFamily:"'Inter',sans-serif",fontSize:13,marginLeft:"auto"}}>
               {saved?TR.guardado:TR.guardar}
