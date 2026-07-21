@@ -91,11 +91,7 @@ var api = {
   unsavePost: function(uid, postId) { return fetchAuth(SUPA_URL+"/rest/v1/saved_posts?user_id=eq."+uid+"&post_id=eq."+String(postId),{method:"DELETE",headers:{"apikey":SUPA_KEY,"Authorization":"Bearer "+getToken()}}).then(function(r){return r.json();}).catch(function(){}); },
   getLikes: function(uid) { return fetchAuth(SUPA_URL+"/rest/v1/likes?user_id=eq."+uid+"&select=post_id",{headers:{"apikey":SUPA_KEY,"Authorization":"Bearer "+getToken()}}).then(function(r){return r.json();}); },
   likePost: function(uid, postId) {
-    console.log("likePost called", uid, postId);
-    return fetchAuth(SUPA_URL+"/rest/v1/likes",{method:"POST",headers:{"Content-Type":"application/json","apikey":SUPA_KEY,"Authorization":"Bearer "+getToken(),"Prefer":"resolution=merge-duplicates,return=representation"},body:JSON.stringify({user_id:uid,post_id:String(postId)})}).then(function(r){
-      console.log("likePost response status:", r.status);
-      return r.json().then(function(data){ console.log("likePost data:", data); return data; });
-    }).catch(function(e){ console.error("likePost error:", e); });
+    return fetchAuth(SUPA_URL+"/rest/v1/likes",{method:"POST",headers:{"Content-Type":"application/json","apikey":SUPA_KEY,"Authorization":"Bearer "+getToken(),"Prefer":"resolution=merge-duplicates,return=representation"},body:JSON.stringify({user_id:uid,post_id:String(postId)})}).then(function(r){return r.json();}).catch(function(){});
   },
   unlikePost: function(uid, postId) { return fetchAuth(SUPA_URL+"/rest/v1/likes?user_id=eq."+uid+"&post_id=eq."+String(postId),{method:"DELETE",headers:{"apikey":SUPA_KEY,"Authorization":"Bearer "+getToken()}}).then(function(r){return r.json();}).catch(function(){}); },
   getUserPosts: function(uid) { return fetchAuth(SUPA_URL+"/rest/v1/posts?user_id=eq."+uid+"&select=*&order=created_at.desc",{headers:{"apikey":SUPA_KEY,"Authorization":"Bearer "+getToken()}}).then(function(r){return r.json();}); },
