@@ -1933,6 +1933,7 @@ function App() {
     setScreen("auth");
   };
 
+  if(showResetPassword) return <ResetPasswordScreen onDone={function(){ setShowResetPassword(false); setScreen("auth"); }}/>;
   if(screen==="auth") return <><OfflineBanner/><Auth key={dark?"dark":"light"} onDone={handleDone}/></>;
 
   if(screen==="feed") return (
@@ -2025,15 +2026,6 @@ function ResetPasswordScreen(props) {
 }
 
 export default function AppRoot() {
-  // Password Reset Screen
-  if(showResetPassword){
-    return (
-      <ErrorBoundary>
-        <ResetPasswordScreen onDone={function(){ setShowResetPassword(false); setScreen("auth"); }} />
-      </ErrorBoundary>
-    );
-  }
-
   return (
     <ErrorBoundary>
       <style dangerouslySetInnerHTML={{__html:"@media (min-width: 768px) { .epale-mobile-nav { display: none !important; } } @media (max-width: 767px) { .epale-mobile-nav { display: flex !important; } }"}}/>
