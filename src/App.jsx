@@ -1338,7 +1338,7 @@ function Search(props) {
           <div style={{textAlign:"center",padding:"60px 20px"}}>
             <div style={{fontSize:56,marginBottom:16}}>{"🔍"}</div>
             <div style={{fontSize:17,fontFamily:"'Syne',sans-serif",color:C.text,marginBottom:8}}>Busca en Epale</div>
-            <div style={{fontSize:14,color:C.muted,fontFamily:"'Inter',sans-serif",lineHeight:1.6}}>Encuentra venezolanos, posts,{" "}trabajos y eventos</div>
+            <div style={{fontSize:14,color:C.muted,fontFamily:"'Inter',sans-serif",lineHeight:1.6}}>Encuentra venezolanos, posts, trabajos y eventos</div>
           </div>
         ):tab==="people"?(
           userResults.length===0?(
@@ -2041,3 +2041,4 @@ export default function AppRoot() {
     </ErrorBoundary>
   );
 }
+
