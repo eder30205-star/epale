@@ -2041,4 +2041,3 @@ export default function AppRoot() {
     </ErrorBoundary>
   );
 }
-
