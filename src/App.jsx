@@ -1763,7 +1763,7 @@ class ErrorBoundary extends React.Component {
 }
 
 function ResetPasswordScreen(props) {
-  var C=useColors();
+  var C=_theme||LIGHT;
   var [newPassword,setNewPassword]=useState("");
   var [confirm,setConfirm]=useState("");
   var [loading,setLoading]=useState(false);
