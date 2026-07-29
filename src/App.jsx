@@ -1766,6 +1766,8 @@ function App() {
   var [dark,setDark]=useState(function(){ try{return localStorage.getItem("epale_dark")==="1";}catch(e){return false;} });
   var [lang,setLang]=useState(function(){ try{return localStorage.getItem("epale_lang")||"es";}catch(e){return "es";} });
   C=dark?DARK:LIGHT;
+  var [showResetPassword,setShowResetPassword]=useState(false);
+  var [resetToken,setResetToken]=useState("");
   var [screen,setScreen]=useState(function(){
     try {
       var s=localStorage.getItem("sb-zkydbsymcnnbepvmbchr-auth-token");
@@ -1889,7 +1891,14 @@ function App() {
     var token=params["access_token"]; var uid=params["user_id"]||""; var type=params["type"]||"";
     if(token&&(type==="signup"||type==="magiclink"||type==="recovery"||token.length>10)){
       window._supaToken=token;
-      api.getProfile(uid).then(function(profiles){ var prof=Array.isArray(profiles)&&profiles[0]; var city=prof&&prof.city?prof.city:"madrid"; var name=prof&&prof.name?prof.name:""; var photo=prof&&prof.photo_url?prof.photo_url:null; try { localStorage.setItem("epale_session",JSON.stringify({city:city,name:name,photo:photo,token:token,uid:uid})); } catch(e){} setUserCity(city); setUserName(name); setUserPhoto(photo); setUserId(uid); setScreen("feed"); window.history.replaceState(null,"","/"); }).catch(function(){ try { localStorage.setItem("epale_session",JSON.stringify({city:"madrid",name:"",photo:null,token:token,uid:uid})); } catch(e){} setUserId(uid); setScreen("feed"); window.history.replaceState(null,"","/"); });
+      if(type==="recovery"){
+        // Show password reset form
+        setResetToken(token);
+        setShowResetPassword(true);
+        window.history.replaceState(null,"","/");
+      } else {
+        api.getProfile(uid).then(function(profiles){ var prof=Array.isArray(profiles)&&profiles[0]; var city=prof&&prof.city?prof.city:"madrid"; var name=prof&&prof.name?prof.name:""; var photo=prof&&prof.photo_url?prof.photo_url:null; try { localStorage.setItem("epale_session",JSON.stringify({city:city,name:name,photo:photo,token:token,uid:uid})); } catch(e){} setUserCity(city); setUserName(name); setUserPhoto(photo); setUserId(uid); setScreen("feed"); window.history.replaceState(null,"","/"); }).catch(function(){ try { localStorage.setItem("epale_session",JSON.stringify({city:"madrid",name:"",photo:null,token:token,uid:uid})); } catch(e){} setUserId(uid); setScreen("feed"); window.history.replaceState(null,"","/"); });
+      }
     }
   },[]);
 
@@ -1951,7 +1960,80 @@ function App() {
   return <div style={{padding:20}}>Cargando...</div>;
 }
 
+function ResetPasswordScreen(props) {
+  var C=useColors();
+  var [newPassword,setNewPassword]=useState("");
+  var [confirm,setConfirm]=useState("");
+  var [loading,setLoading]=useState(false);
+  var [done,setDone]=useState(false);
+  var [error,setError]=useState("");
+  var [showPass,setShowPass]=useState(false);
+
+  var submit=function(){
+    if(!newPassword||newPassword.length<6){ setError("La contraseña debe tener al menos 6 caracteres"); return; }
+    if(newPassword!==confirm){ setError("Las contraseñas no coinciden"); return; }
+    setLoading(true);
+    api.changePassword(newPassword).then(function(res){
+      setLoading(false);
+      if(res&&res.error){ setError(res.error.message||"Error al cambiar contraseña"); return; }
+      setDone(true);
+      setTimeout(function(){ props.onDone(); },2000);
+    }).catch(function(){ setLoading(false); setError("Error al cambiar contraseña"); });
+  };
+
+  return (
+    <div style={{minHeight:"100vh",background:C.bg,display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
+      <div style={{width:"100%",maxWidth:400,background:C.card,borderRadius:20,padding:32,boxShadow:"0 4px 24px rgba(0,0,0,0.1)"}}>
+        <div style={{textAlign:"center",marginBottom:24}}>
+          <div style={{fontSize:36,fontFamily:"'Syne',sans-serif",fontWeight:900,color:C.text,letterSpacing:-2}}>épale</div>
+          <div style={{display:"flex",justifyContent:"center",gap:4,marginTop:6}}>
+            <div style={{width:24,height:4,borderRadius:2,background:"#CF9A00"}}/>
+            <div style={{width:24,height:4,borderRadius:2,background:"#0033A0"}}/>
+            <div style={{width:24,height:4,borderRadius:2,background:"#CF0A0A"}}/>
+          </div>
+        </div>
+        {done?(
+          <div style={{textAlign:"center"}}>
+            <div style={{fontSize:48,marginBottom:12}}>{"✅"}</div>
+            <div style={{fontSize:18,fontWeight:700,color:C.text,fontFamily:"'Syne',sans-serif"}}>{"¡Contraseña actualizada!"}</div>
+            <div style={{fontSize:14,color:C.muted,marginTop:8}}>Redirigiendo al inicio de sesion...</div>
+          </div>
+        ):(
+          <>
+            <div style={{fontSize:20,fontWeight:700,color:C.text,fontFamily:"'Syne',sans-serif",marginBottom:6}}>Nueva contraseña</div>
+            <div style={{fontSize:13,color:C.muted,marginBottom:20}}>Crea una nueva contraseña para tu cuenta</div>
+            <div style={{marginBottom:14}}>
+              <div style={{fontSize:10,color:C.muted,marginBottom:7,letterSpacing:1,fontFamily:"'Inter',sans-serif"}}>NUEVA CONTRASENA</div>
+              <div style={{position:"relative"}}>
+                <input value={newPassword} onChange={function(e){setNewPassword(e.target.value);}} type={showPass?"text":"password"} placeholder="Min. 6 caracteres" style={{width:"100%",padding:"13px 46px 13px 16px",background:C.bg,border:"1.5px solid "+(newPassword?C.blue:C.border),borderRadius:12,color:C.text,fontFamily:"'Inter',sans-serif",fontSize:16,outline:"none",boxSizing:"border-box"}}/>
+                <button onClick={function(){setShowPass(function(s){return !s;});}} style={{position:"absolute",right:14,top:10,background:"none",border:"none",cursor:"pointer",fontSize:18,color:C.muted}}>{"👁️"}</button>
+              </div>
+            </div>
+            <div style={{marginBottom:20}}>
+              <div style={{fontSize:10,color:C.muted,marginBottom:7,letterSpacing:1,fontFamily:"'Inter',sans-serif"}}>CONFIRMAR CONTRASENA</div>
+              <input value={confirm} onChange={function(e){setConfirm(e.target.value);}} type="password" placeholder="Repite tu contraseña" style={{width:"100%",padding:"13px 16px",background:C.bg,border:"1.5px solid "+(confirm?C.blue:C.border),borderRadius:12,color:C.text,fontFamily:"'Inter',sans-serif",fontSize:16,outline:"none",boxSizing:"border-box"}}/>
+            </div>
+            {error?<div style={{background:"#3a1a1a",border:"1px solid #ff6b6b",borderRadius:10,padding:"9px 13px",marginBottom:13,fontSize:13,color:"#ff2d2d",fontFamily:"'Inter',sans-serif"}}>{error}</div>:null}
+            <button onClick={submit} disabled={loading} style={{width:"100%",padding:14,background:"#ffcc00",color:"#1a1a1a",border:"none",borderRadius:100,cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:14,fontWeight:700}}>
+              {loading?"Actualizando...":"Actualizar contraseña"}
+            </button>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function AppRoot() {
+  // Password Reset Screen
+  if(showResetPassword){
+    return (
+      <ErrorBoundary>
+        <ResetPasswordScreen onDone={function(){ setShowResetPassword(false); setScreen("auth"); }} />
+      </ErrorBoundary>
+    );
+  }
+
   return (
     <ErrorBoundary>
       <style dangerouslySetInnerHTML={{__html:"@media (min-width: 768px) { .epale-mobile-nav { display: none !important; } } @media (max-width: 767px) { .epale-mobile-nav { display: flex !important; } }"}}/>
