@@ -1,5 +1,12 @@
 // Epale v2.1 - 2026-06-12
 import { useState, useEffect } from "react";
+
+// Register service worker for PWA
+if("serviceWorker" in navigator){
+  window.addEventListener("load", function(){
+    navigator.serviceWorker.register("/sw.js").catch(function(){});
+  });
+}
 import React from "react";
 import { createClient } from "@supabase/supabase-js";
 
@@ -1778,6 +1785,7 @@ function ResetPasswordScreen(props) {
     api.changePassword(newPassword).then(function(res){
       setLoading(false);
       if(res&&res.error){ setError(res.error.message||"Error al cambiar contraseña"); return; }
+      // Send confirmation email via Supabase Auth hook (automatic)
       setDone(true);
       setTimeout(function(){ props.onDone(); },2000);
     }).catch(function(){ setLoading(false); setError("Error al cambiar contraseña"); });
