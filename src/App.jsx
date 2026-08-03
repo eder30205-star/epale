@@ -1,6 +1,8 @@
 // Epale v2.1 - 2026-06-12
 import { useState, useEffect } from "react";
 
+const DEEPSEEK_KEY = import.meta.env.VITE_DEEPSEEK_KEY || "";
+
 // Register service worker for PWA
 if("serviceWorker" in navigator){
   window.addEventListener("load", function(){
@@ -1242,7 +1244,7 @@ function Feed(props) {
     {showComposer?<Composer cityObj={cityObj} onPost={addPost} onClose={function(){setShowComposer(false);}} userPhoto={userPhoto} userName={userName} isFounder={isFounder(userName)}/>:null}{header}<div style={{paddingBottom:"calc(80px + env(safe-area-inset-bottom))"}}><div style={{margin:"10px 14px 0"}}>{dollarWidget}</div><div style={{marginTop:4}}>{postsList}</div><div style={{margin:"10px 14px 20px"}}>{inviteBanner}</div></div></div>); }
   return (<div style={{minHeight:"100vh",background:C.bg}}>
     {openCity?<CountryFeed cityId={openCity} onClose={function(){setOpenCity(null);}} savedPosts={savedPosts} onSave={toggleSave} likedPosts={likedPosts} onLike={toggleLike} following={following} onFollow={toggleFollow} userName={userName} userId={userId} lang={lang} onOpenProfile={props.onOpenProfile} userPhoto={userPhoto}/>:null}
-    {showComposer?<Composer cityObj={cityObj} onPost={addPost} onClose={function(){setShowComposer(false);}} userPhoto={userPhoto} userName={userName} isFounder={isFounder(userName)}/>:null}{header}<div style={{maxWidth:1200,margin:"0 auto",padding:"20px",display:"flex",gap:24,alignItems:"flex-start"}}><div style={{width:240,flexShrink:0,position:"sticky",top:170}}><div style={{background:C.card,borderRadius:16,border:"1px solid "+C.border,overflow:"hidden",marginBottom:16}}><div style={{background:"linear-gradient(135deg,#ffcc00,#0066ff)",height:60}}/><div style={{padding:"0 16px 16px",marginTop:-28}}><Av t={userName} i={0} s={52} photo={userPhoto}/><div style={{marginTop:8,fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:16,color:C.text}}>{userName}</div><div style={{fontSize:12,color:C.muted,fontFamily:"'Inter',sans-serif",marginBottom:4}}>{"@"+userName.toLowerCase().replace(/\s+/g,"")}</div>{userBio?<div style={{fontSize:11,color:C.muted,fontFamily:"'Inter',sans-serif",marginBottom:12,lineHeight:1.4}}>{userBio}</div>:<div style={{marginBottom:12}}/>}<button onClick={onProfile} style={{width:"100%",padding:"8px",background:C.yellow,border:"none",borderRadius:10,cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:12,fontWeight:700,color:C.text}}>Ver perfil</button></div></div><button onClick={function(){setShowComposer(true);}} style={{width:"100%",padding:"12px",background:C.yellow,border:"none",borderRadius:12,cursor:"pointer",fontFamily:"'Syne',sans-serif",fontSize:14,fontWeight:700,color:C.text,marginBottom:16}}>+ Publicar</button><div style={{background:C.card,borderRadius:16,border:"1px solid "+C.border,padding:"14px 16px"}}><div style={{fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:13,color:C.text,marginBottom:12}}>Proximos eventos</div>{SEED.filter(function(p){ return p.type==="evento"&&p.city===activeCity; }).slice(0,3).map(function(ev,i){ return (<div key={ev.id} onClick={function(){setFilter("evento");}} style={{display:"flex",gap:10,marginBottom:12,cursor:"pointer",padding:"8px 10px",borderRadius:10,background:C.bg}}><div style={{width:36,height:36,borderRadius:10,background:"#7b2d8b",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,flexShrink:0}}>{ICONS.bell}</div><div style={{flex:1,minWidth:0}}><div style={{fontSize:12,fontWeight:700,color:C.text,fontFamily:"'Inter',sans-serif",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{ev.name}</div><div style={{fontSize:11,color:C.muted,fontFamily:"'Inter',sans-serif",marginTop:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{ev.content.slice(0,45)}...</div></div></div>); })}{SEED.filter(function(p){ return p.type==="evento"&&p.city===activeCity; }).length===0?(<div style={{textAlign:"center",padding:"10px 0"}}><div style={{fontSize:11,color:C.muted,fontFamily:"'Inter',sans-serif"}}>No hay eventos en este pais aun</div><button onClick={function(){setShowComposer(true);}} style={{marginTop:8,padding:"6px 14px",background:C.yellow,border:"none",borderRadius:100,cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:11,fontWeight:700,color:C.text}}>Crear evento</button></div>):null}</div></div><div style={{flex:1,minWidth:0}}>{dollarWidget}{postsList}</div><div style={{width:280,flexShrink:0,position:"sticky",top:170}}>{inviteBanner}<div style={{background:C.card,borderRadius:16,border:"1px solid "+C.border,padding:"14px 16px",marginBottom:16}}><div style={{fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:13,color:C.text,marginBottom:12}}>Venezolanos en {cityObj.name}</div>{SEED.filter(function(p){return p.city===activeCity;}).slice(0,4).map(function(p,i){ return (<div key={p.id} style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}><Av t={p.av} i={i} s={36}/><div style={{flex:1}}><div style={{fontSize:13,fontWeight:600,color:C.text,fontFamily:"'Inter',sans-serif"}}>{p.name}</div><div style={{fontSize:11,color:C.muted,fontFamily:"'Inter',sans-serif"}}>{p.type}</div></div></div>); })}</div><div style={{background:C.card,borderRadius:16,border:"1px solid "+C.border,padding:"14px 16px"}}><div style={{fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:13,color:C.text,marginBottom:10}}>Epale</div><div style={{fontSize:11,color:C.muted,fontFamily:"'Inter',sans-serif",lineHeight:1.6}}>La red social de los venezolanos en el mundo. Conecta, comparte y crece con tu gente.</div><div style={{marginTop:10,display:"flex",gap:8,flexWrap:"wrap"}}>{["Terminos","Privacidad","Contacto"].map(function(t){ return <span key={t} style={{fontSize:10,color:C.muted,fontFamily:"'Inter',sans-serif",cursor:"pointer",textDecoration:"underline"}}>{t}</span>; })}</div></div></div></div></div>);
+    {showComposer?<Composer cityObj={cityObj} onPost={addPost} onClose={function(){setShowComposer(false);}} userPhoto={userPhoto} userName={userName} isFounder={isFounder(userName)}/>:null}{header}<div style={{maxWidth:1200,margin:"0 auto",padding:"20px",display:"flex",gap:24,alignItems:"flex-start"}}><div style={{width:240,flexShrink:0,position:"sticky",top:170}}><div style={{background:C.card,borderRadius:16,border:"1px solid "+C.border,overflow:"hidden",marginBottom:16}}><div style={{background:"linear-gradient(135deg,#ffcc00,#0066ff)",height:60}}/><div style={{padding:"0 16px 16px",marginTop:-28}}><Av t={userName} i={0} s={52} photo={userPhoto}/><div style={{marginTop:8,fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:16,color:C.text}}>{userName}</div><div style={{fontSize:12,color:C.muted,fontFamily:"'Inter',sans-serif",marginBottom:4}}>{"@"+userName.toLowerCase().replace(/\s+/g,"")}</div>{userBio?<div style={{fontSize:11,color:C.muted,fontFamily:"'Inter',sans-serif",marginBottom:12,lineHeight:1.4}}>{userBio}</div>:<div style={{marginBottom:12}}/>}<button onClick={onProfile} style={{width:"100%",padding:"8px",background:C.yellow,border:"none",borderRadius:10,cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:12,fontWeight:700,color:C.text}}>Ver perfil</button></div></div><button onClick={function(){setShowComposer(true);}} style={{width:"100%",padding:"12px",background:C.yellow,border:"none",borderRadius:12,cursor:"pointer",fontFamily:"'Syne',sans-serif",fontSize:14,fontWeight:700,color:C.text,marginBottom:8}}>+ Publicar</button><button onClick={function(){setShowPana(true);}} style={{width:"100%",padding:"11px",background:C.card,color:C.text,border:"1.5px solid "+C.border,borderRadius:12,cursor:"pointer",fontFamily:"'Syne',sans-serif",fontSize:13,fontWeight:600,marginBottom:16,display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>{"🤖 Preguntar a Pana"}</button><div style={{background:C.card,borderRadius:16,border:"1px solid "+C.border,padding:"14px 16px"}}><div style={{fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:13,color:C.text,marginBottom:12}}>Proximos eventos</div>{SEED.filter(function(p){ return p.type==="evento"&&p.city===activeCity; }).slice(0,3).map(function(ev,i){ return (<div key={ev.id} onClick={function(){setFilter("evento");}} style={{display:"flex",gap:10,marginBottom:12,cursor:"pointer",padding:"8px 10px",borderRadius:10,background:C.bg}}><div style={{width:36,height:36,borderRadius:10,background:"#7b2d8b",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,flexShrink:0}}>{ICONS.bell}</div><div style={{flex:1,minWidth:0}}><div style={{fontSize:12,fontWeight:700,color:C.text,fontFamily:"'Inter',sans-serif",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{ev.name}</div><div style={{fontSize:11,color:C.muted,fontFamily:"'Inter',sans-serif",marginTop:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{ev.content.slice(0,45)}...</div></div></div>); })}{SEED.filter(function(p){ return p.type==="evento"&&p.city===activeCity; }).length===0?(<div style={{textAlign:"center",padding:"10px 0"}}><div style={{fontSize:11,color:C.muted,fontFamily:"'Inter',sans-serif"}}>No hay eventos en este pais aun</div><button onClick={function(){setShowComposer(true);}} style={{marginTop:8,padding:"6px 14px",background:C.yellow,border:"none",borderRadius:100,cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:11,fontWeight:700,color:C.text}}>Crear evento</button></div>):null}</div></div><div style={{flex:1,minWidth:0}}>{dollarWidget}{postsList}</div><div style={{width:280,flexShrink:0,position:"sticky",top:170}}>{inviteBanner}<div style={{background:C.card,borderRadius:16,border:"1px solid "+C.border,padding:"14px 16px",marginBottom:16}}><div style={{fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:13,color:C.text,marginBottom:12}}>Venezolanos en {cityObj.name}</div>{SEED.filter(function(p){return p.city===activeCity;}).slice(0,4).map(function(p,i){ return (<div key={p.id} style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}><Av t={p.av} i={i} s={36}/><div style={{flex:1}}><div style={{fontSize:13,fontWeight:600,color:C.text,fontFamily:"'Inter',sans-serif"}}>{p.name}</div><div style={{fontSize:11,color:C.muted,fontFamily:"'Inter',sans-serif"}}>{p.type}</div></div></div>); })}</div><div style={{background:C.card,borderRadius:16,border:"1px solid "+C.border,padding:"14px 16px"}}><div style={{fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:13,color:C.text,marginBottom:10}}>Epale</div><div style={{fontSize:11,color:C.muted,fontFamily:"'Inter',sans-serif",lineHeight:1.6}}>La red social de los venezolanos en el mundo. Conecta, comparte y crece con tu gente.</div><div style={{marginTop:10,display:"flex",gap:8,flexWrap:"wrap"}}>{["Terminos","Privacidad","Contacto"].map(function(t){ return <span key={t} style={{fontSize:10,color:C.muted,fontFamily:"'Inter',sans-serif",cursor:"pointer",textDecoration:"underline"}}>{t}</span>; })}</div></div></div></div></div>);
 }
 
 function Composer(props) {
@@ -1860,6 +1862,7 @@ function App() {
   var [lang,setLang]=useState(function(){ try{return localStorage.getItem("epale_lang")||"es";}catch(e){return "es";} });
   C=dark?DARK:LIGHT;
   var [showResetPassword,setShowResetPassword]=useState(false);
+  var [showPana,setShowPana]=useState(false);
   var [resetToken,setResetToken]=useState("");
   var [screen,setScreen]=useState(function(){
     try {
@@ -2027,6 +2030,7 @@ function App() {
   };
 
   if(showResetPassword) return <ResetPasswordScreen onDone={function(){ setShowResetPassword(false); setScreen("auth"); }}/>;
+  if(showPana) return <Pana onClose={function(){setShowPana(false);}}/>;
   if(screen==="auth") return <><OfflineBanner/><Auth key={dark?"dark":"light"} onDone={handleDone}/></>;
 
   if(screen==="feed") return (
@@ -2039,9 +2043,9 @@ function App() {
       {viewingUser?<UserProfile name={viewingUser} onClose={function(){setViewingUser(null);}} following={following} onFollow={toggleFollow} currentUserName={userName}/>:null}
       <Feed userCity={userCity} onProfile={function(){setShowProfile(true);}} following={following} onFollow={toggleFollow} userPhoto={userPhoto} userName={userName} userId={userId} savedPosts={savedPosts} onSave={toggleSave} likedPosts={likedPosts} onLike={toggleLike} lang={lang} userBio={userBio} likedLoaded={likedLoaded} onOpenProfile={function(n){ if(n!==userName) setViewingUser(n); else setShowProfile(true); }}/>
       <div className="epale-mobile-nav" style={{position:"fixed",bottom:0,left:0,right:0,minHeight:60,paddingBottom:"env(safe-area-inset-bottom)",background:C.card,borderTop:"1px solid "+C.border,alignItems:"center",justifyContent:"space-around",zIndex:90,maxWidth:"100%",margin:"0 auto",display:isMobileApp?"flex":"none"}}>
-        {[{id:"feed",icon:ICONS.fire,label:"Inicio"},{id:"search",icon:ICONS.comment,label:"Buscar"},{id:"post",icon:ICONS.pencil,label:"",action:true},{id:"notifs",icon:ICONS.bell,label:"Avisos",badge:unreadNotifs},{id:"me",icon:ICONS.group,label:"Yo"}].map(function(tab){
+        {[{id:"feed",icon:ICONS.fire,label:"Inicio"},{id:"search",icon:ICONS.comment,label:"Buscar"},{id:"pana",icon:"🤖",label:"Pana"},{id:"post",icon:ICONS.pencil,label:"",action:true},{id:"notifs",icon:ICONS.bell,label:"Avisos",badge:unreadNotifs},{id:"me",icon:ICONS.group,label:"Yo"}].map(function(tab){
           var isActive=activeTab===tab.id;
-          return (<button key={tab.id} onClick={function(){ if(tab.id==="me"){ setShowProfile(true); return; } if(tab.id==="search"){ setShowSearch(true); return; } if(tab.id==="post"){ document.dispatchEvent(new CustomEvent("epale:openComposer")); return; } if(tab.id==="notifs"){ setShowProfile(true); return; } setActiveTab(tab.id); }} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:2,background:tab.action?C.yellow:"none",border:"none",cursor:"pointer",padding:tab.action?"8px 16px":"6px 10px",borderRadius:tab.action?12:8,minWidth:48,position:"relative"}}>
+          return (<button key={tab.id} onClick={function(){ if(tab.id==="me"){ setShowProfile(true); return; } if(tab.id==="search"){ setShowSearch(true); return; } if(tab.id==="pana"){ setShowPana(true); return; } if(tab.id==="post"){ document.dispatchEvent(new CustomEvent("epale:openComposer")); return; } if(tab.id==="notifs"){ setShowProfile(true); return; } setActiveTab(tab.id); }} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:2,background:tab.action?C.yellow:"none",border:"none",cursor:"pointer",padding:tab.action?"8px 16px":"6px 10px",borderRadius:tab.action?12:8,minWidth:48,position:"relative"}}>
               {tab.badge>0?<div style={{position:"absolute",top:4,right:6,width:8,height:8,borderRadius:9999,background:C.red,border:"2px solid "+C.card}}/>:null}
               <span style={{fontSize:tab.action?20:18,color:tab.action?C.text:isActive?C.blue:C.muted}}>{tab.icon}</span>
               {tab.label?<span style={{fontSize:9,fontFamily:"'Inter',sans-serif",color:tab.action?C.text:isActive?C.blue:C.muted,fontWeight:isActive?700:400}}>{tab.label}</span>:null}
@@ -2052,6 +2056,95 @@ function App() {
   );
 
   return <div style={{padding:20}}>Cargando...</div>;
+}
+
+function Pana(props) {
+  var C=_theme||LIGHT;
+  var [messages,setMessages]=useState([
+    {role:"assistant",content:"Epale pana! Soy Pana, tu asistente venezolano 🇻🇪 Preguntame lo que quieras — tramites en el exterior, como enviar dinero a Venezuela, informacion sobre cualquier pais, o simplemente conversa. Aqui estoy!"}
+  ]);
+  var [input,setInput]=useState("");
+  var [loading,setLoading]=useState(false);
+  var inputRef=React.useRef(null);
+  var bottomRef=React.useRef(null);
+
+  React.useEffect(function(){
+    if(bottomRef.current) bottomRef.current.scrollIntoView({behavior:"smooth"});
+  },[messages]);
+
+  var send=function(){
+    if(!input.trim()||loading) return;
+    var userMsg={role:"user",content:input};
+    var newMessages=messages.concat([userMsg]);
+    setMessages(newMessages);
+    setInput("");
+    setLoading(true);
+
+    var apiMessages=newMessages.map(function(m){ return {role:m.role,content:m.content}; });
+
+    fetch("https://api.deepseek.com/chat/completions",{
+      method:"POST",
+      headers:{"Content-Type":"application/json","Authorization":"Bearer "+DEEPSEEK_KEY},
+      body:JSON.stringify({
+        model:"deepseek-chat",
+        messages:[
+          {role:"system",content:"Eres Pana, un asistente inteligente hecho especialmente para venezolanos en el mundo. Hablas espanol venezolano natural y casual — usas palabras como 'pana', 'chamo', 'epale', 'vaina', 'chimbo', 'chevere' cuando es apropiado. Eres util, amigable y conoces a fondo: tramites de residencia y visa en Espana, USA, Colombia, Chile, Peru, Argentina, Ecuador, Panama, Portugal, Italia y Canada; como enviar dinero a Venezuela (Zelle, cripto, remesas); el dolar BCV y paralelo; la situacion en Venezuela; cultura venezolana; consejos practicos para venezolanos en el exterior. Si no sabes algo, lo dices honestamente. Mantienes respuestas concisas y utiles. Nunca hagas comentarios politicos partidistas."}
+        ].concat(apiMessages),
+        max_tokens:1000,
+        temperature:0.7
+      })
+    }).then(function(r){return r.json();}).then(function(data){
+      var reply=data.choices&&data.choices[0]&&data.choices[0].message&&data.choices[0].message.content;
+      if(reply){
+        setMessages(function(prev){ return prev.concat([{role:"assistant",content:reply}]); });
+      }
+      setLoading(false);
+    }).catch(function(){
+      setMessages(function(prev){ return prev.concat([{role:"assistant",content:"Disculpa pana, tuve un problema tecnico. Intenta de nuevo!"}]); });
+      setLoading(false);
+    });
+  };
+
+  return (
+    <div style={{position:"fixed",inset:0,zIndex:500,background:C.bg,maxWidth:480,margin:"0 auto",display:"flex",flexDirection:"column"}}>
+      {/* Header */}
+      <div style={{display:"flex",height:4}}><div style={{flex:1,background:"#CF9A00"}}/><div style={{flex:1,background:"#0033A0"}}/><div style={{flex:1,background:"#CF0A0A"}}/></div>
+      <div style={{padding:"14px 16px",background:C.card,borderBottom:"1px solid "+C.border,display:"flex",alignItems:"center",gap:12}}>
+        <button onClick={props.onClose} style={{background:C.bg,border:"none",borderRadius:9999,width:36,height:36,cursor:"pointer",color:C.blue,fontSize:20,display:"flex",alignItems:"center",justifyContent:"center"}}>{"←"}</button>
+        <div style={{width:40,height:40,borderRadius:9999,background:"linear-gradient(135deg,#ffcc00,#0033A0)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20}}>{"🤖"}</div>
+        <div>
+          <div style={{fontSize:16,fontFamily:"'Syne',sans-serif",fontWeight:700,color:C.text}}>Pana</div>
+          <div style={{fontSize:11,color:C.muted,fontFamily:"'Inter',sans-serif"}}>Tu asistente venezolano {"🇻🇪"}</div>
+        </div>
+      </div>
+      {/* Messages */}
+      <div style={{flex:1,overflowY:"auto",padding:"16px",WebkitOverflowScrolling:"touch"}}>
+        {messages.map(function(m,i){
+          var isUser=m.role==="user";
+          return (
+            <div key={i} style={{display:"flex",justifyContent:isUser?"flex-end":"flex-start",marginBottom:12}}>
+              {!isUser&&<div style={{width:32,height:32,borderRadius:9999,background:"linear-gradient(135deg,#ffcc00,#0033A0)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,marginRight:8,flexShrink:0,alignSelf:"flex-end"}}>{"🤖"}</div>}
+              <div style={{maxWidth:"78%",padding:"10px 14px",borderRadius:isUser?"18px 18px 4px 18px":"18px 18px 18px 4px",background:isUser?"#ffcc00":C.card,color:isUser?"#1a1a1a":C.text,fontFamily:"'Inter',sans-serif",fontSize:14,lineHeight:1.5,border:isUser?"none":"1px solid "+C.border}}>
+                {m.content}
+              </div>
+            </div>
+          );
+        })}
+        {loading&&(
+          <div style={{display:"flex",justifyContent:"flex-start",marginBottom:12}}>
+            <div style={{width:32,height:32,borderRadius:9999,background:"linear-gradient(135deg,#ffcc00,#0033A0)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,marginRight:8,flexShrink:0}}>{"🤖"}</div>
+            <div style={{padding:"10px 14px",borderRadius:"18px 18px 18px 4px",background:C.card,border:"1px solid "+C.border,color:C.muted,fontFamily:"'Inter',sans-serif",fontSize:14}}>Pensando...</div>
+          </div>
+        )}
+        <div ref={bottomRef}/>
+      </div>
+      {/* Input */}
+      <div style={{padding:"12px 16px",background:C.card,borderTop:"1px solid "+C.border,display:"flex",gap:10,alignItems:"flex-end",paddingBottom:"calc(12px + env(safe-area-inset-bottom))"}}>
+        <textarea ref={inputRef} value={input} onChange={function(e){setInput(e.target.value);}} onKeyDown={function(e){if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}}} placeholder="Preguntale algo a Pana..." rows={1} style={{flex:1,padding:"10px 14px",background:C.bg,border:"1.5px solid "+C.border,borderRadius:20,color:C.text,fontFamily:"'Inter',sans-serif",fontSize:14,outline:"none",resize:"none",maxHeight:120,lineHeight:1.5}}/>
+        <button onClick={send} disabled={loading||!input.trim()} style={{width:44,height:44,borderRadius:9999,background:input.trim()?"#ffcc00":"#333",border:"none",cursor:input.trim()?"pointer":"not-allowed",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}}>{"↑"}</button>
+      </div>
+    </div>
+  );
 }
 
 export default function AppRoot() {
