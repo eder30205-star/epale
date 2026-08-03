@@ -2082,17 +2082,10 @@ function Pana(props) {
 
     var apiMessages=newMessages.map(function(m){ return {role:m.role,content:m.content}; });
 
-    fetch("https://api.deepseek.com/chat/completions",{
+    fetch("https://zkydbsymcnnbepvmbchr.supabase.co/functions/v1/rapid-endpoint",{
       method:"POST",
-      headers:{"Content-Type":"application/json","Authorization":"Bearer "+DEEPSEEK_KEY},
-      body:JSON.stringify({
-        model:"deepseek-chat",
-        messages:[
-          {role:"system",content:"Eres Pana, un asistente inteligente hecho especialmente para venezolanos en el mundo. Hablas espanol venezolano natural y casual — usas palabras como 'pana', 'chamo', 'epale', 'vaina', 'chimbo', 'chevere' cuando es apropiado. Eres util, amigable y conoces a fondo: tramites de residencia y visa en Espana, USA, Colombia, Chile, Peru, Argentina, Ecuador, Panama, Portugal, Italia y Canada; como enviar dinero a Venezuela (Zelle, cripto, remesas); el dolar BCV y paralelo; la situacion en Venezuela; cultura venezolana; consejos practicos para venezolanos en el exterior. Si no sabes algo, lo dices honestamente. Mantienes respuestas concisas y utiles. Nunca hagas comentarios politicos partidistas."}
-        ].concat(apiMessages),
-        max_tokens:1000,
-        temperature:0.7
-      })
+      headers:{"Content-Type":"application/json","Authorization":"Bearer "+getToken()},
+      body:JSON.stringify({messages:apiMessages})
     }).then(function(r){return r.json();}).then(function(data){
       var reply=data.choices&&data.choices[0]&&data.choices[0].message&&data.choices[0].message.content;
       if(reply){
