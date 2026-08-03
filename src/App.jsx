@@ -2065,9 +2065,13 @@ function App() {
 
 function Pana(props) {
   var C=_theme||LIGHT;
-  var [messages,setMessages]=useState([
-    {role:"assistant",content:"Epale pana! Soy Pana, tu asistente venezolano 🇻🇪 Preguntame lo que quieras — tramites en el exterior, como enviar dinero a Venezuela, informacion sobre cualquier pais, o simplemente conversa. Aqui estoy!"}
-  ]);
+  var [messages,setMessages]=useState(function(){
+    try {
+      var saved=localStorage.getItem("pana_conversation");
+      if(saved){ var parsed=JSON.parse(saved); if(parsed&&parsed.length>0) return parsed; }
+    } catch(e){}
+    return [{role:"assistant",content:"Epale pana! Soy Pana, tu asistente venezolano 🇻🇪 Preguntame lo que quieras — tramites en el exterior, como enviar dinero a Venezuela, informacion sobre cualquier pais, o simplemente conversa. Aqui estoy!"}];
+  });
   var [input,setInput]=useState("");
   var [loading,setLoading]=useState(false);
   var inputRef=React.useRef(null);
@@ -2082,6 +2086,7 @@ function Pana(props) {
     var userMsg={role:"user",content:input};
     var newMessages=messages.concat([userMsg]);
     setMessages(newMessages);
+    try{ localStorage.setItem("pana_conversation",JSON.stringify(newMessages)); }catch(e){}
     setInput("");
     setLoading(true);
 
@@ -2089,12 +2094,16 @@ function Pana(props) {
 
     fetch("https://zkydbsymcnnbepvmbchr.supabase.co/functions/v1/rapid-endpoint",{
       method:"POST",
-      headers:{"Content-Type":"application/json","Authorization":"Bearer "+getToken()},
+      headers:{"Content-Type":"application/json","Authorization":"Bearer "+getToken(),"apikey":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpreWRic3ltY25uYmVwdm1iY2hyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDk4MzQ4MDAsImV4cCI6MjAyNTQxMDgwMH0.SHKBbGSqMM7DFnTFRlmh5I_P8CJfJDHbqXXklqF1Fxk"},
       body:JSON.stringify({messages:apiMessages})
     }).then(function(r){return r.json();}).then(function(data){
       var reply=data.choices&&data.choices[0]&&data.choices[0].message&&data.choices[0].message.content;
       if(reply){
-        setMessages(function(prev){ return prev.concat([{role:"assistant",content:reply}]); });
+        setMessages(function(prev){ 
+          var updated=prev.concat([{role:"assistant",content:reply}]);
+          try{ localStorage.setItem("pana_conversation",JSON.stringify(updated)); }catch(e){}
+          return updated;
+        });
       }
       setLoading(false);
     }).catch(function(){
@@ -2110,10 +2119,15 @@ function Pana(props) {
       <div style={{padding:"14px 16px",background:C.card,borderBottom:"1px solid "+C.border,display:"flex",alignItems:"center",gap:12}}>
         <button onClick={props.onClose} style={{background:C.bg,border:"none",borderRadius:9999,width:36,height:36,cursor:"pointer",color:C.blue,fontSize:20,display:"flex",alignItems:"center",justifyContent:"center"}}>{"←"}</button>
         <div style={{width:40,height:40,borderRadius:9999,background:"linear-gradient(135deg,#ffcc00,#0033A0)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20}}>{"🤖"}</div>
-        <div>
+        <div style={{flex:1}}>
           <div style={{fontSize:16,fontFamily:"'Syne',sans-serif",fontWeight:700,color:C.text}}>Pana</div>
           <div style={{fontSize:11,color:C.muted,fontFamily:"'Inter',sans-serif"}}>Tu asistente venezolano {"🇻🇪"}</div>
         </div>
+        <button onClick={function(){
+          var initial=[{role:"assistant",content:"Epale pana! Soy Pana, tu asistente venezolano 🇻🇪 Preguntame lo que quieras!"}];
+          setMessages(initial);
+          try{ localStorage.removeItem("pana_conversation"); }catch(e){}
+        }} style={{background:"none",border:"none",cursor:"pointer",fontSize:11,color:C.muted,padding:"4px 8px",borderRadius:8,fontFamily:"'Inter',sans-serif"}}>Limpiar</button>
       </div>
       {/* Messages */}
       <div style={{flex:1,overflowY:"auto",padding:"16px",WebkitOverflowScrolling:"touch"}}>
