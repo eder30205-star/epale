@@ -104,6 +104,9 @@ var api = {
   },
   unlikePost: function(uid, postId) { return fetchAuth(SUPA_URL+"/rest/v1/likes?user_id=eq."+uid+"&post_id=eq."+String(postId),{method:"DELETE",headers:{"apikey":SUPA_KEY,"Authorization":"Bearer "+getToken()}}).then(function(r){return r.json();}).catch(function(){}); },
   getUserPosts: function(uid) { return fetchAuth(SUPA_URL+"/rest/v1/posts?user_id=eq."+uid+"&select=*&order=created_at.desc",{headers:{"apikey":SUPA_KEY,"Authorization":"Bearer "+getToken()}}).then(function(r){return r.json();}); },
+  getComments: function(postId) {
+    return fetchAuth(SUPA_URL+"/rest/v1/comments?post_id=eq."+String(postId)+"&order=created_at.asc",{headers:{"apikey":SUPA_KEY,"Authorization":"Bearer "+getToken()}}).then(function(r){return r.json();}).catch(function(){ return []; });
+  },
   addComment: function(postId, userId, userName, content) { return fetchAuth(SUPA_URL+"/rest/v1/comments",{method:"POST",headers:{"Content-Type":"application/json","apikey":SUPA_KEY,"Authorization":"Bearer "+getToken(),"Prefer":"return=representation"},body:JSON.stringify({post_id:String(postId),user_id:userId,user_name:userName,content:content})}).then(function(r){return r.json();}).catch(function(){}); },
   getNotifications: function(userId) { return fetchAuth(SUPA_URL+"/rest/v1/notifications?user_id=eq."+userId+"&select=*&order=created_at.desc&limit=20",{headers:{"apikey":SUPA_KEY,"Authorization":"Bearer "+getToken()}}).then(function(r){return r.json();}); },
   addNotification: function(userId, fromName, type, postId) { return fetchAuth(SUPA_URL+"/rest/v1/notifications",{method:"POST",headers:{"Content-Type":"application/json","apikey":SUPA_KEY,"Authorization":"Bearer "+getToken()},body:JSON.stringify({user_id:userId,from_name:fromName,type:type,post_id:String(postId)})}).then(function(r){return r.json();}).catch(function(){}); },
@@ -619,7 +622,20 @@ function PostCard(props) {
   var [open,setOpen]=useState(false);
   var [comment,setComment]=useState("");
   var [comments,setComments]=useState(post._comments||[]);
+
   var [commentCount,setCommentCount]=useState(post.comments||0);
+
+  // Load real comments from DB when opened
+  React.useEffect(function(){
+    if(open&&post.id&&!String(post.id).startsWith("local")){
+      api.getComments(post.id).then(function(data){
+        if(Array.isArray(data)&&data.length>0){
+          setComments(data.map(function(c){ return {id:c.id,user_name:c.user_name||"Anonimo",content:c.content,created_at:c.created_at}; }));
+          setCommentCount(data.length);
+        }
+      }).catch(function(){});
+    }
+  },[open]);
   var commentInputRef=React.useRef(null);
   var [showCommentEmoji,setShowCommentEmoji]=useState(false);
   var [showMenu,setShowMenu]=useState(false);
