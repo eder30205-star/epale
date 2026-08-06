@@ -77,11 +77,12 @@ var api = {
   upsertProfile: function(id, name, city, username) { return fetchAuth(SUPA_URL+"/rest/v1/profiles",{method:"POST",headers:{"Content-Type":"application/json","apikey":SUPA_KEY,"Authorization":"Bearer "+getToken(),"Prefer":"resolution=merge-duplicates"},body:JSON.stringify({id:id,name:name,city:city,username:username})}).then(function(r){return r.json();}).catch(function(){}); },
   getProfile: function(id) { return fetchAuth(SUPA_URL+"/rest/v1/profiles?id=eq."+id+"&select=*",{headers:{"apikey":SUPA_KEY,"Authorization":"Bearer "+getToken()}}).then(function(r){return r.json();}); },
   getPosts: function(city,before) {
-    var url=city==="global"
-      ? SUPA_URL+"/rest/v1/rpc/get_ranked_posts?p_limit=30"
-      : SUPA_URL+"/rest/v1/rpc/get_ranked_posts?p_city="+encodeURIComponent(city)+"&p_limit=30";
-    if(before) url+="&created_at=lt."+encodeURIComponent(before);
-    return fetch(url,{headers:{"apikey":SUPA_KEY}}).then(function(r){return r.json()});
+    var body=city==="global"?{p_limit:30}:{p_city:city,p_limit:30};
+    return fetch(SUPA_URL+"/rest/v1/rpc/get_ranked_posts",{
+      method:"POST",
+      headers:{"apikey":SUPA_KEY,"Content-Type":"application/json"},
+      body:JSON.stringify(body)
+    }).then(function(r){return r.json()});
   },
   createPost: function(userId, city, type, content, name) { return fetchAuth(SUPA_URL+"/rest/v1/posts",{method:"POST",headers:{"Content-Type":"application/json","apikey":SUPA_KEY,"Authorization":"Bearer "+getToken(),"Prefer":"return=representation"},body:JSON.stringify({user_id:userId,city:city,type:type,content:content,name:name||"Anonimo"})}).then(function(r){return r.json();}).catch(function(){}); },
   uploadPhoto: function(uid, base64data) {
