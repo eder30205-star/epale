@@ -78,8 +78,8 @@ var api = {
   getProfile: function(id) { return fetchAuth(SUPA_URL+"/rest/v1/profiles?id=eq."+id+"&select=*",{headers:{"apikey":SUPA_KEY,"Authorization":"Bearer "+getToken()}}).then(function(r){return r.json();}); },
   getPosts: function(city,before) {
     var url=city==="global"
-      ? SUPA_URL+"/rest/v1/posts?select=*&order=created_at.desc&limit=30"
-      : SUPA_URL+"/rest/v1/posts?city=eq."+city+"&select=*&order=created_at.desc&limit=30";
+      ? SUPA_URL+"/rest/v1/rpc/get_ranked_posts?p_limit=30"
+      : SUPA_URL+"/rest/v1/rpc/get_ranked_posts?p_city="+encodeURIComponent(city)+"&p_limit=30";
     if(before) url+="&created_at=lt."+encodeURIComponent(before);
     return fetch(url,{headers:{"apikey":SUPA_KEY}}).then(function(r){return r.json()});
   },
