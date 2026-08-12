@@ -2098,6 +2098,35 @@ function Pana(props) {
     if(bottomRef.current) bottomRef.current.scrollIntoView({behavior:"smooth"});
   },[messages]);
 
+  var [listening,setListening]=useState(false);
+
+  var startListening=function(){
+    if(!('webkitSpeechRecognition' in window||'SpeechRecognition' in window)){ alert("Tu navegador no soporta reconocimiento de voz"); return; }
+    var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+    var recognition=new SR();
+    recognition.lang="es-VE";
+    recognition.continuous=false;
+    recognition.interimResults=false;
+    recognition.onstart=function(){ setListening(true); };
+    recognition.onend=function(){ setListening(false); };
+    recognition.onresult=function(e){ var transcript=e.results[0][0].transcript; setInput(function(prev){ return prev+transcript; }); };
+    recognition.onerror=function(){ setListening(false); };
+    recognition.start();
+  };
+
+  var speak=function(text){
+    if(!('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    var utt=new SpeechSynthesisUtterance(text);
+    utt.lang="es";
+    utt.rate=1.0;
+    utt.pitch=1.0;
+    var voices=window.speechSynthesis.getVoices();
+    var spanishVoice=voices.find(function(v){ return v.lang.startsWith("es"); });
+    if(spanishVoice) utt.voice=spanishVoice;
+    window.speechSynthesis.speak(utt);
+  };
+
   var send=function(){
     if(!input.trim()||loading) return;
     var userMsg={role:"user",content:input};
@@ -2121,6 +2150,7 @@ function Pana(props) {
           try{ localStorage.setItem("pana_conversation",JSON.stringify(updated)); }catch(e){}
           return updated;
         });
+        speak(reply);
       }
       setLoading(false);
     }).catch(function(){
@@ -2169,7 +2199,8 @@ function Pana(props) {
       </div>
       {/* Input */}
       <div style={{padding:"12px 16px",background:C.card,borderTop:"1px solid "+C.border,display:"flex",gap:10,alignItems:"flex-end",paddingBottom:"calc(12px + env(safe-area-inset-bottom))"}}>
-        <textarea ref={inputRef} value={input} onChange={function(e){setInput(e.target.value);}} onKeyDown={function(e){if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}}} placeholder="Preguntale algo a Pana..." rows={1} style={{flex:1,padding:"10px 14px",background:C.bg,border:"1.5px solid "+C.border,borderRadius:20,color:C.text,fontFamily:"'Inter',sans-serif",fontSize:14,outline:"none",resize:"none",maxHeight:120,lineHeight:1.5}}/>
+        <button onClick={startListening} style={{width:44,height:44,borderRadius:9999,background:listening?"#ff4444":"#333",border:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}}>{"🎤"}</button>
+        <textarea ref={inputRef} value={input} onChange={function(e){setInput(e.target.value);}} onKeyDown={function(e){if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}}} placeholder={listening?"Escuchando...":"Preguntale algo a Pana..."} rows={1} style={{flex:1,padding:"10px 14px",background:C.bg,border:"1.5px solid "+(listening?"#ff4444":C.border),borderRadius:20,color:C.text,fontFamily:"'Inter',sans-serif",fontSize:14,outline:"none",resize:"none",maxHeight:120,lineHeight:1.5}}/>
         <button onClick={send} disabled={loading||!input.trim()} style={{width:44,height:44,borderRadius:9999,background:input.trim()?"#ffcc00":"#333",border:"none",cursor:input.trim()?"pointer":"not-allowed",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}}>{"↑"}</button>
       </div>
     </div>
