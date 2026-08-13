@@ -1782,6 +1782,61 @@ function Auth(props) {
   var onDone=props.onDone; var [mode,setMode]=useState("login"); var [step,setStep]=useState(1);
   var [email,setEmail]=useState(""); var [password,setPassword]=useState(""); var [password2,setPassword2]=useState("");
   var [name,setName]=useState(""); var [username,setUsername]=useState(""); var [chosenCity,setChosenCity]=useState(""); var [agreed,setAgreed]=useState(false); var [userPhoto,setUserPhoto]=useState(null);
+  var [showForm,setShowForm]=useState(false);
+
+  if(!showForm) return (
+    <div style={{background:"#0d0d12",color:"#fff",fontFamily:"'Inter',sans-serif",minHeight:"100vh",overflowY:"auto"}}>
+      <div style={{display:"flex",height:5}}><div style={{flex:1,background:"#CF9A00"}}/><div style={{flex:1,background:"#0033A0"}}/><div style={{flex:1,background:"#CF0A0A"}}/></div>
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"16px 24px",position:"sticky",top:0,background:"rgba(13,13,18,0.95)",backdropFilter:"blur(12px)",borderBottom:"1px solid #2a2a38",zIndex:100}}>
+        <div style={{fontFamily:"'Syne',sans-serif",fontWeight:900,fontSize:24,color:"#fff"}}>Epale</div>
+        <button onClick={function(){setShowForm(true);setMode("login");}} style={{background:"transparent",color:"#fff",border:"1.5px solid #2a2a38",padding:"8px 20px",borderRadius:100,cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:14,fontWeight:600}}>Iniciar sesión</button>
+      </div>
+      <div style={{textAlign:"center",padding:"60px 24px 40px",position:"relative"}}>
+        <div style={{position:"absolute",top:0,left:"50%",transform:"translateX(-50%)",width:500,height:500,background:"radial-gradient(circle,rgba(255,204,0,0.1) 0%,transparent 70%)",pointerEvents:"none"}}/>
+        <div style={{fontSize:56,marginBottom:20,display:"inline-block",animation:"float 3s ease-in-out infinite"}}>🇻🇪</div>
+        <h1 style={{fontFamily:"'Syne',sans-serif",fontWeight:900,fontSize:"clamp(28px,7vw,52px)",lineHeight:1.1,marginBottom:20,maxWidth:700,margin:"0 auto 20px"}}>
+          La red social de los{" "}
+          <span style={{background:"linear-gradient(90deg,#CF9A00 33%,#0033A0 33%,#0033A0 66%,#CF0A0A 66%)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>venezolanos</span>
+          {" "}en el mundo
+        </h1>
+        <p style={{fontSize:16,color:"#a0a0b0",maxWidth:500,margin:"0 auto 32px",lineHeight:1.6}}>Conecta con tu gente sin importar en qué país estés. Dólar BCV, feed por país y Pana — tu asistente venezolano con IA.</p>
+        <div style={{display:"flex",gap:12,flexWrap:"wrap",justifyContent:"center",marginBottom:48}}>
+          <button onClick={function(){setShowForm(true);setMode("register");}} style={{background:"#ffcc00",color:"#0d0d12",padding:"14px 32px",borderRadius:100,fontWeight:800,fontSize:16,border:"none",cursor:"pointer",fontFamily:"'Syne',sans-serif",boxShadow:"0 0 30px rgba(255,204,0,0.3)"}}>Únete gratis 🚀</button>
+          <button onClick={function(){setShowForm(true);setMode("login");}} style={{background:"transparent",color:"#fff",padding:"14px 32px",borderRadius:100,fontWeight:600,fontSize:16,border:"1.5px solid #2a2a38",cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>Iniciar sesión</button>
+        </div>
+        <div style={{display:"flex",gap:10,flexWrap:"wrap",justifyContent:"center",fontSize:20}}>🇪🇸 🇺🇸 🇨🇴 🇨🇱 🇵🇪 🇦🇷 🇪🇨 🇵🇦 🇵🇹 🇮🇹 🇨🇦 🇻🇪</div>
+      </div>
+      <div style={{display:"flex",borderTop:"1px solid #2a2a38",borderBottom:"1px solid #2a2a38"}}>
+        {[["12","Países"],["7M+","Venezolanos"],["100%","Gratis"]].map(function(s,i){ return <div key={i} style={{flex:1,padding:"28px 16px",textAlign:"center",borderRight:i<2?"1px solid #2a2a38":"none"}}><div style={{fontFamily:"'Syne',sans-serif",fontSize:32,fontWeight:900,color:"#ffcc00"}}>{s[0]}</div><div style={{fontSize:13,color:"#a0a0b0",marginTop:4}}>{s[1]}</div></div>; })}
+      </div>
+      <div style={{padding:"48px 24px",maxWidth:800,margin:"0 auto"}}>
+        <div style={{fontSize:11,letterSpacing:3,color:"#ffcc00",fontWeight:600,marginBottom:12,textTransform:"uppercase"}}>Épale tiene todo</div>
+        <div style={{fontFamily:"'Syne',sans-serif",fontWeight:900,fontSize:"clamp(22px,4vw,36px)",marginBottom:32}}>Hecha para nosotros, por nosotros</div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(240px,1fr))",gap:16}}>
+          {[["🌍","Feed por país","Ve lo que publican los venezolanos en tu país o en cualquier otro."],["💵","Dólar BCV","El precio del dólar BCV y el paralelo, actualizado cada día."],["🤖","Pana IA","Tu asistente venezolano. Pregúntale sobre trámites, remesas y más."],["📱","Instálala como app","Sin App Store. Agrégala directo a tu pantalla de inicio."],["🔒","Espacio seguro","Solo para venezolanos. Sin spam, sin bots."],["⚡","Entra con Google","Regístrate en segundos con tu cuenta de Google."]].map(function(f,i){
+            return <div key={i} style={{background:"#18181f",border:"1px solid #2a2a38",borderRadius:16,padding:24}}>
+              <div style={{fontSize:28,marginBottom:12}}>{f[0]}</div>
+              <div style={{fontFamily:"'Syne',sans-serif",fontWeight:800,fontSize:16,marginBottom:8,color:"#fff"}}>{f[1]}</div>
+              <div style={{fontSize:13,color:"#a0a0b0",lineHeight:1.6}}>{f[2]}</div>
+            </div>;
+          })}
+        </div>
+      </div>
+      <div style={{textAlign:"center",padding:"60px 24px",position:"relative"}}>
+        <h2 style={{fontFamily:"'Syne',sans-serif",fontWeight:900,fontSize:"clamp(22px,4vw,40px)",marginBottom:12}}>¿Eres venezolano?<br/>Este es tu espacio.</h2>
+        <p style={{color:"#a0a0b0",fontSize:16,marginBottom:32}}>Únete gratis. Sin descargas. Sin anuncios.</p>
+        <button onClick={function(){setShowForm(true);setMode("register");}} style={{background:"#ffcc00",color:"#0d0d12",padding:"16px 44px",borderRadius:100,fontWeight:800,fontSize:17,border:"none",cursor:"pointer",fontFamily:"'Syne',sans-serif"}}>Entrar a Épale 🇻🇪</button>
+      </div>
+      <div style={{display:"flex",height:5}}><div style={{flex:1,background:"#CF9A00"}}/><div style={{flex:1,background:"#0033A0"}}/><div style={{flex:1,background:"#CF0A0A"}}/></div>
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"24px",flexWrap:"wrap",gap:12,borderTop:"1px solid #2a2a38"}}>
+        <div style={{fontFamily:"'Syne',sans-serif",fontWeight:900,fontSize:20,color:"#fff"}}>Epale</div>
+        <div style={{display:"flex",gap:20}}><a href="mailto:hola@epaleapp.online" style={{color:"#a0a0b0",textDecoration:"none",fontSize:13}}>Contacto</a></div>
+        <div style={{color:"#a0a0b0",fontSize:12}}>© 2026 Épale · La red social venezolana</div>
+      </div>
+      <style dangerouslySetInnerHTML={{__html:"@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}"}}/>
+    </div>
+  );
+
   return (<div style={{minHeight:"100vh",background:C.bg,display:"flex",flexDirection:"column",maxWidth:480,margin:"0 auto"}}><AuthHero mode={mode} step={step}/>{mode==="login"||step===1?(<div style={{display:"flex",margin:"18px 20px 0",background:C.bg,borderRadius:100,padding:4,border:"1px solid "+C.border}}>{["login","register"].map(function(m){ return <button key={m} onClick={function(){setMode(m);setStep(1);}} style={{flex:1,padding:"10px 0",borderRadius:100,border:"none",cursor:"pointer",background:mode===m?C.card:"transparent",color:mode===m?C.text:C.muted,fontFamily:"'Inter',sans-serif",fontSize:13,fontWeight:mode===m?700:400,boxShadow:mode===m?"0 1px 6px rgba(0,0,0,0.1)":"none"}}>{m==="login"?"Iniciar sesion":"Crear cuenta"}</button>; })}</div>):null}{mode==="login"?<AuthLogin onDone={onDone}/>:null}{mode==="register"&&step===1?<AuthStep1 onNext={function(){setStep(2);}} email={email} setEmail={setEmail} password={password} setPassword={setPassword} password2={password2} setPassword2={setPassword2}/>:null}{mode==="register"&&step===2?<AuthStep2 onNext={function(){setStep(3);}} onBack={function(){setStep(1);}} name={name} setName={setName} username={username} setUsername={setUsername}/>:null}{mode==="register"&&step===3?<AuthStep3 onNext={function(){setStep(4);}} onBack={function(){setStep(2);}} chosenCity={chosenCity} setChosenCity={setChosenCity} agreed={agreed} setAgreed={setAgreed}/>:null}{mode==="register"&&step===4?<AuthStep4 onDone={onDone} onBack={function(){setStep(3);}} email={email} chosenCity={chosenCity} userName={name} userPhoto={userPhoto} setUserPhoto={setUserPhoto} password={password}/>:null}</div>);
 }
 
