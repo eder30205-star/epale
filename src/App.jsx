@@ -2057,7 +2057,7 @@ function App() {
   if(screen==="auth"){
     if(!showAuthForm){
       return (
-        <div style={{minHeight:"100vh",background:"#0d0d12",color:"#fff",fontFamily:"'Inter',sans-serif",overflowX:"hidden"}}>
+        <div style={{minHeight:"100vh",background:"#0d0d12",color:"#fff",fontFamily:"'Inter',sans-serif",overflowX:"hidden",overflowY:"auto",position:"fixed",inset:0}}>
           <div style={{display:"flex",height:5}}><div style={{flex:1,background:"#CF9A00"}}/><div style={{flex:1,background:"#0033A0"}}/><div style={{flex:1,background:"#CF0A0A"}}/></div>
           <nav style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"20px 40px",position:"sticky",top:0,zIndex:100,background:"rgba(13,13,18,0.92)",backdropFilter:"blur(12px)",borderBottom:"1px solid #2a2a38"}}>
             <div style={{fontFamily:"'Syne',sans-serif",fontWeight:900,fontSize:28,color:"#fff",letterSpacing:-1}}>Epale</div>
