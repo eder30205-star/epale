@@ -1065,8 +1065,6 @@ function Feed(props) {
   var [isMobile,setIsMobile]=useState(window.innerWidth<768);
   var [openCity,setOpenCity]=useState(null);
   useEffect(function(){
-    var authHandler=function(){ window._showAuthForm=true; };
-    window.addEventListener("epale:showauth",authHandler);
     var handler=function(){ setShowComposer(true); };
     document.addEventListener("epale:openComposer",handler);
 
@@ -1887,6 +1885,7 @@ function App() {
   C=dark?DARK:LIGHT;
   var [showResetPassword,setShowResetPassword]=useState(false);
   var [showPana,setShowPana]=useState(false);
+  var [showAuthForm,setShowAuthForm]=useState(false);
   var [resetToken,setResetToken]=useState("");
   var [screen,setScreen]=useState(function(){
     try {
@@ -2056,13 +2055,13 @@ function App() {
   if(showResetPassword) return <ResetPasswordScreen onDone={function(){ setShowResetPassword(false); setScreen("auth"); }}/>;
   if(showPana) return <Pana onClose={function(){setShowPana(false);}}/>;
   if(screen==="auth"){
-    if(!window._showAuthForm){
+    if(!showAuthForm){
       return (
         <div style={{minHeight:"100vh",background:"#0d0d12",color:"#fff",fontFamily:"'Inter',sans-serif",overflowX:"hidden"}}>
           <div style={{display:"flex",height:5}}><div style={{flex:1,background:"#CF9A00"}}/><div style={{flex:1,background:"#0033A0"}}/><div style={{flex:1,background:"#CF0A0A"}}/></div>
           <nav style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"20px 40px",position:"sticky",top:0,zIndex:100,background:"rgba(13,13,18,0.92)",backdropFilter:"blur(12px)",borderBottom:"1px solid #2a2a38"}}>
             <div style={{fontFamily:"'Syne',sans-serif",fontWeight:900,fontSize:28,color:"#fff",letterSpacing:-1}}>Epale</div>
-            <button onClick={function(){window._showAuthForm=true;window.dispatchEvent(new Event("epale:showauth"));}} style={{background:"#ffcc00",color:"#0d0d12",padding:"10px 24px",borderRadius:100,fontWeight:700,fontSize:15,border:"none",cursor:"pointer",fontFamily:"'Syne',sans-serif"}}>Regístrate gratis</button>
+            <button onClick={function(){setShowAuthForm(true);}} style={{background:"#ffcc00",color:"#0d0d12",padding:"10px 24px",borderRadius:100,fontWeight:700,fontSize:15,border:"none",cursor:"pointer",fontFamily:"'Syne',sans-serif"}}>Regístrate gratis</button>
           </nav>
           <section style={{minHeight:"85vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",textAlign:"center",padding:"80px 24px 60px",position:"relative"}}>
             <div style={{position:"absolute",top:-200,left:"50%",transform:"translateX(-50%)",width:600,height:600,background:"radial-gradient(circle,rgba(255,204,0,0.12) 0%,transparent 70%)",pointerEvents:"none"}}/>
@@ -2074,8 +2073,8 @@ function App() {
             </h1>
             <p style={{fontSize:18,color:"#a0a0b0",maxWidth:560,marginBottom:40}}>Conecta con tu gente sin importar en qué país estés. Dólar BCV en tiempo real, feed por país y Pana — tu asistente venezolano con IA.</p>
             <div style={{display:"flex",gap:16,flexWrap:"wrap",justifyContent:"center",marginBottom:60}}>
-              <button onClick={function(){window._showAuthForm=true;window.dispatchEvent(new Event("epale:showauth"));}} style={{background:"#ffcc00",color:"#0d0d12",padding:"16px 36px",borderRadius:100,fontWeight:800,fontSize:17,border:"none",cursor:"pointer",fontFamily:"'Syne',sans-serif",boxShadow:"0 0 30px rgba(255,204,0,0.3)"}}>Únete gratis 🚀</button>
-              <button onClick={function(){window._showAuthForm=true;window.dispatchEvent(new Event("epale:showauth"));}} style={{background:"transparent",color:"#fff",padding:"16px 36px",borderRadius:100,fontWeight:600,fontSize:17,border:"1.5px solid #2a2a38",cursor:"pointer",fontFamily:"'Syne',sans-serif"}}>Iniciar sesión</button>
+              <button onClick={function(){setShowAuthForm(true);}} style={{background:"#ffcc00",color:"#0d0d12",padding:"16px 36px",borderRadius:100,fontWeight:800,fontSize:17,border:"none",cursor:"pointer",fontFamily:"'Syne',sans-serif",boxShadow:"0 0 30px rgba(255,204,0,0.3)"}}>Únete gratis 🚀</button>
+              <button onClick={function(){setShowAuthForm(true);}} style={{background:"transparent",color:"#fff",padding:"16px 36px",borderRadius:100,fontWeight:600,fontSize:17,border:"1.5px solid #2a2a38",cursor:"pointer",fontFamily:"'Syne',sans-serif"}}>Iniciar sesión</button>
             </div>
             <div style={{display:"flex",gap:12,flexWrap:"wrap",justifyContent:"center",fontSize:22}}>🇪🇸 🇺🇸 🇨🇴 🇨🇱 🇵🇪 🇦🇷 🇪🇨 🇵🇦 🇵🇹 🇮🇹 🇨🇦 🇻🇪</div>
           </section>
