@@ -2171,16 +2171,25 @@ function Pana(props) {
   };
 
   var speak=function(text){
-    if(!('speechSynthesis' in window)) return;
-    window.speechSynthesis.cancel();
-    var utt=new SpeechSynthesisUtterance(text);
-    utt.lang="es";
-    utt.rate=1.0;
-    utt.pitch=1.0;
-    var voices=window.speechSynthesis.getVoices();
-    var spanishVoice=voices.find(function(v){ return v.lang.startsWith("es"); });
-    if(spanishVoice) utt.voice=spanishVoice;
-    window.speechSynthesis.speak(utt);
+    fetch("https://api.elevenlabs.io/v1/text-to-speech/Aoh8oiCIlPke1wFxeNuK/stream",{
+      method:"POST",
+      headers:{"Content-Type":"application/json","xi-api-key":"sk_474bffab3b33a784978559f21b0480948a0c08528d182d91"},
+      body:JSON.stringify({text:text,model_id:"eleven_multilingual_v2",voice_settings:{stability:0.5,similarity_boost:0.75,style:0.3,use_speaker_boost:true}})
+    }).then(function(r){
+      if(!r.ok) throw new Error("ElevenLabs error "+r.status);
+      return r.blob();
+    }).then(function(blob){
+      var url=URL.createObjectURL(blob);
+      var audio=new Audio(url);
+      audio.onended=function(){ URL.revokeObjectURL(url); };
+      audio.play();
+    }).catch(function(){
+      if(!('speechSynthesis' in window)) return;
+      window.speechSynthesis.cancel();
+      var utt=new SpeechSynthesisUtterance(text);
+      utt.lang="es";
+      window.speechSynthesis.speak(utt);
+    });
   };
 
   var send=function(){
