@@ -2054,40 +2054,7 @@ function App() {
 
   if(showResetPassword) return <ResetPasswordScreen onDone={function(){ setShowResetPassword(false); setScreen("auth"); }}/>;
   if(showPana) return <Pana onClose={function(){setShowPana(false);}}/>;
-  if(screen==="auth"){
-    if(!showAuthForm){
-      return (
-        <div style={{background:"#0d0d12",color:"#fff",fontFamily:"'Inter',sans-serif"}}>
-          <style dangerouslySetInnerHTML={{__html:"html,body,#root{height:auto!important;overflow:auto!important;min-height:100vh;}"}}/>
-          <div style={{display:"flex",height:5}}><div style={{flex:1,background:"#CF9A00"}}/><div style={{flex:1,background:"#0033A0"}}/><div style={{flex:1,background:"#CF0A0A"}}/></div>
-          <nav style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"20px 40px",position:"sticky",top:0,zIndex:100,background:"rgba(13,13,18,0.92)",backdropFilter:"blur(12px)",borderBottom:"1px solid #2a2a38"}}>
-            <div style={{fontFamily:"'Syne',sans-serif",fontWeight:900,fontSize:28,color:"#fff",letterSpacing:-1}}>Epale</div>
-            <button onClick={function(){setShowAuthForm(true);}} style={{background:"#ffcc00",color:"#0d0d12",padding:"10px 24px",borderRadius:100,fontWeight:700,fontSize:15,border:"none",cursor:"pointer",fontFamily:"'Syne',sans-serif"}}>Regístrate gratis</button>
-          </nav>
-          <section style={{minHeight:"85vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",textAlign:"center",padding:"80px 24px 60px",position:"relative"}}>
-            <div style={{position:"absolute",top:-200,left:"50%",transform:"translateX(-50%)",width:600,height:600,background:"radial-gradient(circle,rgba(255,204,0,0.12) 0%,transparent 70%)",pointerEvents:"none"}}/>
-            <div style={{fontSize:64,marginBottom:24,animation:"float 3s ease-in-out infinite"}}>🇻🇪</div>
-            <h1 style={{fontFamily:"'Syne',sans-serif",fontWeight:900,fontSize:"clamp(36px,5vw,60px)",lineHeight:1.05,maxWidth:820,marginBottom:24}}>
-              La red social de los{" "}
-              <span style={{background:"linear-gradient(90deg,#CF9A00 33%,#0033A0 33%,#0033A0 66%,#CF0A0A 66%)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>venezolanos</span>
-              {" "}en el mundo
-            </h1>
-            <p style={{fontSize:18,color:"#a0a0b0",maxWidth:560,marginBottom:40}}>Conecta con tu gente sin importar en qué país estés. Dólar BCV en tiempo real, feed por país y Pana — tu asistente venezolano con IA.</p>
-            <div style={{display:"flex",gap:16,flexWrap:"wrap",justifyContent:"center",marginBottom:60}}>
-              <button onClick={function(){setShowAuthForm(true);}} style={{background:"#ffcc00",color:"#0d0d12",padding:"16px 36px",borderRadius:100,fontWeight:800,fontSize:17,border:"none",cursor:"pointer",fontFamily:"'Syne',sans-serif",boxShadow:"0 0 30px rgba(255,204,0,0.3)"}}>Únete gratis 🚀</button>
-              <button onClick={function(){setShowAuthForm(true);}} style={{background:"transparent",color:"#fff",padding:"16px 36px",borderRadius:100,fontWeight:600,fontSize:17,border:"1.5px solid #2a2a38",cursor:"pointer",fontFamily:"'Syne',sans-serif"}}>Iniciar sesión</button>
-            </div>
-            <div style={{display:"flex",gap:12,flexWrap:"wrap",justifyContent:"center",fontSize:22}}>🇪🇸 🇺🇸 🇨🇴 🇨🇱 🇵🇪 🇦🇷 🇪🇨 🇵🇦 🇵🇹 🇮🇹 🇨🇦 🇻🇪</div>
-          </section>
-          <div style={{display:"flex",borderTop:"1px solid #2a2a38",borderBottom:"1px solid #2a2a38"}}>
-            {[["12","Países conectados"],["7M+","Venezolanos en el exterior"],["100%","Gratis, sin anuncios"]].map(function(s,i){ return <div key={i} style={{flex:1,padding:"40px 24px",textAlign:"center",borderRight:i<2?"1px solid #2a2a38":"none"}}><div style={{fontFamily:"'Syne',sans-serif",fontSize:42,fontWeight:900,color:"#ffcc00"}}>{s[0]}</div><div style={{fontSize:14,color:"#a0a0b0",marginTop:4}}>{s[1]}</div></div>; })}
-          </div>
-          <style>{`@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}`}</style>
-        </div>
-      );
-    }
-    return <><OfflineBanner/><Auth key={dark?"dark":"light"} onDone={handleDone}/></>;
-  }
+  if(screen==="auth") return <><OfflineBanner/><Auth key={dark?"dark":"light"} onDone={handleDone}/></>;
 
   if(screen==="feed") return (
     <div key={dark?"dark":"light"}>
