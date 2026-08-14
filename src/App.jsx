@@ -1822,6 +1822,7 @@ function Auth(props) {
           })}
         </div>
       </div>
+      <BlogSection/>
       <div style={{textAlign:"center",padding:"60px 24px",position:"relative"}}>
         <h2 style={{fontFamily:"'Syne',sans-serif",fontWeight:900,fontSize:"clamp(22px,4vw,40px)",marginBottom:12}}>¿Eres venezolano?<br/>Este es tu espacio.</h2>
         <p style={{color:"#a0a0b0",fontSize:16,marginBottom:32}}>Únete gratis. Sin descargas. Sin anuncios.</p>
@@ -2267,6 +2268,78 @@ function Pana(props) {
         <button onClick={startListening} style={{width:44,height:44,borderRadius:9999,background:listening?"#ff4444":"#333",border:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}}>{"🎤"}</button>
         <textarea ref={inputRef} value={input} onChange={function(e){setInput(e.target.value);}} onKeyDown={function(e){if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}}} placeholder={listening?"Escuchando...":"Preguntale algo a Pana..."} rows={1} style={{flex:1,padding:"10px 14px",background:C.bg,border:"1.5px solid "+(listening?"#ff4444":C.border),borderRadius:20,color:C.text,fontFamily:"'Inter',sans-serif",fontSize:14,outline:"none",resize:"none",maxHeight:120,lineHeight:1.5}}/>
         <button onClick={send} disabled={loading||!input.trim()} style={{width:44,height:44,borderRadius:9999,background:input.trim()?"#ffcc00":"#333",border:"none",cursor:input.trim()?"pointer":"not-allowed",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}}>{"↑"}</button>
+      </div>
+    </div>
+  );
+}
+
+
+function BlogSection() {
+  var articles = [
+    {
+      slug: "dolar-bcv-hoy",
+      title: "Dólar BCV hoy: precio oficial y paralelo en Venezuela",
+      desc: "El precio del dólar BCV oficial y el dólar paralelo en Venezuela, actualizado diariamente. Todo lo que necesitas saber sobre el tipo de cambio venezolano.",
+      icon: "💵",
+      keywords: "dolar bcv, dolar paralelo venezuela, tipo de cambio venezuela"
+    },
+    {
+      slug: "venezolanos-en-espana",
+      title: "Guía para venezolanos en España: residencia, trabajo y más",
+      desc: "Todo lo que necesitas saber si eres venezolano en España. Trámites de residencia, NIE, trabajo, sanidad y comunidad venezolana en España.",
+      icon: "🇪🇸",
+      keywords: "venezolanos en españa, residencia españa venezolanos, nie venezuela"
+    },
+    {
+      slug: "enviar-dinero-venezuela",
+      title: "Cómo enviar dinero a Venezuela en 2026",
+      desc: "Las mejores formas de enviar dinero a Venezuela desde el exterior: Zelle, Binance, remesas y más. Tasas, comisiones y consejos prácticos.",
+      icon: "💸",
+      keywords: "enviar dinero venezuela, remesas venezuela, zelle venezuela"
+    },
+    {
+      slug: "venezolanos-en-colombia",
+      title: "Venezolanos en Colombia: comunidad, trámites y consejos",
+      desc: "Guía completa para venezolanos en Colombia. Permiso de Protección Temporal (PPT), trabajo, vivienda y comunidad venezolana en Colombia.",
+      icon: "🇨🇴",
+      keywords: "venezolanos en colombia, ppt colombia venezolanos, migracion colombia"
+    },
+    {
+      slug: "red-social-venezolana",
+      title: "Épale: la primera red social venezolana del mundo",
+      desc: "Épale es la red social hecha por y para venezolanos en el exterior. Feed por país, dólar BCV en tiempo real, Pana IA y comunidad venezolana global.",
+      icon: "🇻🇪",
+      keywords: "red social venezolana, app venezolanos, comunidad venezolana"
+    },
+    {
+      slug: "venezolanos-en-chile",
+      title: "Venezolanos en Chile: todo lo que necesitas saber",
+      desc: "Guía para venezolanos en Chile. Visa, residencia, trabajo, donde vivir y comunidad venezolana en Santiago y otras ciudades.",
+      icon: "🇨🇱",
+      keywords: "venezolanos en chile, residencia chile venezolanos, visa chile"
+    }
+  ];
+
+  var C = _theme || LIGHT;
+
+  return (
+    <div style={{padding:"60px 24px",maxWidth:1100,margin:"0 auto"}}>
+      <div style={{fontSize:11,letterSpacing:3,color:"#ffcc00",fontWeight:600,marginBottom:12,textTransform:"uppercase"}}>Recursos</div>
+      <h2 style={{fontFamily:"'Syne',sans-serif",fontWeight:900,fontSize:"clamp(22px,4vw,36px)",color:"#fff",marginBottom:8}}>Guías para venezolanos en el mundo</h2>
+      <p style={{color:"#a0a0b0",fontSize:16,marginBottom:40,maxWidth:600}}>Todo lo que necesitas saber sobre la vida venezolana en el exterior.</p>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(280px,1fr))",gap:20}}>
+        {articles.map(function(a,i){
+          return (
+            <div key={i} style={{background:"#18181f",border:"1px solid #2a2a38",borderRadius:16,padding:24,cursor:"pointer",transition:"border-color 0.2s,transform 0.2s"}}
+              onMouseEnter={function(e){e.currentTarget.style.borderColor="rgba(255,204,0,0.4)";e.currentTarget.style.transform="translateY(-4px)";}}
+              onMouseLeave={function(e){e.currentTarget.style.borderColor="#2a2a38";e.currentTarget.style.transform="translateY(0)";}}>
+              <div style={{fontSize:32,marginBottom:14}}>{a.icon}</div>
+              <h3 style={{fontFamily:"'Syne',sans-serif",fontWeight:800,fontSize:16,color:"#fff",marginBottom:10,lineHeight:1.3}}>{a.title}</h3>
+              <p style={{fontSize:13,color:"#a0a0b0",lineHeight:1.6,marginBottom:16}}>{a.desc}</p>
+              <div style={{fontSize:12,color:"#ffcc00",fontWeight:600}}>Leer más →</div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
