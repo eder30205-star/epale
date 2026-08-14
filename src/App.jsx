@@ -2274,7 +2274,133 @@ function Pana(props) {
 }
 
 
+
+function ArticlePage(props) {
+  var slug = props.slug;
+  var onBack = props.onBack;
+
+  var articles = {
+    "dolar-bcv-hoy": {
+      title: "Dólar BCV hoy: precio oficial y paralelo en Venezuela",
+      icon: "💵",
+      content: [
+        { type: "intro", text: "El dólar BCV (Banco Central de Venezuela) es el tipo de cambio oficial establecido por el gobierno venezolano. El dólar paralelo o dólar negro es el tipo de cambio del mercado libre, generalmente más alto que el oficial. En Épale puedes ver ambas tasas actualizadas diariamente." },
+        { type: "h2", text: "¿Qué es el dólar BCV?" },
+        { type: "p", text: "El BCV publica diariamente la tasa de cambio oficial del bolívar frente al dólar americano. Esta tasa se usa para transacciones oficiales, pagos de impuestos y operaciones bancarias formales en Venezuela." },
+        { type: "h2", text: "¿Qué es el dólar paralelo?" },
+        { type: "p", text: "El dólar paralelo es la tasa que se usa en el mercado informal venezolano. Generalmente es más alto que el BCV y refleja mejor la realidad económica del país. Los venezolanos usan esta tasa para la mayoría de sus transacciones diarias." },
+        { type: "h2", text: "¿Cómo ver el dólar en Épale?" },
+        { type: "p", text: "En la aplicación de Épale, el widget del dólar muestra tanto el precio BCV oficial como el paralelo, actualizado diariamente. Es una de las funciones más usadas por la comunidad venezolana en el exterior." },
+        { type: "cta", text: "Ver el dólar BCV en Épale" }
+      ]
+    },
+    "venezolanos-en-espana": {
+      title: "Guía para venezolanos en España: residencia, trabajo y más",
+      icon: "🇪🇸",
+      content: [
+        { type: "intro", text: "España es el país europeo con mayor comunidad venezolana. Con más de 300,000 venezolanos registrados, España ofrece varias opciones de residencia y trabajo para la diáspora venezolana." },
+        { type: "h2", text: "Opciones de residencia para venezolanos en España" },
+        { type: "p", text: "Los venezolanos en España pueden optar por diferentes tipos de visa y residencia según su situación: visa de trabajo, visa de estudiante, reagrupación familiar, o residencia por arraigo si llevan tiempo viviendo en el país." },
+        { type: "h2", text: "El NIE para venezolanos" },
+        { type: "p", text: "El NIE (Número de Identificación de Extranjero) es el documento fundamental que necesitas para trabajar, abrir cuentas bancarias y realizar trámites en España. Se solicita en las comisarías de policía o consulados españoles." },
+        { type: "h2", text: "Comunidad venezolana en España" },
+        { type: "p", text: "La comunidad venezolana en España está concentrada principalmente en Madrid, Barcelona, Valencia y Sevilla. En Épale puedes conectar con venezolanos en España y encontrar apoyo de tu comunidad." },
+        { type: "cta", text: "Conecta con venezolanos en España" }
+      ]
+    },
+    "enviar-dinero-venezuela": {
+      title: "Cómo enviar dinero a Venezuela en 2026",
+      icon: "💸",
+      content: [
+        { type: "intro", text: "Enviar dinero a Venezuela desde el exterior es uno de los temas más importantes para la diáspora venezolana. Existen varias opciones con distintas tasas, comisiones y tiempos de entrega." },
+        { type: "h2", text: "Zelle" },
+        { type: "p", text: "Zelle es uno de los métodos más populares para enviar dinero a Venezuela. Muchos venezolanos tienen cuentas en bancos estadounidenses que aceptan Zelle. La transferencia es inmediata y sin comisiones." },
+        { type: "h2", text: "Criptomonedas (USDT/Binance)" },
+        { type: "p", text: "Las criptomonedas, especialmente USDT en la red Tron, son muy populares en Venezuela. Plataformas como Binance permiten enviar dinero de forma rápida y a bajo costo. El receptor puede convertir a bolívares fácilmente." },
+        { type: "h2", text: "Remesas tradicionales" },
+        { type: "p", text: "Empresas como Western Union, MoneyGram y Remitly ofrecen servicios de remesas a Venezuela. Las comisiones varían y los tiempos de entrega pueden ser de 1 a 3 días hábiles." },
+        { type: "h2", text: "Pregúntale a Pana" },
+        { type: "p", text: "Pana, el asistente de IA de Épale, puede ayudarte con los mejores métodos para enviar dinero a Venezuela según tu país y cantidad. Accede a Pana gratuitamente en la app." },
+        { type: "cta", text: "Pregúntale a Pana sobre remesas" }
+      ]
+    },
+    "venezolanos-en-colombia": {
+      title: "Venezolanos en Colombia: comunidad, trámites y consejos",
+      icon: "🇨🇴",
+      content: [
+        { type: "intro", text: "Colombia es el país con mayor número de venezolanos en el mundo, con más de 2.5 millones de venezolanos viviendo en territorio colombiano. El gobierno colombiano ha implementado programas especiales para regularizar su situación." },
+        { type: "h2", text: "Permiso de Protección Temporal (PPT)" },
+        { type: "p", text: "El PPT es el documento migratorio especial para venezolanos en Colombia. Permite trabajar legalmente, acceder a servicios de salud y educación. Se solicita a través del portal de Migración Colombia." },
+        { type: "h2", text: "Trabajo para venezolanos en Colombia" },
+        { type: "p", text: "Con el PPT, los venezolanos pueden trabajar legalmente en Colombia en cualquier sector. Las principales ciudades con más oportunidades son Bogotá, Medellín, Cali y Barranquilla." },
+        { type: "h2", text: "Comunidad venezolana en Colombia" },
+        { type: "p", text: "En Épale puedes conectar con venezolanos en Colombia, compartir experiencias, conseguir trabajo y recibir apoyo de tu comunidad. El feed de Colombia te mantiene al tanto de lo que pasa con los venezolanos en el país." },
+        { type: "cta", text: "Conecta con venezolanos en Colombia" }
+      ]
+    },
+    "red-social-venezolana": {
+      title: "Épale: la primera red social venezolana del mundo",
+      icon: "🇻🇪",
+      content: [
+        { type: "intro", text: "Épale es la primera red social creada exclusivamente por y para venezolanos en el mundo. Fue fundada por Raul, un venezolano radicado en Shenzhen, China, con la misión de conectar a la diáspora venezolana y crear un espacio seguro para la comunidad." },
+        { type: "h2", text: "¿Qué hace diferente a Épale?" },
+        { type: "p", text: "A diferencia de otras redes sociales, Épale está diseñada específicamente para venezolanos. Tiene feed por país, dólar BCV en tiempo real, Pana el asistente de IA venezolano, y una comunidad de venezolanos en 12 países." },
+        { type: "h2", text: "Pana: el asistente de IA venezolano" },
+        { type: "p", text: "Pana es el asistente de inteligencia artificial de Épale. Habla en español venezolano, conoce los trámites de residencia en cada país, cómo enviar dinero a Venezuela, el dólar BCV y mucho más." },
+        { type: "h2", text: "Disponible en 12 países" },
+        { type: "p", text: "Épale conecta a venezolanos en España, USA, Colombia, Chile, Perú, Argentina, Ecuador, Panamá, Portugal, Italia, Canadá y Venezuela. Cada país tiene su propio feed con contenido relevante." },
+        { type: "cta", text: "Únete a Épale gratis" }
+      ]
+    },
+    "venezolanos-en-chile": {
+      title: "Venezolanos en Chile: todo lo que necesitas saber",
+      icon: "🇨🇱",
+      content: [
+        { type: "intro", text: "Chile es uno de los destinos más populares para los venezolanos en Sudamérica. Con una economía estable y buenas oportunidades laborales, más de 500,000 venezolanos viven actualmente en territorio chileno." },
+        { type: "h2", text: "Visa y residencia en Chile para venezolanos" },
+        { type: "p", text: "Los venezolanos pueden solicitar la visa de residencia temporal en Chile. El proceso se realiza en el Servicio Nacional de Migraciones (Sermig). Los documentos requeridos incluyen pasaporte vigente, antecedentes penales y comprobante de domicilio." },
+        { type: "h2", text: "Trabajo para venezolanos en Chile" },
+        { type: "p", text: "Chile tiene una de las tasas de empleo más altas de Sudamérica para migrantes. Santiago, Antofagasta y Concepción son las ciudades con más oportunidades laborales para venezolanos." },
+        { type: "h2", text: "Comunidad venezolana en Chile" },
+        { type: "p", text: "En Épale puedes conectar con venezolanos en Chile, encontrar trabajo, conseguir vivienda y recibir consejos de tu comunidad. El feed de Chile te mantiene informado sobre lo que pasa con los venezolanos en el país." },
+        { type: "cta", text: "Conecta con venezolanos en Chile" }
+      ]
+    }
+  };
+
+  var article = articles[slug];
+  if(!article) return null;
+
+  return (
+    <div style={{background:"#0d0d12",color:"#fff",fontFamily:"'Inter',sans-serif",minHeight:"100vh"}}>
+      <div style={{display:"flex",height:5}}><div style={{flex:1,background:"#CF9A00"}}/><div style={{flex:1,background:"#0033A0"}}/><div style={{flex:1,background:"#CF0A0A"}}/></div>
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"16px 24px",position:"sticky",top:0,background:"rgba(13,13,18,0.95)",backdropFilter:"blur(12px)",borderBottom:"1px solid #2a2a38",zIndex:100}}>
+        <button onClick={onBack} style={{background:"none",border:"none",color:"#ffcc00",cursor:"pointer",fontSize:15,fontWeight:600,fontFamily:"'Inter',sans-serif",display:"flex",alignItems:"center",gap:8}}>← Volver</button>
+        <div style={{fontFamily:"'Syne',sans-serif",fontWeight:900,fontSize:20,color:"#fff"}}>Epale</div>
+      </div>
+      <div style={{maxWidth:720,margin:"0 auto",padding:"48px 24px"}}>
+        <div style={{fontSize:48,marginBottom:16}}>{article.icon}</div>
+        <h1 style={{fontFamily:"'Syne',sans-serif",fontWeight:900,fontSize:"clamp(22px,4vw,36px)",marginBottom:32,lineHeight:1.2}}>{article.title}</h1>
+        {article.content.map(function(block,i){
+          if(block.type==="intro") return <p key={i} style={{fontSize:18,color:"#d0d0d0",lineHeight:1.8,marginBottom:32,padding:"20px 24px",background:"#18181f",borderRadius:12,borderLeft:"4px solid #ffcc00"}}>{block.text}</p>;
+          if(block.type==="h2") return <h2 key={i} style={{fontFamily:"'Syne',sans-serif",fontWeight:800,fontSize:22,marginBottom:12,marginTop:32,color:"#ffcc00"}}>{block.text}</h2>;
+          if(block.type==="p") return <p key={i} style={{fontSize:16,color:"#a0a0b0",lineHeight:1.8,marginBottom:20}}>{block.text}</p>;
+          if(block.type==="cta") return (
+            <div key={i} style={{marginTop:48,textAlign:"center"}}>
+              <button onClick={onBack} style={{background:"#ffcc00",color:"#0d0d12",padding:"16px 40px",borderRadius:100,fontWeight:800,fontSize:16,border:"none",cursor:"pointer",fontFamily:"'Syne',sans-serif"}}>{block.text} 🚀</button>
+            </div>
+          );
+          return null;
+        })}
+      </div>
+      <div style={{display:"flex",height:5}}><div style={{flex:1,background:"#CF9A00"}}/><div style={{flex:1,background:"#0033A0"}}/><div style={{flex:1,background:"#CF0A0A"}}/></div>
+    </div>
+  );
+}
+
 function BlogSection() {
+  var [currentArticle, setCurrentArticle] = useState(null);
+  if(currentArticle) return <ArticlePage slug={currentArticle} onBack={function(){setCurrentArticle(null);}}/>;
   var articles = [
     {
       slug: "dolar-bcv-hoy",
@@ -2332,7 +2458,8 @@ function BlogSection() {
           return (
             <div key={i} style={{background:"#18181f",border:"1px solid #2a2a38",borderRadius:16,padding:24,cursor:"pointer",transition:"border-color 0.2s,transform 0.2s"}}
               onMouseEnter={function(e){e.currentTarget.style.borderColor="rgba(255,204,0,0.4)";e.currentTarget.style.transform="translateY(-4px)";}}
-              onMouseLeave={function(e){e.currentTarget.style.borderColor="#2a2a38";e.currentTarget.style.transform="translateY(0)";}}>
+              onMouseLeave={function(e){e.currentTarget.style.borderColor="#2a2a38";e.currentTarget.style.transform="translateY(0)";}}
+              onClick={function(){setCurrentArticle(a.slug);}}>
               <div style={{fontSize:32,marginBottom:14}}>{a.icon}</div>
               <h3 style={{fontFamily:"'Syne',sans-serif",fontWeight:800,fontSize:16,color:"#fff",marginBottom:10,lineHeight:1.3}}>{a.title}</h3>
               <p style={{fontSize:13,color:"#a0a0b0",lineHeight:1.6,marginBottom:16}}>{a.desc}</p>
