@@ -1822,7 +1822,7 @@ function Auth(props) {
           })}
         </div>
       </div>
-      <BlogSection/>
+      <BlogSection onJoin={function(){setShowForm(true);setMode("register");}}/>
       <div style={{textAlign:"center",padding:"60px 24px",position:"relative"}}>
         <h2 style={{fontFamily:"'Syne',sans-serif",fontWeight:900,fontSize:"clamp(22px,4vw,40px)",marginBottom:12}}>¿Eres venezolano?<br/>Este es tu espacio.</h2>
         <p style={{color:"#a0a0b0",fontSize:16,marginBottom:32}}>Únete gratis. Sin descargas. Sin anuncios.</p>
@@ -2278,6 +2278,7 @@ function Pana(props) {
 function ArticlePage(props) {
   var slug = props.slug;
   var onBack = props.onBack;
+  var onJoin = props.onJoin || onBack;
 
   var articles = {
     "dolar-bcv-hoy": {
@@ -2386,8 +2387,9 @@ function ArticlePage(props) {
           if(block.type==="h2") return <h2 key={i} style={{fontFamily:"'Syne',sans-serif",fontWeight:800,fontSize:22,marginBottom:12,marginTop:32,color:"#ffcc00"}}>{block.text}</h2>;
           if(block.type==="p") return <p key={i} style={{fontSize:16,color:"#a0a0b0",lineHeight:1.8,marginBottom:20}}>{block.text}</p>;
           if(block.type==="cta") return (
-            <div key={i} style={{marginTop:48,textAlign:"center"}}>
-              <button onClick={onBack} style={{background:"#ffcc00",color:"#0d0d12",padding:"16px 40px",borderRadius:100,fontWeight:800,fontSize:16,border:"none",cursor:"pointer",fontFamily:"'Syne',sans-serif"}}>{block.text} 🚀</button>
+            <div key={i} style={{marginTop:48,textAlign:"center",display:"flex",flexDirection:"column",gap:16,alignItems:"center"}}>
+              <button onClick={function(){props.onJoin();}} style={{background:"#ffcc00",color:"#0d0d12",padding:"16px 40px",borderRadius:100,fontWeight:800,fontSize:16,border:"none",cursor:"pointer",fontFamily:"'Syne',sans-serif"}}>{block.text} 🚀</button>
+              <button onClick={onBack} style={{background:"transparent",color:"#a0a0b0",border:"none",cursor:"pointer",fontSize:14,fontFamily:"'Inter',sans-serif"}}>← Volver a recursos</button>
             </div>
           );
           return null;
@@ -2400,7 +2402,7 @@ function ArticlePage(props) {
 
 function BlogSection() {
   var [currentArticle, setCurrentArticle] = useState(null);
-  if(currentArticle) return <ArticlePage slug={currentArticle} onBack={function(){setCurrentArticle(null);}}/>;
+  if(currentArticle) return <ArticlePage slug={currentArticle} onBack={function(){setCurrentArticle(null);}} onJoin={props.onJoin}/>;
   var articles = [
     {
       slug: "dolar-bcv-hoy",
