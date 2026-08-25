@@ -2161,13 +2161,13 @@ function Pana(props) {
     if(!('webkitSpeechRecognition' in window||'SpeechRecognition' in window)){ alert("Tu navegador no soporta reconocimiento de voz"); return; }
     var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
     var recognition=new SR();
-    recognition.lang="es-VE";
+    recognition.lang="es-ES";
     recognition.continuous=false;
     recognition.interimResults=false;
     recognition.onstart=function(){ setListening(true); };
     recognition.onend=function(){ setListening(false); };
     recognition.onresult=function(e){ var transcript=e.results[0][0].transcript; setInput(function(prev){ return prev+transcript; }); };
-    recognition.onerror=function(){ setListening(false); };
+    recognition.onerror=function(e){ setListening(false); if(e.error==="network"){ alert("El reconocimiento de voz no esta disponible en tu red. Escribe tu mensaje."); } else if(e.error==="not-allowed"){ alert("Permite el acceso al microfono para usar la voz."); } };
     recognition.start();
   };
 
