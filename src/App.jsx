@@ -2108,6 +2108,34 @@ function App() {
     setScreen("auth");
   };
 
+
+  useEffect(function(){
+    if(!userId || screen!=="feed") return;
+    if(!("serviceWorker" in navigator) || !("PushManager" in window) || !("Notification" in window)) return;
+    if(localStorage.getItem("epale_push_saved")==="1") return;
+    var t=setTimeout(function(){
+      Notification.requestPermission().then(function(perm){
+        if(perm!=="granted") return;
+        navigator.serviceWorker.ready.then(function(reg){
+          var VAPID="BPPYGdBcZdp_VuLh6CymL9EoNcX132TetcGx9RZk3bNawurdckNp9LGVh4Ob1AQosSabO7YfpMgotpH_XOty-l0";
+          var pad="=".repeat((4 - VAPID.length % 4) % 4);
+          var b64=(VAPID+pad).replace(/-/g,"+").replace(/_/g,"/");
+          var raw=window.atob(b64);
+          var arr=new Uint8Array(raw.length);
+          for(var i=0;i<raw.length;i++){ arr[i]=raw.charCodeAt(i); }
+          return reg.pushManager.subscribe({ userVisibleOnly:true, applicationServerKey:arr }).then(function(sub){
+            return fetch(SUPA_URL+"/rest/v1/push_subscriptions",{
+              method:"POST",
+              headers:{ "apikey":SUPA_KEY, "Authorization":"Bearer "+SUPA_KEY, "Content-Type":"application/json" },
+              body:JSON.stringify({ user_id:userId, subscription:sub.toJSON() })
+            }).then(function(r){ if(r.ok) localStorage.setItem("epale_push_saved","1"); });
+          });
+        }).catch(function(){});
+      });
+    },8000);
+    return function(){ clearTimeout(t); };
+  },[userId,screen]);
+
   if(showResetPassword) return <ResetPasswordScreen onDone={function(){ setShowResetPassword(false); setScreen("auth"); }}/>;
   if(showPana) return <Pana onClose={function(){setShowPana(false);}}/>;
   if(screen==="auth") return <><OfflineBanner/><Auth key={dark?"dark":"light"} onDone={handleDone}/></>;
