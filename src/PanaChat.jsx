@@ -9,6 +9,10 @@ const SUGERENCIAS = [
   "Ayúdame a escribir un aviso de trabajo",
   "¿Qué tengo que hacer al llegar a Chile?",
   "Avísame cuando salga trabajo de cocinero",
+  "¿A cuánto está el dólar hoy?",
+  "¿Qué hay de nuevo en mi país esta semana?",
+  "¿Este aviso es estafa? (pega el texto)",
+  "¿Tengo flechas nuevas en Flechao?",
 ];
 
 const ACCION = { publicar_post: "Publicar", comentar: "Comentar", seguir: "Seguir" };
@@ -109,7 +113,7 @@ export default function PanaChat({ supabase, theme, onClose }) {
             <div style={{ display: "flex" }}>
               {avatar}
               <div style={{ maxWidth: "80%", padding: "10px 14px", borderRadius: "18px 18px 18px 4px", background: C.card, color: C.text, border: "1px solid " + C.border, fontFamily: "'Inter',sans-serif", fontSize: 14, lineHeight: 1.5 }}>
-                ¡Épale, pana! Puedo buscarte cuartos, trabajos y servicios en Épale, escribir tu aviso, orientarte si acabas de llegar a un país y avisarte cuando salga algo que te sirva. ¿En qué te ayudo?
+                ¡Épale, pana! Puedo buscarte cuartos, trabajos y servicios en Épale, escribir tu aviso, revisar si uno huele a estafa, decirte el dólar del día, orientarte si acabas de llegar a un país y avisarte cuando salga algo que te sirva. ¿En qué te ayudo?
               </div>
             </div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8, paddingLeft: 40 }}>
@@ -127,6 +131,14 @@ export default function PanaChat({ supabase, theme, onClose }) {
               {!isUser && avatar}
               <div style={{ maxWidth: "78%", padding: "10px 14px", borderRadius: isUser ? "18px 18px 4px 18px" : "18px 18px 18px 4px", background: isUser ? "#ffcc00" : C.card, color: isUser ? "#1a1a1a" : C.text, fontFamily: "'Inter',sans-serif", fontSize: 14, lineHeight: 1.5, border: isUser ? "none" : "1px solid " + C.border, whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
                 {m.content}
+                {!isUser && m.id && (
+                  <div style={{ display: "flex", gap: 4, marginTop: 6, justifyContent: "flex-end" }}>
+                    {[[1, "👍", "Me sirvió"], [-1, "👎", "No me sirvió"]].map(([r, icon, label]) => (
+                      <button key={r} onClick={() => pana.feedback(m.id, r)} aria-label={label} title={label}
+                        style={{ padding: "2px 6px", borderRadius: 9999, border: "1px solid " + (m.rating === r ? "#ffcc00" : "transparent"), background: m.rating === r ? "rgba(255,204,0,.15)" : "transparent", cursor: "pointer", fontSize: 13, opacity: m.rating && m.rating !== r ? 0.35 : 0.8 }}>{icon}</button>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           );

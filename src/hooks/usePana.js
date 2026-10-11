@@ -40,7 +40,7 @@ export function usePana(supabase) {
         conversation_id: conversationId,
       });
       setConversationId(data.conversation_id);
-      setMessages((m) => [...m, { role: "assistant", content: data.reply }]);
+      setMessages((m) => [...m, { role: "assistant", content: data.reply, id: data.message_id ?? undefined }]);
       if (data.pending_actions?.length) {
         setPending((p) => [...p, ...data.pending_actions]);
       }
@@ -72,6 +72,16 @@ export function usePana(supabase) {
     }
   }, [supabase]);
 
+  const feedback = useCallback(async (messageId, rating) => {
+    if (!messageId) return;
+    setMessages((m) => m.map((x) => (x.id === messageId ? { ...x, rating } : x)));
+    try {
+      await invokePana(supabase, { action: "feedback", message_id: String(messageId), rating });
+    } catch (e) {
+      console.warn("No se guardó la calificación", e);
+    }
+  }, [supabase]);
+
   const loadConversations = useCallback(async () => {
     const data = await invokePana(supabase, { action: "conversations" });
     setConversations(data.conversations ?? []);
@@ -92,7 +102,7 @@ export function usePana(supabase) {
 
   return {
     messages, pending, loading, error, conversationId, conversations,
-    send,
+    send, feedback,
     confirm: (id) => resolve(id, true),
     cancel: (id) => resolve(id, false),
     loadConversations, openConversation, newConversation,

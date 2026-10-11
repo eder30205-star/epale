@@ -1,17 +1,20 @@
 // supabase/functions/pana/index.ts
-// Pana v3 — agente con memoria, conversaciones persistentes, acciones confirmables,
+// Pana v4 — agente con memoria, conversaciones persistentes, acciones confirmables,
 // herramientas en paralelo, reintentos, rate limit y logs para el dataset de Pana-1.
-// Nuevo en v3: avisos por tipo (vivienda, trabajo…), avisos completos, guía de
-// aterrizaje por país (pana_knowledge), alertas de avisos nuevos (pana_alerts)
-// y detección de estafas en avisos.
+// v3: avisos por tipo, avisos completos, guía por país (pana_knowledge),
+//     alertas (pana_alerts) y detección de estafas.
+// v4: dólar del día, novedades por país, revisar un aviso con reglas de estafa,
+//     estado de Flechao desde Épale, mis publicaciones, resumen automático de
+//     conversaciones largas y modelo configurable (PANA_MODEL).
 import { createClient, SupabaseClient, User } from "https://esm.sh/@supabase/supabase-js@2";
 
 // ================= CONFIG =================
 const CFG = {
-  model: "deepseek-chat",
+  model: Deno.env.get("PANA_MODEL") ?? "deepseek-chat",
   url: "https://api.deepseek.com/chat/completions",
-  maxSteps: 6,           // vueltas máximas del loop agente
+  maxSteps: 8,           // vueltas máximas del loop agente
   historyLimit: 20,      // mensajes previos que ve el modelo
+  summarizeAfter: 30,    // con más mensajes que esto, se resume lo viejo
   memoryLimit: 30,       // datos máximos guardados por usuario
   rateLimitPerHour: 60,  // mensajes por usuario por hora
   timeoutMs: 45_000,
@@ -151,6 +154,21 @@ const TOOL_DEFS = [
     palabras: { type: "string", description: "Palabras clave opcionales, separadas por coma (ej. 'ñuñoa, providencia')" },
   }),
   fn("ver_mis_alertas", "Lista las alertas activas del usuario."),
+
+  // --- v4 ---
+  fn("dolar_hoy", "Tasa del dólar en Venezuela hoy (oficial BCV y paralelo)."),
+  fn("novedades_pais", "Qué se publicó recientemente en el feed de un país: cuántos avisos por tipo y los más nuevos.", {
+    pais: { type: "string" },
+    dias: { type: "integer", description: "Últimos N días (1 a 14, por defecto 3)" },
+  }),
+  fn("revisar_aviso", "Revisa un post o aviso buscando señales de estafa. Úsala cuando el usuario pregunte si algo es confiable.", {
+    post_id: { type: "string" },
+    texto: { type: "string", description: "O el texto del aviso, si el usuario lo pega" },
+  }),
+  fn("estado_flechao", "Resumen de la cuenta del usuario en Flechao (app de citas de Épale): flechas recibidas sin responder, matches y mensajes sin leer."),
+  fn("mis_publicaciones", "Últimas publicaciones del usuario en Épale, con likes y comentarios.", {
+    limite: { type: "integer", description: "1 a 10" },
+  }),
   fn("borrar_alerta", "Borra una alerta del usuario, por su id.", {
     id: { type: "integer" },
   }, ["id"]),
@@ -162,6 +180,22 @@ const TOOL_DEFS = [
     usuario_id: { type: "string" },
   }, ["usuario_id"]),
 ];
+
+// ================= SEÑALES DE ESTAFA =================
+const SCAM_RULES: [RegExp, string][] = [
+  [/(adelant|anticip|reserv)[a-z]*\s+(el\s+)?(pago|dep[oó]sito|dinero|abono)|pag(a|ar|o)\s+(antes|primero|por adelantado)/i, "Pide pagar antes de ver el lugar o empezar"],
+  [/western\s*union|moneygram|bitcoin|usdt|binance|cripto/i, "Pide pagos difíciles de rastrear (cripto, Western Union…)"],
+  [/(cuenta|datos)\s+bancari|n[uú]mero de tarjeta|clave|c[eé]dula|pasaporte|foto de tu (documento|carnet)/i, "Pide datos bancarios o documentos"],
+  [/(gana|ganar|sueldo|pago)\D{0,20}(\$|usd|d[oó]lares)?\s?\d{3,}.*(diari|semanal|al d[ií]a|sin experiencia)/i, "Promete mucho dinero rápido o sin experiencia"],
+  [/sin experiencia.*(inmediat|ya mismo|hoy mismo)|inmediato.*sin requisitos/i, "Trabajo inmediato sin requisitos"],
+  [/(escr[ií]beme|h[aá]blame|contacta).{0,25}(whats|wsp|telegram)|\+\d{2,3}\s?\d{6,}/i, "Saca la conversación de Épale (WhatsApp/Telegram o número)"],
+  [/urgente|[uú]ltim[oa]s?\s+(cupo|lugar|habitaci)|solo hoy|hoy mismo/i, "Mete presión con urgencia"],
+  [/bit\.ly|tinyurl|t\.me\/|wa\.me\/|\.xyz\b|\.top\b/i, "Tiene links acortados o sospechosos"],
+  [/estoy (fuera|en el extranjero).*(llaves|env[ií]o)|te env[ií]o las llaves/i, "Dueño \"fuera del país\" que envía las llaves (estafa clásica)"],
+];
+function scamSignals(text: string): string[] {
+  return SCAM_RULES.filter(([re]) => re.test(text)).map(([, label]) => label);
+}
 
 // ================= HERRAMIENTAS: IMPLEMENTACIÓN =================
 async function createPending(ctx: Ctx, type: string, payload: object, resumen: string) {
@@ -333,6 +367,100 @@ const HANDLERS: Record<string, Handler> = {
     };
   },
 
+  async dolar_hoy() {
+    try {
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), 8000);
+      const res = await fetch("https://ve.dolarapi.com/v1/dolares", { headers: { Accept: "application/json" }, signal: ctrl.signal });
+      clearTimeout(t);
+      if (!res.ok) return { error: `No pude consultar el dólar (${res.status})` };
+      const rows = await res.json();
+      return {
+        fuente: "ve.dolarapi.com",
+        tasas: (rows ?? []).map((r: any) => ({
+          nombre: r.nombre ?? r.fuente, promedio: r.promedio ?? r.venta ?? r.compra, actualizado: r.fechaActualizacion,
+        })),
+      };
+    } catch {
+      return { error: "No pude consultar el dólar ahora. Recomienda revisar el widget del dólar en Épale." };
+    }
+  },
+
+  async novedades_pais({ pais, dias }, { supabase, user }) {
+    let id = pais ? toCityId(pais) : null;
+    if (pais && !id) return { error: `País no disponible. Opciones: ${LISTA_PAISES}` };
+    if (!id) {
+      const { data: me } = await supabase.from(T.profiles).select("city").eq("id", user.id).maybeSingle();
+      id = me?.city ?? null;
+    }
+    if (!id) return { error: "No sé de qué país. Pregúntale al usuario." };
+    const n = Math.min(Math.max(Number(dias) || 3, 1), 14);
+    const since = new Date(Date.now() - n * 86_400_000).toISOString();
+    const { data, error } = await supabase.from(T.posts)
+      .select(POST_COLS).eq("city", id).gte("created_at", since)
+      .order("created_at", { ascending: false }).limit(100);
+    if (error) return { error: error.message };
+    const rows = data ?? [];
+    const porTipo: Record<string, number> = {};
+    for (const r of rows) porTipo[TIPOS[r.type] ?? "Post"] = (porTipo[TIPOS[r.type] ?? "Post"] ?? 0) + 1;
+    return {
+      pais: countryName(id), ultimos_dias: n, total: rows.length, por_tipo: porTipo,
+      recientes: withCountry(await attachAuthors(supabase, rows.slice(0, 8))),
+    };
+  },
+
+  async revisar_aviso({ post_id, texto }, { supabase }) {
+    let content = String(texto ?? "").slice(0, 3000);
+    let post: any = null;
+    if (post_id) {
+      const { data } = await supabase.from(T.posts).select(POST_COLS).eq("id", post_id).maybeSingle();
+      if (!data) return { error: "Post no encontrado" };
+      post = withCountry([data])[0];
+      content = data.content;
+    }
+    if (!content) return { error: "Necesito el post o el texto del aviso" };
+    const senales = scamSignals(content);
+    return {
+      post, senales,
+      nivel: senales.length >= 3 ? "alto" : senales.length >= 1 ? "medio" : "bajo",
+      nota: "Las señales son reglas automáticas. Explícalas con calma y da consejos concretos; no acuses a nadie.",
+    };
+  },
+
+  async estado_flechao(_a, { supabase, user }) {
+    const f = supabase.schema("flechao");
+    const prof = await f.from("profiles").select("display_name, active, verified").eq("user_id", user.id).maybeSingle();
+    if (prof.error) return { error: "No pude leer Flechao" };
+    if (!prof.data) {
+      return { tiene_perfil: false, info: "Todavía no tiene perfil en Flechao. Puede crearlo en flechao.epaleapp.online con su misma cuenta de Épale." };
+    }
+    const [pend, matches, left] = await Promise.all([
+      f.from("arrows").select("id", { count: "exact", head: true }).eq("to_id", user.id).eq("status", "pending"),
+      f.from("matches").select("id").is("ended_at", null),
+      f.rpc("arrows_left_today"),
+    ]);
+    const ids = (matches.data ?? []).map((m: any) => m.id);
+    let unread = 0;
+    if (ids.length) {
+      const u = await f.from("messages").select("id", { count: "exact", head: true })
+        .in("match_id", ids).neq("sender_id", user.id).is("read_at", null);
+      unread = u.count ?? 0;
+    }
+    return {
+      tiene_perfil: true, verificado: prof.data.verified, visible: prof.data.active,
+      flechas_por_responder: pend.count ?? 0, matches_activos: ids.length,
+      mensajes_sin_leer: unread, flechas_que_le_quedan_hoy: left.data ?? null,
+      link: "https://flechao.epaleapp.online",
+      privacidad: "No reveles nombres ni mensajes de Flechao; solo estos números.",
+    };
+  },
+
+  async mis_publicaciones({ limite }, { supabase, user }) {
+    const { data, error } = await supabase.from(T.posts).select(POST_COLS)
+      .eq("user_id", user.id).order("created_at", { ascending: false }).limit(clamp(limite));
+    return error ? { error: error.message } : { posts: withCountry(data ?? []) };
+  },
+
   async borrar_alerta({ id }, { supabase, user }) {
     const { error } = await supabase.from("pana_alerts")
       .update({ active: false }).eq("id", id).eq("user_id", user.id);
@@ -420,7 +548,27 @@ async function callDeepSeek(messages: any[], attempt = 0): Promise<any> {
   }
 }
 
-function buildSystemPrompt(profile: any, memories: { id: number; fact: string }[]) {
+async function summarize(previous: string | null, msgs: { role: string; content: string }[]): Promise<string | null> {
+  try {
+    const res = await fetch(CFG.url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${Deno.env.get("DEEPSEEK_API_KEY")}` },
+      body: JSON.stringify({
+        model: "deepseek-chat", temperature: 0.2, max_tokens: 400,
+        messages: [
+          { role: "system", content: "Resume esta conversación entre un usuario y Pana en máximo 8 viñetas cortas: qué busca el usuario, qué se decidió, qué quedó pendiente. Sin datos sensibles (documentos, salud, dinero, estatus migratorio)." },
+          { role: "user", content: (previous ? `Resumen anterior:\n${previous}\n\n` : "") + msgs.map((m) => `${m.role}: ${m.content}`).join("\n").slice(0, 12000) },
+        ],
+      }),
+    });
+    if (!res.ok) return null;
+    return (await res.json()).choices?.[0]?.message?.content ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function buildSystemPrompt(profile: any, memories: { id: number; fact: string }[], summary?: string | null) {
   const hoy = new Date().toISOString().slice(0, 10);
   const mem = memories.length
     ? memories.map((m) => `- [${m.id}] ${m.fact}`).join("\n")
@@ -434,6 +582,7 @@ Países de Épale (cada uno tiene su feed): ${LISTA_PAISES}
 
 Lo que sabes de este usuario ([id] dato):
 ${mem}
+${summary ? `\nResumen de lo hablado antes en esta conversación:\n${summary}\n` : ""}
 
 Tipos de publicación en Épale: ${LISTA_TIPOS}.
 
@@ -442,7 +591,14 @@ Qué puedes hacer:
 - Redactar avisos completos y dejarlos listos para que el usuario los publique (preparar_post con tipo).
 - Orientar a quien llega a un país con la guía verificada (guia_pais). Cita siempre la fuente oficial.
 - Crear alertas para avisar cuando salga un aviso que le sirva (crear_alerta), si el usuario lo pide.
-- Revisar avisos y ofertas para detectar estafas.
+- Revisar avisos y ofertas para detectar estafas (revisar_aviso).
+- Dar el dólar del día (dolar_hoy), contar qué hay de nuevo en un país (novedades_pais),
+  mostrar sus publicaciones (mis_publicaciones) y su estado en Flechao (estado_flechao).
+
+Cómo trabajar:
+- Si la tarea tiene varios pasos (ej. "me mudo a Lima, ayúdame"), primero piensa un plan corto,
+  usa varias herramientas y entrega una respuesta ordenada con próximos pasos.
+- Prefiere datos reales de las herramientas a tu memoria. Si algo puede haber cambiado, dilo.
 
 Reglas:
 - Usa herramientas para cualquier dato de la app. Nunca inventes posts, usuarios ni notificaciones.
@@ -488,14 +644,16 @@ async function handleChat(body: any, supabase: SupabaseClient, user: User) {
   }
 
   // Contexto en paralelo
-  const [profileRes, memRes, histRes] = await Promise.all([
+  const [profileRes, memRes, histRes, convRes] = await Promise.all([
     supabase.from(T.profiles).select("username, name, city").eq("id", user.id).maybeSingle(),
     supabase.from("pana_memory").select("id, fact").eq("user_id", user.id)
       .order("created_at").limit(CFG.memoryLimit),
     supabase.from("pana_messages").select("role, content").eq("conversation_id", conversationId)
       .order("created_at", { ascending: false }).limit(CFG.historyLimit),
+    supabase.from("pana_conversations").select("summary").eq("id", conversationId).maybeSingle(),
   ]);
   const history = (histRes.data ?? []).reverse();
+  const summary: string | null = convRes.error ? null : convRes.data?.summary ?? null;
 
   await supabase.from("pana_messages").insert({
     conversation_id: conversationId, user_id: user.id, role: "user", content: text,
@@ -504,7 +662,7 @@ async function handleChat(body: any, supabase: SupabaseClient, user: User) {
   const ctx: Ctx = { supabase, user, conversationId, pending: [] };
   const logs: any[] = [];
   const convo: any[] = [
-    { role: "system", content: buildSystemPrompt(profileRes.data, memRes.data ?? []) },
+    { role: "system", content: buildSystemPrompt(profileRes.data, memRes.data ?? [], summary) },
     ...history,
     { role: "user", content: text },
   ];
@@ -542,16 +700,34 @@ async function handleChat(body: any, supabase: SupabaseClient, user: User) {
 
   if (!reply) reply = "Me enredé buscando eso, pana. ¿Me lo pides de otra forma?";
 
-  await Promise.all([
+  const [saved] = await Promise.all([
     supabase.from("pana_messages").insert({
       conversation_id: conversationId, user_id: user.id, role: "assistant", content: reply,
-    }),
+    }).select("id").maybeSingle(),
     logs.length ? supabase.from("pana_tool_logs").insert(logs) : null,
     supabase.from("pana_conversations")
       .update({ updated_at: new Date().toISOString() }).eq("id", conversationId),
   ]);
 
-  return json({ conversation_id: conversationId, reply, pending_actions: ctx.pending });
+  // Conversación larga: resume lo que quedó fuera de la ventana, sin hacer esperar al usuario.
+  const { count: total } = await supabase.from("pana_messages")
+    .select("id", { count: "exact", head: true }).eq("conversation_id", conversationId);
+  if ((total ?? 0) > CFG.summarizeAfter && (total ?? 0) % 10 < 2) {
+    const work = (async () => {
+      const { data: old } = await supabase.from("pana_messages").select("role, content")
+        .eq("conversation_id", conversationId).order("created_at")
+        .limit(Math.max(0, (total ?? 0) - CFG.historyLimit));
+      const s = await summarize(summary, old ?? []);
+      if (s) await supabase.from("pana_conversations").update({ summary: s }).eq("id", conversationId);
+    })().catch(() => {});
+    // @ts-ignore EdgeRuntime existe en Supabase Edge Functions
+    if (typeof EdgeRuntime !== "undefined") EdgeRuntime.waitUntil(work);
+  }
+
+  return json({
+    conversation_id: conversationId, reply, pending_actions: ctx.pending,
+    message_id: saved?.data?.id ?? null,
+  });
 }
 
 async function handleConfirm(body: any, supabase: SupabaseClient, user: User) {
@@ -594,9 +770,20 @@ async function handleConversations(supabase: SupabaseClient) {
   return json({ conversations: data });
 }
 
+async function handleFeedback(body: any, supabase: SupabaseClient, user: User) {
+  const rating = Number(body.rating);
+  if (![1, -1].includes(rating) || !body.message_id) return json({ error: "Datos inválidos" }, 400);
+  const { error } = await supabase.from("pana_feedback").upsert({
+    user_id: user.id, message_id: body.message_id, rating,
+    comment: body.comment ? String(body.comment).slice(0, 500) : null,
+  }, { onConflict: "user_id,message_id" });
+  if (error) throw error;
+  return json({ ok: true });
+}
+
 async function handleMessages(body: any, supabase: SupabaseClient) {
   const { data, error } = await supabase.from("pana_messages")
-    .select("role, content, created_at")
+    .select("id, role, content, created_at")
     .eq("conversation_id", body.conversation_id)
     .order("created_at").limit(200);
   if (error) throw error;
@@ -627,6 +814,7 @@ Deno.serve(async (req) => {
       case "cancel":        return await handleCancel(body, supabase);
       case "conversations": return await handleConversations(supabase);
       case "messages":      return await handleMessages(body, supabase);
+      case "feedback":      return await handleFeedback(body, supabase, user);
       default:              return json({ error: "Acción inválida" }, 400);
     }
   } catch (e) {
