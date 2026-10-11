@@ -1,6 +1,6 @@
 // src/hooks/usePana.js
 // Uso: const pana = usePana(supabase);  ← pasa el cliente que ya tienes en App.jsx
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 
 async function invokePana(supabase, body, retry = true) {
   const { data, error } = await supabase.functions.invoke("pana", { body });
@@ -25,6 +25,8 @@ export function usePana(supabase) {
   const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const messagesRef = useRef([]);
+  useEffect(() => { messagesRef.current = messages; }, [messages]);
 
   const send = useCallback(async (text) => {
     if (!text?.trim() || loading) return;
@@ -43,7 +45,18 @@ export function usePana(supabase) {
         setPending((p) => [...p, ...data.pending_actions]);
       }
     } catch (e) {
-      setError(e.message);
+      // Respaldo: si Pana v3 falla, responde el chat anterior (rapid-endpoint) para no dejar al usuario sin respuesta.
+      try {
+        const history = [...messagesRef.current, { role: "user", content: text }]
+          .slice(-20).map((m) => ({ role: m.role, content: m.content }));
+        const { data } = await supabase.functions.invoke("rapid-endpoint", { body: { messages: history } });
+        const reply = data?.choices?.[0]?.message?.content;
+        if (!reply) throw e;
+        setMessages((m) => [...m, { role: "assistant", content: reply }]);
+        console.warn("Pana v3 no respondió; se usó el chat anterior", e);
+      } catch {
+        setError(e.message);
+      }
     } finally {
       setLoading(false);
     }

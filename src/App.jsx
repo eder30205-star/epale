@@ -1,7 +1,6 @@
 // Epale v2.1 - 2026-06-12
 import { useState, useEffect } from "react";
 
-const DEEPSEEK_KEY = import.meta.env.VITE_DEEPSEEK_KEY || "";
 
 // Register service worker for PWA
 if("serviceWorker" in navigator){
@@ -11,6 +10,7 @@ if("serviceWorker" in navigator){
 }
 import React from "react";
 import { createClient } from "@supabase/supabase-js";
+import PanaChat from "./PanaChat.jsx";
 
 const SUPA_URL = "https://zkydbsymcnnbepvmbchr.supabase.co";
 const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpreWRic3ltY25uYmVwdm1iY2hyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyNjExNjksImV4cCI6MjA5NTgzNzE2OX0.bIiUt752AROIfQkQTHqN7r9OrjRTzxmwNQLDw0WVVS4";
@@ -2165,140 +2165,9 @@ function App() {
   return <div style={{padding:20}}>Cargando...</div>;
 }
 
+// Pana v3: ver src/PanaChat.jsx (la voz pasa por la función segura "pana-voz").
 function Pana(props) {
-  var C=_theme||LIGHT;
-  var [messages,setMessages]=useState(function(){
-    try {
-      var saved=localStorage.getItem("pana_conversation");
-      if(saved){ var parsed=JSON.parse(saved); if(parsed&&parsed.length>0) return parsed; }
-    } catch(e){}
-    return [{role:"assistant",content:"Epale pana! Soy Pana, tu asistente venezolano 🇻🇪 Preguntame lo que quieras — tramites en el exterior, como enviar dinero a Venezuela, informacion sobre cualquier pais, o simplemente conversa. Aqui estoy!"}];
-  });
-  var [input,setInput]=useState("");
-  var [loading,setLoading]=useState(false);
-  var inputRef=React.useRef(null);
-  var bottomRef=React.useRef(null);
-
-  React.useEffect(function(){
-    if(bottomRef.current) bottomRef.current.scrollIntoView({behavior:"smooth"});
-  },[messages]);
-
-  var [listening,setListening]=useState(false);
-
-  var startListening=function(){
-    if(!('webkitSpeechRecognition' in window||'SpeechRecognition' in window)){ alert("Tu navegador no soporta reconocimiento de voz"); return; }
-    var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-    var recognition=new SR();
-    recognition.lang="es-ES";
-    recognition.continuous=false;
-    recognition.interimResults=false;
-    recognition.onstart=function(){ setListening(true); };
-    recognition.onend=function(){ setListening(false); };
-    recognition.onresult=function(e){ var transcript=e.results[0][0].transcript; setInput(function(prev){ return prev+transcript; }); };
-    recognition.onerror=function(e){ setListening(false); if(e.error==="network"){ alert("El reconocimiento de voz no esta disponible en tu red. Escribe tu mensaje."); } else if(e.error==="not-allowed"){ alert("Permite el acceso al microfono para usar la voz."); } };
-    recognition.start();
-  };
-
-  var speak=function(text){
-    fetch("https://api.elevenlabs.io/v1/text-to-speech/Aoh8oiCIlPke1wFxeNuK/stream",{
-      method:"POST",
-      headers:{"Content-Type":"application/json","xi-api-key":"sk_474bffab3b33a784978559f21b0480948a0c08528d182d91"},
-      body:JSON.stringify({text:text,model_id:"eleven_multilingual_v2",voice_settings:{stability:0.5,similarity_boost:0.75,style:0.3,use_speaker_boost:true}})
-    }).then(function(r){
-      if(!r.ok) throw new Error("ElevenLabs error "+r.status);
-      return r.blob();
-    }).then(function(blob){
-      var url=URL.createObjectURL(blob);
-      var audio=new Audio(url);
-      audio.onended=function(){ URL.revokeObjectURL(url); };
-      audio.play();
-    }).catch(function(){
-      if(!('speechSynthesis' in window)) return;
-      window.speechSynthesis.cancel();
-      var utt=new SpeechSynthesisUtterance(text);
-      utt.lang="es";
-      window.speechSynthesis.speak(utt);
-    });
-  };
-
-  var send=function(){
-    if(!input.trim()||loading) return;
-    var userMsg={role:"user",content:input};
-    var newMessages=messages.concat([userMsg]);
-    setMessages(newMessages);
-    try{ localStorage.setItem("pana_conversation",JSON.stringify(newMessages)); }catch(e){}
-    setInput("");
-    setLoading(true);
-
-    var apiMessages=newMessages.map(function(m){ return {role:m.role,content:m.content}; });
-
-    fetch("https://zkydbsymcnnbepvmbchr.supabase.co/functions/v1/rapid-endpoint",{
-      method:"POST",
-      headers:{"Content-Type":"application/json","Authorization":"Bearer "+getToken(),"apikey":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpreWRic3ltY25uYmVwdm1iY2hyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDk4MzQ4MDAsImV4cCI6MjAyNTQxMDgwMH0.SHKBbGSqMM7DFnTFRlmh5I_P8CJfJDHbqXXklqF1Fxk"},
-      body:JSON.stringify({messages:apiMessages})
-    }).then(function(r){return r.json();}).then(function(data){
-      var reply=data.choices&&data.choices[0]&&data.choices[0].message&&data.choices[0].message.content;
-      if(reply){
-        setMessages(function(prev){ 
-          var updated=prev.concat([{role:"assistant",content:reply}]);
-          try{ localStorage.setItem("pana_conversation",JSON.stringify(updated)); }catch(e){}
-          return updated;
-        });
-        speak(reply);
-      }
-      setLoading(false);
-    }).catch(function(){
-      setMessages(function(prev){ return prev.concat([{role:"assistant",content:"Disculpa pana, tuve un problema tecnico. Intenta de nuevo!"}]); });
-      setLoading(false);
-    });
-  };
-
-  return (
-    <div style={{position:"fixed",inset:0,zIndex:500,background:C.bg,maxWidth:480,margin:"0 auto",display:"flex",flexDirection:"column"}}>
-      {/* Header */}
-      <div style={{display:"flex",height:4}}><div style={{flex:1,background:"#CF9A00"}}/><div style={{flex:1,background:"#0033A0"}}/><div style={{flex:1,background:"#CF0A0A"}}/></div>
-      <div style={{padding:"14px 16px",background:C.card,borderBottom:"1px solid "+C.border,display:"flex",alignItems:"center",gap:12}}>
-        <button onClick={props.onClose} style={{background:C.bg,border:"none",borderRadius:9999,width:36,height:36,cursor:"pointer",color:C.blue,fontSize:20,display:"flex",alignItems:"center",justifyContent:"center"}}>{"←"}</button>
-        <div style={{width:40,height:40,borderRadius:9999,background:"linear-gradient(135deg,#ffcc00,#0033A0)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20}}>{"🤖"}</div>
-        <div style={{flex:1}}>
-          <div style={{fontSize:16,fontFamily:"'Syne',sans-serif",fontWeight:700,color:C.text}}>Pana</div>
-          <div style={{fontSize:11,color:C.muted,fontFamily:"'Inter',sans-serif"}}>Tu asistente venezolano {"🇻🇪"}</div>
-        </div>
-        <button onClick={function(){
-          var initial=[{role:"assistant",content:"Epale pana! Soy Pana, tu asistente venezolano 🇻🇪 Preguntame lo que quieras!"}];
-          setMessages(initial);
-          try{ localStorage.removeItem("pana_conversation"); }catch(e){}
-        }} style={{background:"none",border:"none",cursor:"pointer",fontSize:11,color:C.muted,padding:"4px 8px",borderRadius:8,fontFamily:"'Inter',sans-serif"}}>Limpiar</button>
-      </div>
-      {/* Messages */}
-      <div style={{flex:1,overflowY:"auto",padding:"16px",WebkitOverflowScrolling:"touch"}}>
-        {messages.map(function(m,i){
-          var isUser=m.role==="user";
-          return (
-            <div key={i} style={{display:"flex",justifyContent:isUser?"flex-end":"flex-start",marginBottom:12}}>
-              {!isUser&&<div style={{width:32,height:32,borderRadius:9999,background:"linear-gradient(135deg,#ffcc00,#0033A0)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,marginRight:8,flexShrink:0,alignSelf:"flex-end"}}>{"🤖"}</div>}
-              <div style={{maxWidth:"78%",padding:"10px 14px",borderRadius:isUser?"18px 18px 4px 18px":"18px 18px 18px 4px",background:isUser?"#ffcc00":C.card,color:isUser?"#1a1a1a":C.text,fontFamily:"'Inter',sans-serif",fontSize:14,lineHeight:1.5,border:isUser?"none":"1px solid "+C.border}}>
-                {m.content}
-              </div>
-            </div>
-          );
-        })}
-        {loading&&(
-          <div style={{display:"flex",justifyContent:"flex-start",marginBottom:12}}>
-            <div style={{width:32,height:32,borderRadius:9999,background:"linear-gradient(135deg,#ffcc00,#0033A0)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,marginRight:8,flexShrink:0}}>{"🤖"}</div>
-            <div style={{padding:"10px 14px",borderRadius:"18px 18px 18px 4px",background:C.card,border:"1px solid "+C.border,color:C.muted,fontFamily:"'Inter',sans-serif",fontSize:14}}>Pensando...</div>
-          </div>
-        )}
-        <div ref={bottomRef}/>
-      </div>
-      {/* Input */}
-      <div style={{padding:"12px 16px",background:C.card,borderTop:"1px solid "+C.border,display:"flex",gap:10,alignItems:"flex-end",paddingBottom:"calc(12px + env(safe-area-inset-bottom))"}}>
-        <button onClick={startListening} style={{width:44,height:44,borderRadius:9999,background:listening?"#ff4444":"#333",border:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}}>{"🎤"}</button>
-        <textarea ref={inputRef} value={input} onChange={function(e){setInput(e.target.value);}} onKeyDown={function(e){if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}}} placeholder={listening?"Escuchando...":"Preguntale algo a Pana..."} rows={1} style={{flex:1,padding:"10px 14px",background:C.bg,border:"1.5px solid "+(listening?"#ff4444":C.border),borderRadius:20,color:C.text,fontFamily:"'Inter',sans-serif",fontSize:14,outline:"none",resize:"none",maxHeight:120,lineHeight:1.5}}/>
-        <button onClick={send} disabled={loading||!input.trim()} style={{width:44,height:44,borderRadius:9999,background:input.trim()?"#ffcc00":"#333",border:"none",cursor:input.trim()?"pointer":"not-allowed",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}}>{"↑"}</button>
-      </div>
-    </div>
-  );
+  return <PanaChat supabase={supabase} theme={_theme || LIGHT} onClose={props.onClose} />;
 }
 
 
