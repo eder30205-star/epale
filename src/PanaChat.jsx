@@ -216,11 +216,25 @@ async function speak(supabase, text) {
     window.__panaAudio = audio;
     audio.onended = () => URL.revokeObjectURL(url);
     await audio.play();
-  } catch {
+  } catch (e) {
+    console.warn("Voz de ElevenLabs no disponible, se usa la del navegador:", e?.message);
     if (!("speechSynthesis" in window)) return;
     window.speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(plain);
-    u.lang = "es";
+    const v = spanishVoice();
+    if (v) u.voice = v;
+    u.lang = v?.lang ?? "es-US";
     window.speechSynthesis.speak(u);
   }
+}
+
+// Elige una voz en español del dispositivo (latina primero) para el respaldo.
+function spanishVoice() {
+  const voices = window.speechSynthesis?.getVoices?.() ?? [];
+  const es = voices.filter((v) => /^es([-_]|$)/i.test(v.lang));
+  const pick = (re) => es.find((v) => re.test(v.lang));
+  return pick(/es[-_](US|MX|419|VE|CO)/i) || pick(/es[-_]ES/i) || es[0] || null;
+}
+if (typeof window !== "undefined" && window.speechSynthesis) {
+  window.speechSynthesis.getVoices(); // algunos navegadores cargan las voces tarde
 }
