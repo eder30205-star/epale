@@ -15,8 +15,8 @@ const SUGERENCIAS = [
   "¿Tengo flechas nuevas en Flechao?",
 ];
 
-const ACCION = { publicar_post: "Publicar", comentar: "Comentar", seguir: "Seguir" };
-const HECHO = { publicar_post: "Publicado ✓", comentar: "Comentado ✓", seguir: "Siguiendo ✓" };
+const ACCION = { publicar_post: "Publicar", comentar: "Comentar", seguir: "Seguir", aprobar_autopost: "Publicar", modo_bot: "Cambiar" };
+const HECHO = { publicar_post: "Publicado ✓", comentar: "Comentado ✓", seguir: "Siguiendo ✓", aprobar_autopost: "Publicado como Pana IA ✓", modo_bot: "Modo cambiado ✓" };
 
 export default function PanaChat({ supabase, theme, onClose }) {
   const C = theme;

@@ -181,6 +181,20 @@ const TOOL_DEFS = [
   }, ["usuario_id"]),
 ];
 
+// Solo para administradores de Épale (Pana publica con su cuenta "Pana IA")
+const BOT_NAME = "Pana IA";
+const ADMIN_TOOL_DEFS = [
+  fn("borradores_pana", "SOLO ADMIN. Muestra los posts que Pana IA dejó en borrador y prepara un botón para publicar cada uno.", {
+    limite: { type: "integer", description: "1 a 10" },
+  }),
+  fn("descartar_borrador", "SOLO ADMIN. Descarta un borrador de Pana IA por su id (no se publica).", {
+    id: { type: "integer" },
+  }, ["id"]),
+  fn("modo_pana_publica", "SOLO ADMIN. Ver o cambiar cómo publica Pana IA: 'borrador' (el admin aprueba), 'auto' (publica solo) o 'pausa'. Sin modo, solo muestra el modo actual y lo último que publicó.", {
+    modo: { type: "string", description: "borrador, auto o pausa (vacío = solo ver)" },
+  }),
+];
+
 // ================= SEÑALES DE ESTAFA =================
 const SCAM_RULES: [RegExp, string][] = [
   [/(adelant|anticip|reserv)[a-z]*\s+(el\s+)?(pago|dep[oó]sito|dinero|abono)|pag(a|ar|o)\s+(antes|primero|por adelantado)/i, "Pide pagar antes de ver el lugar o empezar"],
@@ -210,10 +224,42 @@ async function createPending(ctx: Ctx, type: string, payload: object, resumen: s
 }
 
 const HANDLERS: Record<string, Handler> = {
+  async borradores_pana({ limite }, ctx) {
+    const { data, error } = await ctx.supabase.from("pana_autoposts")
+      .select("id, kind, city, content, created_at").eq("status", "borrador")
+      .order("created_at", { ascending: true }).limit(clamp(limite));
+    if (error) return { error: "Solo administradores (o falta correr pana-autopost.sql)" };
+    if (!data?.length) return { borradores: [], nota: "No hay borradores pendientes." };
+    for (const d of data) {
+      await createPending(ctx, "aprobar_autopost", { id: d.id, contenido: d.content, city: d.city },
+        `Publicar como Pana IA en ${countryName(d.city)} (${d.kind})`);
+    }
+    return { borradores: data.map((d) => ({ id: d.id, tipo: d.kind, pais: countryName(d.city), texto: d.content })),
+             nota: "Ya preparé un botón Publicar para cada uno. Para descartar uno, usa descartar_borrador." };
+  },
+
+  async descartar_borrador({ id }, { supabase }) {
+    const { data, error } = await supabase.rpc("pana_autopost_decidir", { p_id: Number(id), p_aprobar: false });
+    return error ? { error: error.message } : { estado: data };
+  },
+
+  async modo_pana_publica({ modo }, ctx) {
+    const { data: cfg, error } = await ctx.supabase.from("pana_bot").select("modo").eq("id", 1).maybeSingle();
+    if (error || !cfg) return { error: "Falta correr pana-autopost.sql" };
+    const { data: ultimos } = await ctx.supabase.from("pana_autoposts")
+      .select("kind, city, status, created_at").order("created_at", { ascending: false }).limit(5);
+    const m = String(modo ?? "").toLowerCase().trim();
+    if (!m) return { modo_actual: cfg.modo, ultimos: ultimos ?? [] };
+    if (!["borrador", "auto", "pausa"].includes(m)) return { error: "Modo no válido: borrador, auto o pausa" };
+    return await createPending(ctx, "modo_bot", { modo: m, contenido: `Cambiar Pana IA a modo «${m}»` },
+      `Cambiar Pana IA de «${cfg.modo}» a «${m}»`);
+  },
+
   async buscar_posts({ texto, tipo, pais, desde_dias, limite }, { supabase }) {
     let q = supabase
       .from(T.posts)
       .select(POST_COLS)
+      .neq("name", BOT_NAME)
       .order("created_at", { ascending: false })
       .limit(clamp(limite));
     if (texto) q = q.ilike("content", `%${clean(texto)}%`);
@@ -397,7 +443,7 @@ const HANDLERS: Record<string, Handler> = {
     const n = Math.min(Math.max(Number(dias) || 3, 1), 14);
     const since = new Date(Date.now() - n * 86_400_000).toISOString();
     const { data, error } = await supabase.from(T.posts)
-      .select(POST_COLS).eq("city", id).gte("created_at", since)
+      .select(POST_COLS).eq("city", id).neq("name", BOT_NAME).gte("created_at", since)
       .order("created_at", { ascending: false }).limit(100);
     if (error) return { error: error.message };
     const rows = data ?? [];
@@ -491,6 +537,17 @@ const HANDLERS: Record<string, Handler> = {
 
 // ================= EJECUTORES (solo tras confirmación) =================
 const EXECUTORS: Record<string, (p: any, s: SupabaseClient, u: User) => Promise<unknown>> = {
+  async aprobar_autopost(p, s) {
+    const { data, error } = await s.rpc("pana_autopost_decidir", { p_id: Number(p.id), p_aprobar: true });
+    if (error) throw error;
+    if (data !== "publicado") throw new Error(`No se publicó (estado: ${data})`);
+    return { estado: data };
+  },
+  async modo_bot(p, s) {
+    const { data, error } = await s.rpc("pana_bot_modo", { p_modo: p.modo });
+    if (error) throw error;
+    return { modo: data };
+  },
   async publicar_post(p, s, u) {
     const { data: me } = await s.from(T.profiles).select("name, username").eq("id", u.id).maybeSingle();
     const { data, error } = await s.from(T.posts)
@@ -524,7 +581,7 @@ const EXECUTORS: Record<string, (p: any, s: SupabaseClient, u: User) => Promise<
 };
 
 // ================= MODELO =================
-async function callDeepSeek(messages: any[], attempt = 0): Promise<any> {
+async function callDeepSeek(messages: any[], tools: any[] = TOOL_DEFS, attempt = 0): Promise<any> {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), CFG.timeoutMs);
   try {
@@ -535,11 +592,11 @@ async function callDeepSeek(messages: any[], attempt = 0): Promise<any> {
         "Content-Type": "application/json",
         Authorization: `Bearer ${Deno.env.get("DEEPSEEK_API_KEY")}`,
       },
-      body: JSON.stringify({ model: CFG.model, messages, tools: TOOL_DEFS, temperature: 0.6 }),
+      body: JSON.stringify({ model: CFG.model, messages, tools, temperature: 0.6 }),
     });
     if ((res.status === 429 || res.status >= 500) && attempt < 2) {
       await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
-      return callDeepSeek(messages, attempt + 1);
+      return callDeepSeek(messages, tools, attempt + 1);
     }
     if (!res.ok) throw new Error(`DeepSeek ${res.status}: ${await res.text()}`);
     return (await res.json()).choices[0].message;
@@ -659,17 +716,21 @@ async function handleChat(body: any, supabase: SupabaseClient, user: User) {
     conversation_id: conversationId, user_id: user.id, role: "user", content: text,
   });
 
+  const { data: esAdmin } = await supabase.rpc("pana_es_admin");
+  const tools = esAdmin === true ? [...TOOL_DEFS, ...ADMIN_TOOL_DEFS] : TOOL_DEFS;
   const ctx: Ctx = { supabase, user, conversationId, pending: [] };
   const logs: any[] = [];
   const convo: any[] = [
-    { role: "system", content: buildSystemPrompt(profileRes.data, memRes.data ?? [], summary) },
+    { role: "system", content: buildSystemPrompt(profileRes.data, memRes.data ?? [], summary) + (esAdmin === true
+      ? "\n\nEste usuario es ADMINISTRADOR de Épale. Puede revisar y aprobar lo que publica tu cuenta \"Pana IA\" (borradores_pana, descartar_borrador, modo_pana_publica). Al mostrar borradores, enuméralos cortito con su país; los botones Publicar ya salen solos."
+      : "") },
     ...history,
     { role: "user", content: text },
   ];
 
   let reply = "";
   for (let step = 0; step < CFG.maxSteps; step++) {
-    const msg = await callDeepSeek(convo);
+    const msg = await callDeepSeek(convo, tools);
     convo.push(msg);
 
     if (!msg.tool_calls?.length) {
