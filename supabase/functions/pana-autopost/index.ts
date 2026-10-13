@@ -3,8 +3,10 @@
 //   job "diario"  → dólar del día + revisión de estafas
 //   job "semanal" → resumen de la semana + bienvenida por país
 //   job "tip"     → tip de la semana (sale de pana_knowledge)
-// Solo usa datos reales (DolarApi, posts y perfiles de Épale, guía por país). No usa IA para escribir,
-// así no inventa nada. Cada post es único por (tipo, país, día/semana): llamarlo dos veces no duplica.
+//   job "pregunta" | "consejo" | "cultura" | "comunidad" → un post del día escrito con IA (DeepSeek),
+//       con reglas estrictas: nada de cifras, leyes, noticias ni datos que se puedan inventar.
+//       Si la IA falla, usa una frase de respaldo. Rota la pestaña de país cada día.
+// El dólar, los resúmenes, los tips y las alertas usan solo datos reales (sin IA). Cada post es único por (tipo, país, día/semana): llamarlo dos veces no duplica.
 // Modo 'borrador' (por defecto): deja los posts para que un admin los apruebe. 'auto': publica. 'pausa': nada.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -246,6 +248,112 @@ async function jobTip(): Promise<Draft[]> {
   return drafts;
 }
 
+// ---------- posts del día escritos con IA ----------
+const CIUDADES = Object.keys(PAISES);
+const TEMAS: Record<string, { offset: number; brief: string; respaldo: string[] }> = {
+  pregunta: {
+    offset: 0,
+    brief: "Una PREGUNTA divertida o nostálgica para que la comunidad comente: comida, palabras venezolanas, costumbres, música, recuerdos de Venezuela, vida en el nuevo país. Termina invitando a responder en los comentarios.",
+    respaldo: [
+      "🫓 Pregunta seria: ¿arepa con qué? Dime tu relleno favorito 👇",
+      "🗣️ ¿Qué palabra venezolana tuviste que explicarle a alguien en tu nuevo país? 👇",
+      "🎄 Hallacas: ¿con pasas o sin pasas? Que empiece el debate 👇",
+      "✈️ ¿Desde qué ciudad nos lees y cuánto tiempo llevas ahí? 👇",
+      "🍫 ¿Qué es lo primero que comerías si llegaras hoy a Venezuela? 👇",
+    ],
+  },
+  consejo: {
+    offset: 3,
+    brief: "Un CONSEJO PRÁCTICO y general para venezolanos que viven fuera: organizarse con el dinero, cuidarse de estafas, guardar copias de documentos, buscar trabajo, adaptarse, cuidar la salud mental, mantener contacto con la familia. Nada de requisitos legales, trámites concretos, cifras ni nombres de instituciones.",
+    respaldo: [
+      "📁 Consejo del día: guarda una copia digital de tus documentos en la nube y otra en papel. Si pierdes algo, te ahorras un dolor de cabeza.",
+      "🛡️ Consejo del día: si alguien te pide pagar por adelantado para \"asegurarte\" un trabajo o un cuarto, desconfía. Primero ves, después pagas.",
+      "📝 Consejo del día: cuando empieces un trabajo, pide siempre las condiciones por escrito: horario, pago y fecha de pago.",
+      "💬 Consejo del día: llama a tu familia aunque sea 5 minutos. Estar lejos se lleva mejor cuando uno no se aísla.",
+    ],
+  },
+  cultura: {
+    offset: 6,
+    brief: "Un post sobre CULTURA VENEZOLANA cotidiana y muy conocida: comida, dichos y expresiones, juegos de infancia, música en general, Navidad venezolana, costumbres por región. Tono cálido y orgulloso. NO menciones fechas, cifras, récords, ni personas reales.",
+    respaldo: [
+      "🇻🇪 \"Échale bolas\": la frase que más de un venezolano se ha repetido en el extranjero. ¿Cuál es tu frase para seguir adelante? 👇",
+      "🥟 Un tequeño a tiempo arregla cualquier reunión. ¿Quién los hace mejor en tu casa? 👇",
+      "🎶 Hay canciones que suenan a casa apenas empiezan. ¿Cuál es la tuya? 👇",
+    ],
+  },
+  comunidad: {
+    offset: 9,
+    brief: "Un mensaje de COMUNIDAD para cerrar el día: ánimo, humor sano de la vida del migrante, celebrar logros pequeños, invitar a presentarse o a ayudar a otros en Épale. Cercano y positivo, sin cursilería.",
+    respaldo: [
+      "🌙 ¿Qué lograste hoy, aunque sea pequeño? Cuéntalo aquí, que en Épale se celebra todo 👇",
+      "🤝 Si llegaste hace poco a tu país, preséntate en los comentarios: siempre hay un pana que ya pasó por lo mismo.",
+      "😅 Migrante nivel experto: ya no conviertes precios a bolívares… ¿o sí? 👇",
+    ],
+  },
+};
+
+const REGLAS_IA = `Eres Pana, el asistente de Épale, la red social de la diáspora venezolana. Escribe UN post corto para el feed.
+Reglas obligatorias:
+- Español venezolano natural, cercano, sin exagerar la jerga. 1 a 3 frases, máximo 280 caracteres. 1 o 2 emojis.
+- No inventes datos: nada de cifras, precios, fechas, estadísticas, leyes, requisitos de trámites, noticias ni nombres de personas reales o instituciones.
+- Nada de política, religión, temas médicos, dinero/inversiones, contenido sexual ni nada que pueda ofender a un grupo.
+- Sin links, sin hashtags, sin @menciones, sin comillas alrededor del post.
+- No repitas ideas de los posts recientes que te paso.
+Devuelve SOLO el texto del post.`;
+
+function diaNum() {
+  const [y, m, d] = hoyVE().split("-").map(Number);
+  return Math.floor(Date.UTC(y, m - 1, d) / 86_400_000);
+}
+
+async function escribirConIA(kind: string, pais: string, recientes: string[]): Promise<string | null> {
+  const key = Deno.env.get("DEEPSEEK_API_KEY");
+  if (!key) return null;
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 25_000);
+  try {
+    const res = await fetch("https://api.deepseek.com/chat/completions", {
+      method: "POST", signal: ctrl.signal,
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
+      body: JSON.stringify({
+        model: "deepseek-chat", temperature: 0.95, max_tokens: 220,
+        messages: [
+          { role: "system", content: REGLAS_IA },
+          { role: "user", content: `Tipo de post: ${TEMAS[kind].brief}\nSe publicará en la pestaña de ${pais}, pero lo lee toda la diáspora.\nPosts recientes (no repetir):\n${recientes.map((r) => "- " + r).join("\n") || "- (ninguno)"}` },
+        ],
+      }),
+    });
+    if (!res.ok) return null;
+    let t: string = (await res.json()).choices?.[0]?.message?.content ?? "";
+    t = t.trim().replace(/^["“«]|["”»]$/g, "").trim();
+    // Filtros de seguridad: largo razonable, sin links, teléfonos, menciones ni hashtags
+    if (t.length < 30 || t.length > 400) return null;
+    if (/https?:|www\.|\.com\b|@\w|#\w|\+?\d[\d\s-]{7,}/i.test(t)) return null;
+    return t;
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function jobTema(kind: string): Promise<Draft[]> {
+  const tema = TEMAS[kind];
+  const dia = diaNum();
+  const city = CIUDADES[(dia + tema.offset) % CIUDADES.length];
+  const { data: prev } = await sb.from("pana_autoposts").select("content")
+    .in("kind", Object.keys(TEMAS)).order("created_at", { ascending: false }).limit(15);
+  const recientes = (prev ?? []).map((r) => String(r.content).slice(0, 90));
+  let content = await escribirConIA(kind, PAISES[city].nombre, recientes);
+  let fuente = "ia";
+  if (!content) {
+    const libres = tema.respaldo.filter((r) => !recientes.some((x) => r.startsWith(x.slice(0, 40))));
+    content = (libres.length ? libres : tema.respaldo)[dia % (libres.length || tema.respaldo.length)];
+    fuente = "respaldo";
+  }
+  return [{ kind, city, period: hoyVE(), content, meta: { fuente } }];
+}
+
 async function avisarAdmins(n: number) {
   const { data: admins } = await sb.from("pana_admins").select("user_id");
   const texto = `Pana: dejé ${n} post${n === 1 ? "" : "s"} en borrador. Ábreme y dime «muéstrame los borradores» 🤖`;
@@ -268,6 +376,7 @@ Deno.serve(async (req) => {
     if (job === "diario") drafts = [...await jobDolar(), ...await jobEstafas(bot)];
     else if (job === "semanal") drafts = await jobSemanal(bot);
     else if (job === "tip") drafts = await jobTip();
+    else if (TEMAS[job]) drafts = await jobTema(job);
     else return json({ error: "job desconocido" }, 400);
 
     if (!drafts.length) return json({ job, creados: 0 });

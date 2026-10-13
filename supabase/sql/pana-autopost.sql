@@ -47,7 +47,7 @@ grant execute on function public.pana_es_admin() to authenticated;
 -- 3. Posts que prepara Pana (borradores y publicados)
 create table if not exists public.pana_autoposts (
   id          bigserial primary key,
-  kind        text not null check (kind in ('dolar', 'resumen', 'bienvenida', 'estafa', 'tip')),
+  kind        text not null check (kind in ('dolar', 'resumen', 'bienvenida', 'estafa', 'tip', 'pregunta', 'consejo', 'cultura', 'comunidad')),
   city        text not null,
   period      text not null,                 -- día o semana: evita repetir el mismo post
   type        text not null default 'post',
