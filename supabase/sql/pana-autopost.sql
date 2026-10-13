@@ -27,7 +27,7 @@ create table if not exists public.pana_admins (
   user_id uuid primary key references auth.users(id) on delete cascade
 );
 insert into public.pana_admins (user_id)
-  select id from auth.users where lower(email) = 'eder30205@gmail.com'
+  select id from auth.users where lower(email) in ('eder30205@gmail.com', 'raul@epaleapp.online')
 on conflict (user_id) do nothing;
 
 alter table public.pana_admins enable row level security;
