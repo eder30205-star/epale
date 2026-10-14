@@ -11,6 +11,9 @@ if("serviceWorker" in navigator){
 import React from "react";
 import { createClient } from "@supabase/supabase-js";
 import PanaChat from "./PanaChat.jsx";
+import { leerParametros, registrarInvitacionPendiente, cargarEmbajadores, esEmbajador, compartirPostWhatsApp, PostPublico, InvitaCard, CompletarPerfil } from "./Crecimiento.jsx";
+// Links que llegan de afuera: ?post=123 (post compartido) y ?ref=usuario (invitación)
+const POST_INICIAL = leerParametros();
 
 const SUPA_URL = "https://zkydbsymcnnbepvmbchr.supabase.co";
 const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpreWRic3ltY25uYmVwdm1iY2hyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyNjExNjksImV4cCI6MjA5NTgzNzE2OX0.bIiUt752AROIfQkQTHqN7r9OrjRTzxmwNQLDw0WVVS4";
@@ -682,7 +685,7 @@ function PostCard(props) {
             <Av t={post.av||post.name} i={idx} s={42} photo={post.name===userName?userPhoto:(post.photo_url||null)}/>
             <div style={{flex:1}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                <span onClick={function(){ if(props.onOpenProfile) props.onOpenProfile(post.name); }} style={{fontWeight:700,fontSize:15,fontFamily:"'Syne',sans-serif",color:C.text,cursor:"pointer",display:"inline-flex",alignItems:"center",gap:4}}>{post.name}{(isFounder(post.name)||isFounder(userName)&&post.name===userName)?<span style={{display:"inline-flex",alignItems:"center",gap:3,background:"linear-gradient(135deg,#ffd700,#ff8c00)",borderRadius:20,padding:"1px 7px",fontSize:10,fontWeight:800,color:"#fff",letterSpacing:0.3}}>{"⚡ Founder"}</span>:isPanaBot(post.name)?<span title="Cuenta automática del asistente de Épale" style={{display:"inline-flex",alignItems:"center",gap:3,background:"#0066ff",borderRadius:20,padding:"1px 7px",fontSize:10,fontWeight:800,color:"#fff",letterSpacing:0.3}}>{"🤖 Asistente IA"}</span>:(isVerified(post.name))?<span style={{display:"inline-flex",alignItems:"center",justifyContent:"center",width:16,height:16,background:C.blue,borderRadius:9999,fontSize:10,color:"#fff",fontWeight:800}}>{"✓"}</span>:null}</span>
+                <span onClick={function(){ if(props.onOpenProfile) props.onOpenProfile(post.name); }} style={{fontWeight:700,fontSize:15,fontFamily:"'Syne',sans-serif",color:C.text,cursor:"pointer",display:"inline-flex",alignItems:"center",gap:4}}>{post.name}{(isFounder(post.name)||isFounder(userName)&&post.name===userName)?<span style={{display:"inline-flex",alignItems:"center",gap:3,background:"linear-gradient(135deg,#ffd700,#ff8c00)",borderRadius:20,padding:"1px 7px",fontSize:10,fontWeight:800,color:"#fff",letterSpacing:0.3}}>{"⚡ Founder"}</span>:isPanaBot(post.name)?<span title="Cuenta automática del asistente de Épale" style={{display:"inline-flex",alignItems:"center",gap:3,background:"#0066ff",borderRadius:20,padding:"1px 7px",fontSize:10,fontWeight:800,color:"#fff",letterSpacing:0.3}}>{"🤖 Asistente IA"}</span>:(isVerified(post.name))?<span style={{display:"inline-flex",alignItems:"center",justifyContent:"center",width:16,height:16,background:C.blue,borderRadius:9999,fontSize:10,color:"#fff",fontWeight:800}}>{"✓"}</span>:null}{esEmbajador(post.name)?<span title="Embajador de Épale: invitó a 3 o más panas" style={{display:"inline-flex",alignItems:"center",background:"#ffcc00",borderRadius:20,padding:"1px 7px",fontSize:10,fontWeight:800,color:"#1a1a1a"}}>{"🤝 Embajador"}</span>:null}</span>
                 <div style={{display:"flex",alignItems:"center",gap:8}}>
                   {post.name!=="Tu"&&post.name!==userName&&post.name!==""&&(!post.user_id||post.user_id!==props.userId)&&onFollow?(<button onClick={function(){onFollow(post.name);}} style={{padding:"8px 14px",minHeight:36,borderRadius:100,border:"1.5px solid "+(following.includes(post.name)?C.border:C.blue),background:"transparent",color:following.includes(post.name)?C.muted:C.blue,fontFamily:"'Inter',sans-serif",fontSize:12,fontWeight:700,cursor:"pointer"}}>{following.includes(post.name)?TR.siguiendo:TR.seguir}</button>):null}
                   <button onClick={function(){setShowMenu(function(m){return !m;});}} style={{background:"none",border:"none",cursor:"pointer",color:C.muted,fontSize:20,padding:"4px 10px",minWidth:44,minHeight:44,display:"flex",alignItems:"center",justifyContent:"center"}}>...</button>
@@ -761,7 +764,7 @@ function PostCard(props) {
               {saved?TR.guardado:TR.guardar}
             </button>
           </div>
-          <a href={waShare(post,cityObj?cityObj.id:"ve")} target="_blank" rel="noreferrer" style={{textDecoration:"none",display:"block",marginBottom:14}}>
+          <a href={compartirPostWhatsApp(post)} target="_blank" rel="noreferrer" style={{textDecoration:"none",display:"block",marginBottom:14}}>
             <div style={{display:"flex",alignItems:"center",gap:10,padding:"11px 14px",background:C.wa,borderRadius:12,cursor:"pointer"}}>
               <span style={{fontSize:20}}>{ICONS.phone}</span>
               <div style={{flex:1}}><div style={{fontSize:13,fontWeight:700,color:"#fff",fontFamily:"'Inter',sans-serif"}}>Compartir en WhatsApp</div><div style={{fontSize:11,color:"rgba(255,255,255,0.8)",fontFamily:"'Inter',sans-serif"}}>Envia este post a tus panas</div></div>
@@ -1508,7 +1511,7 @@ function Profile(props) {
           return (<div key={i} onClick={item.action||function(){}} style={{display:"flex",alignItems:"center",gap:14,padding:"14px 20px",borderBottom:i<3?"1px solid "+C.border:"none",cursor:"pointer"}}><div style={{width:42,height:42,borderRadius:12,background:C.bg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20}}>{item.icon}</div><div style={{flex:1}}><div style={{fontSize:14,color:C.text,fontFamily:"'Inter',sans-serif",fontWeight:600}}>{item.label}</div><div style={{fontSize:11,color:C.muted,fontFamily:"'Inter',sans-serif",marginTop:1}}>{item.sub}</div></div><span style={{color:C.muted,fontSize:18}}>{">"}</span></div>);
         })}
       </div>
-      <div style={{margin:"0 14px 10px"}}><a href={waInvite(userCity)} target="_blank" rel="noreferrer" style={{textDecoration:"none"}}><div style={{background:C.wa,borderRadius:14,padding:"14px 18px",display:"flex",alignItems:"center",gap:12}}><span style={{fontSize:22}}>{ICONS.phone}</span><div style={{flex:1}}><div style={{fontWeight:700,color:"#fff",fontFamily:"'Inter',sans-serif",fontSize:13}}>Invitar venezolanos a Epale</div><div style={{fontSize:11,color:"rgba(255,255,255,0.8)",fontFamily:"'Inter',sans-serif"}}>Comparte con tus panas en {cityObj.name}</div></div></div></a></div>
+      <InvitaCard supabase={supabase} userId={props.userId} C={C}/>
       <div style={{margin:"0 14px 8px"}}><button onClick={onLogout} style={{width:"100%",padding:"14px",background:C.card,border:"1px solid "+C.border,borderRadius:14,color:C.red,cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:13,fontWeight:700}}>{currentLang==="en"?"Sign out":"Cerrar Sesion"}</button></div>
       <div style={{margin:"0 14px 40px"}}>
         <button onClick={function(){
@@ -2003,6 +2006,9 @@ function App() {
   var [unreadNotifs,setUnreadNotifs]=useState(0);
   var [isMobileApp,setIsMobileApp]=useState(window.innerWidth<768);
   var [profileReady,setProfileReady]=useState(false);
+  var [postAbierto,setPostAbierto]=useState(POST_INICIAL);
+  var [necesitaPerfil,setNecesitaPerfil]=useState(null);
+  useEffect(function(){ cargarEmbajadores(supabase); },[]);
   useEffect(function(){
     var handler=function(){ setIsMobileApp(window.innerWidth<768); };
     window.addEventListener("resize",handler);
@@ -2016,7 +2022,7 @@ function App() {
   useEffect(function(){
     var doRefresh=function(){ try { var s=localStorage.getItem("epale_session"); var d=s?JSON.parse(s):null; if(d&&d.refresh){ fetch(SUPA_URL+"/auth/v1/token?grant_type=refresh_token",{method:"POST",headers:{"Content-Type":"application/json","apikey":SUPA_KEY},body:JSON.stringify({refresh_token:d.refresh})}).then(function(r){return r.json();}).then(function(res){ if(res.access_token){ window._supaToken=res.access_token; d.token=res.access_token; if(res.refresh_token) d.refresh=res.refresh_token; localStorage.setItem("epale_session",JSON.stringify(d)); setSessionExpired(false); } }).catch(function(){}); } } catch(e){} };
     doRefresh(); var interval=setInterval(doRefresh,1800000);
-    var authListener=supabase.auth.onAuthStateChange(function(event,session){ if(session&&session.access_token){ window._supaToken=session.access_token; setSessionExpired(false); try { var s=localStorage.getItem("epale_session"); var d=s?JSON.parse(s):{}; d.token=session.access_token; if(session.refresh_token) d.refresh=session.refresh_token; localStorage.setItem("epale_session",JSON.stringify(d)); } catch(e){} } else if(event==="SIGNED_OUT"){ window._supaToken=null; } });
+    var authListener=supabase.auth.onAuthStateChange(function(event,session){ if(session&&session.access_token){ window._supaToken=session.access_token; setSessionExpired(false); if(event==="SIGNED_IN"&&session.user&&session.user.id){ setUserId(function(cur){ return cur||session.user.id; }); setScreen(function(sc){ return sc==="auth"?"feed":sc; }); } try { var s=localStorage.getItem("epale_session"); var d=s?JSON.parse(s):{}; d.token=session.access_token; if(session.refresh_token) d.refresh=session.refresh_token; localStorage.setItem("epale_session",JSON.stringify(d)); } catch(e){} } else if(event==="SIGNED_OUT"){ window._supaToken=null; } });
     return function(){ clearInterval(interval); if(authListener&&authListener.data&&authListener.data.subscription) authListener.data.subscription.unsubscribe(); };
   },[]);
 
@@ -2048,6 +2054,11 @@ function App() {
             } catch(e){}
           }
           setProfileReady(true);
+          // Primera vez con Google: falta nombre o país → pedirlos
+          if(!prof||!prof.name||!prof.city){
+            supabase.auth.getUser().then(function(r){ var u=r&&r.data&&r.data.user; if(!u) return; var prov=(u.app_metadata&&u.app_metadata.provider)||"email"; if(prov!=="email"){ var md=u.user_metadata||{}; setNecesitaPerfil({nombre:md.full_name||md.name||""}); } }).catch(function(){});
+          }
+          registrarInvitacionPendiente(supabase).catch(function(){});
         }).catch(function(){ setProfileReady(true); });
       } else { setProfileReady(true); }
       api.getFollowing(userId).then(function(data){ if(Array.isArray(data)){ var names=data.map(function(r){return r.following_name;}).filter(Boolean); if(names.length>0) setFollowing(names); } }).catch(function(){});
@@ -2068,6 +2079,9 @@ function App() {
     var hash=window.location.hash; if(!hash) return;
     var params={}; hash.replace("#","").split("&").forEach(function(pair){ var parts=pair.split("="); params[parts[0]]=decodeURIComponent(parts[1]||""); });
     var token=params["access_token"]; var uid=params["user_id"]||""; var type=params["type"]||"";
+    // Google y los links de confirmación no traen user_id: Supabase termina el inicio de sesión
+    // solo y avisa con SIGNED_IN (ver onAuthStateChange), así que aquí no hacemos nada.
+    if(token&&!uid&&type!=="recovery") return;
     if(token&&(type==="signup"||type==="magiclink"||type==="recovery"||token.length>10)){
       window._supaToken=token;
       if(type==="recovery"){
@@ -2142,12 +2156,15 @@ function App() {
 
   if(showResetPassword) return <ResetPasswordScreen onDone={function(){ setShowResetPassword(false); setScreen("auth"); }}/>;
   if(showPana) return <Pana onClose={function(){setShowPana(false);}}/>;
-  if(screen==="auth") return <><OfflineBanner/><Auth key={dark?"dark":"light"} onDone={handleDone}/></>;
+  var postOverlay=postAbierto?<PostPublico supabase={supabase} postId={postAbierto} C={C} logueado={!!userId&&screen==="feed"} onCerrar={function(){setPostAbierto(null);}} onUnirme={function(){setPostAbierto(null);}}/>:null;
+  if(screen==="auth") return <><OfflineBanner/><Auth key={dark?"dark":"light"} onDone={handleDone}/>{postOverlay}</>;
 
   if(screen==="feed") return (
     <div key={dark?"dark":"light"}>
       <OfflineBanner/>
       {sessionExpired?<SessionExpiredBanner onLogin={handleExpiredLogin}/>:null}
+      {postOverlay}
+      {necesitaPerfil?<CompletarPerfil supabase={supabase} userId={userId} nombreSugerido={necesitaPerfil.nombre} C={C} onListo={function(d){ setNecesitaPerfil(null); setUserName(d.name); setUserCity(d.city); try { var s0=localStorage.getItem("epale_session"); var d0=s0?JSON.parse(s0):{}; d0.name=d.name; d0.city=d.city; d0.uid=userId; localStorage.setItem("epale_session",JSON.stringify(d0)); } catch(e){} registrarInvitacionPendiente(supabase).catch(function(){}); }}/>:null}
       {showOnboarding?<Onboarding onDone={function(){setShowOnboarding(false);}} userCity={userCity} userId={userId} userName={userName} following={following} onFollow={toggleFollow}/>:null}
       {showProfile?<Profile key={dark?"dark":"light"} userCity={userCity} onLogout={handleLogout} onClose={function(){setShowProfile(false);}} onSetDark={setDarkSaved} onSetLang={setLangSaved} isDark={dark} currentLang={lang} following={following} onFollow={toggleFollow} userPhoto={userPhoto} userName={userName} onPhotoChange={setUserPhoto} userId={userId} savedPosts={savedPosts} likedPosts={likedPosts} userBio={userBio} onBioChange={setUserBio} onClearNotifs={function(){setUnreadNotifs(0);}} onCityChange={function(c){setUserCity(c);}}/>:null}
       {showSearch?<Search onClose={function(){setShowSearch(false);}} following={following} onFollow={toggleFollow} onOpenProfile={function(n){ setShowSearch(false); if(n!==userName) setViewingUser(n); else setShowProfile(true); }} userName={userName}/>:null}
