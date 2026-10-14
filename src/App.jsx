@@ -2054,9 +2054,29 @@ function App() {
             } catch(e){}
           }
           setProfileReady(true);
-          // Primera vez con Google: falta nombre o país → pedirlos
+          // Sin perfil (registro por correo que confirmó después, o primera vez con Google):
+          // si al registrarse dejó nombre y país, se crea el perfil solo; si no, se los pedimos.
           if(!prof||!prof.name||!prof.city){
-            supabase.auth.getUser().then(function(r){ var u=r&&r.data&&r.data.user; if(!u) return; var prov=(u.app_metadata&&u.app_metadata.provider)||"email"; if(prov!=="email"){ var md=u.user_metadata||{}; setNecesitaPerfil({nombre:md.full_name||md.name||""}); } }).catch(function(){});
+            supabase.auth.getUser().then(function(r){
+              var u=r&&r.data&&r.data.user; if(!u) return;
+              var md=u.user_metadata||{};
+              var nombre=(prof&&prof.name)||md.name||md.full_name||"";
+              var pais=(prof&&prof.city)||md.city||"";
+              var usuario=(prof&&prof.username)||md.username||"";
+              if(nombre&&pais){
+                var base={id:u.id,name:nombre,city:pais};
+                supabase.from("profiles").upsert(usuario?Object.assign({username:usuario},base):base,{onConflict:"id"}).then(function(res){
+                  if(res.error&&usuario&&/duplicate|unique/i.test(res.error.message)){ return supabase.from("profiles").upsert(Object.assign({username:usuario+Math.floor(100+Math.random()*900)},base),{onConflict:"id"}); }
+                  return res;
+                }).then(function(res){
+                  if(res&&res.error){ setNecesitaPerfil({nombre:nombre}); return; }
+                  setUserName(nombre); setUserCity(pais);
+                  try { var s1=localStorage.getItem("epale_session"); var d1=s1?JSON.parse(s1):{}; d1.name=nombre; d1.city=pais; d1.uid=u.id; localStorage.setItem("epale_session",JSON.stringify(d1)); } catch(e){}
+                });
+              } else {
+                setNecesitaPerfil({nombre:nombre});
+              }
+            }).catch(function(){});
           }
           registrarInvitacionPendiente(supabase).catch(function(){});
         }).catch(function(){ setProfileReady(true); });
