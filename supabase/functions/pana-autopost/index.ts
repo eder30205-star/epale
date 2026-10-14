@@ -5,7 +5,7 @@
 //   job "tip"     → tip de la semana (sale de pana_knowledge)
 //   job "pregunta" | "consejo" | "cultura" | "comunidad" → un post del día escrito con IA (DeepSeek),
 //       con reglas estrictas: nada de cifras, leyes, noticias ni datos que se puedan inventar.
-//       Si la IA falla, usa una frase de respaldo. Rota la pestaña de país cada día.
+//       Si la IA falla, usa una frase de respaldo. Sale en las 12 pestañas de país.
 // El dólar, los resúmenes, los tips y las alertas usan solo datos reales (sin IA). Cada post es único por (tipo, país, día/semana): llamarlo dos veces no duplica.
 // Modo 'borrador' (por defecto): deja los posts para que un admin los apruebe. 'auto': publica. 'pausa': nada.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -132,7 +132,9 @@ async function jobDolar(): Promise<Draft[]> {
   lineas.push("", "Fuente: DolarApi. Son valores de referencia y pueden variar durante el día.",
     "¿Dudas? Pregúntale a Pana 🤖");
 
-  return [{ kind: "dolar", city: "caracas", period: hoyVE(), content: lineas.join("\n"), meta: { oficial, paralelo } }];
+  // Sale en las 12 pestañas: a toda la diáspora le sirve (remesas, familia en Venezuela)
+  const content = lineas.join("\n");
+  return Object.keys(PAISES).map((city) => ({ kind: "dolar", city, period: hoyVE(), content, meta: { oficial, paralelo } }));
 }
 
 async function jobEstafas(bot: string): Promise<Draft[]> {
@@ -319,7 +321,7 @@ async function escribirConIA(kind: string, pais: string, recientes: string[]): P
         model: "deepseek-chat", temperature: 0.95, max_tokens: 220,
         messages: [
           { role: "system", content: REGLAS_IA },
-          { role: "user", content: `Tipo de post: ${TEMAS[kind].brief}\nSe publicará en la pestaña de ${pais}, pero lo lee toda la diáspora.\nPosts recientes (no repetir):\n${recientes.map((r) => "- " + r).join("\n") || "- (ninguno)"}` },
+          { role: "user", content: `Tipo de post: ${TEMAS[kind].brief}\nSe publicará en ${pais}: lo lee toda la diáspora, en cualquier país.\nPosts recientes (no repetir):\n${recientes.map((r) => "- " + r).join("\n") || "- (ninguno)"}` },
         ],
       }),
     });
@@ -340,18 +342,18 @@ async function escribirConIA(kind: string, pais: string, recientes: string[]): P
 async function jobTema(kind: string): Promise<Draft[]> {
   const tema = TEMAS[kind];
   const dia = diaNum();
-  const city = CIUDADES[(dia + tema.offset) % CIUDADES.length];
   const { data: prev } = await sb.from("pana_autoposts").select("content")
-    .in("kind", Object.keys(TEMAS)).order("created_at", { ascending: false }).limit(15);
-  const recientes = (prev ?? []).map((r) => String(r.content).slice(0, 90));
-  let content = await escribirConIA(kind, PAISES[city].nombre, recientes);
+    .in("kind", Object.keys(TEMAS)).order("created_at", { ascending: false }).limit(200);
+  const recientes = [...new Set((prev ?? []).map((r) => String(r.content).slice(0, 90)))].slice(0, 15);
+  let content = await escribirConIA(kind, "todos los países", recientes);
   let fuente = "ia";
   if (!content) {
     const libres = tema.respaldo.filter((r) => !recientes.some((x) => r.startsWith(x.slice(0, 40))));
     content = (libres.length ? libres : tema.respaldo)[dia % (libres.length || tema.respaldo.length)];
     fuente = "respaldo";
   }
-  return [{ kind, city, period: hoyVE(), content, meta: { fuente } }];
+  // El mismo post en las 12 pestañas de país (la pestaña Global lo muestra una sola vez)
+  return CIUDADES.map((city) => ({ kind, city, period: hoyVE(), content: content!, meta: { fuente } }));
 }
 
 async function avisarAdmins(n: number) {

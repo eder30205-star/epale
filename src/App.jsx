@@ -437,6 +437,8 @@ function PostSkeleton() {
 
 var VERIFIED_NAMES=["RE","Epale","Epale Madrid","Venezuela Miami","VE Bogota","Vzla Santiago","VE Buenos Aires","Tech Lisboa","Canada VE Jobs"];
 var FOUNDER_NAMES=["RE","Re","re","Rede","rede"];
+// Un post publicado en varias pestañas de país (ej. "Global" o Pana IA) se muestra una sola vez
+var sinRepetidos=function(list){ var seen={}; return list.filter(function(p){ var k=(p.name||"")+"|"+(p.content||""); if(seen[k]) return false; seen[k]=true; return true; }); };
 var isPanaBot=function(name){ return (name||"").trim().toLowerCase()==="pana ia"; };
 var isVerified=function(name){ return VERIFIED_NAMES.map(function(n){return n.toLowerCase();}).includes((name||"").toLowerCase()); };
 var isFounder=function(name){ return FOUNDER_NAMES.map(function(n){return n.toLowerCase();}).includes((name||"").toLowerCase()); };
@@ -964,6 +966,7 @@ function CountryFeed(props) {
   });
 
   var filtered=posts.filter(function(p){ return filter==="all"||p.type===filter; });
+  if(cityId==="global") filtered=sinRepetidos(filtered);
 
   return (
     <div style={{
@@ -1158,7 +1161,7 @@ function Feed(props) {
   var tabButtons=[["forYou",TR.forYou],["following",TR.siguiendo]].map(function(item){ var id=item[0],label=item[1]; return (<button key={id} onClick={function(){setFeedTab(id);}} style={{background:"none",border:"none",cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:13,fontWeight:feedTab===id?700:500,color:feedTab===id?C.text:C.muted,paddingBottom:2,borderBottom:feedTab===id?"2px solid "+C.text:"2px solid transparent"}}>{label}</button>); });
   var allFiltered=posts.filter(function(p){ return filter==="all"||p.type===filter; });
   var cityFiltered=allFiltered.filter(function(p){ return p.city===activeCity; });
-  var followFiltered=allFiltered.filter(function(p){ return following.includes(p.name); });
+  var followFiltered=sinRepetidos(allFiltered.filter(function(p){ return following.includes(p.name); }));
   var filtered=feedTab==="following"?followFiltered:cityFiltered;
   var addPost=function(p){
     var displayName=userName||"Tu"; var currentUserId=userId||"";
