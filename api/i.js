@@ -1,5 +1,5 @@
 // epaleapp.online/i/<usuario> → "Fulano te invita a Épale" y abre Épale guardando quién invitó.
-import { supa, pagina, enviar, SITE } from "./_comun.js";
+import { supa, pagina, enviar, esRobot, SITE } from "./_comun.js";
 
 export default async function handler(req, res) {
   const code = String(req.query.code ?? "").replace(/[^0-9a-zA-Z_.-]/g, "").slice(0, 40);
@@ -13,5 +13,6 @@ export default async function handler(req, res) {
   }
   const titulo = nombre ? `${nombre} te invita a Épale 🇻🇪` : "Te invitaron a Épale 🇻🇪";
   const descripcion = "La red de los venezolanos en el mundo: trabajo, vivienda, el dólar del día y tu gente en tu país. Gratis.";
-  enviar(res, pagina({ titulo, descripcion, url, destino }));
+  res.setHeader("X-Robots-Tag", "noindex"); // las invitaciones no deben salir en Google
+  enviar(res, pagina({ titulo, descripcion, url, destino, robot: esRobot(req) }));
 }

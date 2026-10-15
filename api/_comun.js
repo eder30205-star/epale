@@ -41,7 +41,14 @@ export function recortar(s, n) {
 }
 
 // HTML mínimo: etiquetas para la vista previa + redirección inmediata a la app
-export function pagina({ titulo, descripcion, url, destino }) {
+// Buscadores y apps que leen la vista previa (no ejecutan la app de Épale)
+export const esRobot = (req) =>
+  /bot|crawl|spider|slurp|facebookexternalhit|whatsapp|telegram|twitterbot|linkedin|discord|googlebot|google-inspectiontool|googleother|adsbot|bingbot|yandex|duckduck/i
+    .test(String(req.headers?.["user-agent"] ?? ""));
+
+// robot = true → página completa con el texto (para Google), sin redirigir.
+// robot = false → la persona va directo a la app.
+export function pagina({ titulo, descripcion, url, destino, cuerpo = "", robot = false }) {
   return `<!doctype html>
 <html lang="es"><head>
 <meta charset="utf-8">
@@ -61,11 +68,13 @@ export function pagina({ titulo, descripcion, url, destino }) {
 <meta name="twitter:description" content="${esc(descripcion)}">
 <meta name="twitter:image" content="${SITE}/og-epale.png">
 <link rel="canonical" href="${esc(url)}">
-<meta http-equiv="refresh" content="0;url=${esc(destino)}">
+${robot ? "" : `<meta http-equiv="refresh" content="0;url=${esc(destino)}">`}
 <style>body{font-family:system-ui,sans-serif;background:#0d0d12;color:#fff;display:grid;place-items:center;min-height:100vh;margin:0}a{color:#ffcc00}</style>
 </head><body>
-<p>Abriendo Épale… <a href="${esc(destino)}">toca aquí si no abre</a></p>
-<script>location.replace(${JSON.stringify(destino)});</script>
+${robot
+  ? `<main style="max-width:640px;padding:24px;line-height:1.6"><h1 style="font-size:22px">${esc(titulo)}</h1>${cuerpo ? `<p style="white-space:pre-wrap">${esc(cuerpo)}</p>` : `<p>${esc(descripcion)}</p>`}<p><a href="${esc(destino)}">Ver en Épale</a> · <a href="${SITE}">Épale: la red de los venezolanos en el mundo</a></p></main>`
+  : `<p>Abriendo Épale… <a href="${esc(destino)}">toca aquí si no abre</a></p>
+<script>location.replace(${JSON.stringify(destino)});</script>`}
 </body></html>`;
 }
 

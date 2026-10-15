@@ -1,5 +1,5 @@
 // epaleapp.online/p/<id> → vista previa del post en WhatsApp y luego abre el post en Épale.
-import { supa, pagina, enviar, recortar, PAISES, TIPOS, SITE } from "./_comun.js";
+import { supa, pagina, enviar, recortar, esRobot, PAISES, TIPOS, SITE } from "./_comun.js";
 
 export default async function handler(req, res) {
   const id = String(req.query.id ?? "").replace(/[^0-9a-zA-Z-]/g, "").slice(0, 64);
@@ -19,5 +19,6 @@ export default async function handler(req, res) {
       : `${post.name || "Un pana"}${pais ? " desde " + pais : ""} en Épale 🇻🇪`;
     descripcion = recortar(post.content, 190);
   }
-  enviar(res, pagina({ titulo, descripcion, url, destino }));
+  if (!post && id) res.setHeader("X-Robots-Tag", "noindex");
+  enviar(res, pagina({ titulo, descripcion, url, destino, cuerpo: post?.content ?? "", robot: esRobot(req) }));
 }
