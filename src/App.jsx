@@ -176,190 +176,9 @@ const toFlag=function(code){ if(!code) return ""; if(code==="🌍"||code==="glob
 const getCity=function(id){ return CITIES.find(function(c){ return c.id===id; })||CITIES[0]; };
 const TYPES={post:{label:"Post",icon:ICONS.pencil,badgeBg:null},job:{label:"Trabajo",icon:ICONS.briefcase,badgeBg:"#ffcc00",badgeFg:"#1a1a1a"},housing:{label:"Vivienda",icon:ICONS.house,badgeBg:"#1a4fa0",badgeFg:"#fff"},service:{label:"Servicio",icon:ICONS.wrench,badgeBg:"#1a7a3c",badgeFg:"#fff"},help:{label:"Ayuda",icon:ICONS.handshake,badgeBg:"#cc2200",badgeFg:"#fff"},evento:{label:"Evento",icon:ICONS.bell,badgeBg:"#7b2d8b",badgeFg:"#fff"}};
 const GR=["linear-gradient(135deg,#ffcc00,#1a4fa0)","linear-gradient(135deg,#1a4fa0,#cc2200)","linear-gradient(135deg,#cc2200,#ffcc00)","linear-gradient(135deg,#1a7a3c,#1a4fa0)","linear-gradient(135deg,#ffcc00,#cc2200)","linear-gradient(135deg,#1a4fa0,#1a7a3c)"];
-const SEED=[
-  {id:101,city:"madrid",type:"post",name:"Carlos Useche",av:"CU",content:"epale!! acabo de instalar esto y ya veo como 10 conocidos mios aqui jajaja el mundillo venezolano es pequeñisimo 😂",likes:12,comments:4,time:"12min",_comments:[
-    {id:1011,user_name:"Andreina C",content:"jajaja verdad!! yo tambien vi gente que no veia desde el cole"},
-    {id:1012,user_name:"Luis G",content:"el grupito venezolano siempre se encuentra en todos lados 😂"},
-    {id:1013,user_name:"Maria F",content:"yo vi a mi ex de la universidad aqui y casi me da un infarto jajaja"},
-    {id:1014,user_name:"Carlos Useche",content:"jajajaja eso es lo mejor de esto!!"},
-  ]},
-  {id:102,city:"madrid",type:"post",name:"Andreina C",av:"AC",content:"alguien sabe si hay venezolanos por la zona de vallecas? llevo 8 meses aqui y todavia no he encontrado casi nadie de venezuela cerca",likes:5,comments:3,time:"28min",_comments:[
-    {id:1021,user_name:"Maria F",content:"yo estoy en vallecas!! mandame un mensaje"},
-    {id:1022,user_name:"Luis G",content:"hay un grupo de whatsapp de venezolanos en vallecas busca en facebook"},
-    {id:1023,user_name:"Katiuska B",content:"yo tambien!! somos mas de los que creemos por aqui"},
-  ]},
-  {id:103,city:"madrid",type:"post",name:"Luis G",av:"LG",content:"que fue?? esto es como un twitter pero venezolano?? ya lo compartí en el grupo del trabajo a ver cuantos se meten jajaja",likes:23,comments:3,time:"45min",_comments:[
-    {id:1031,user_name:"Carlos Useche",content:"exacto!! y puedes ver venezolanos en todos los paises"},
-    {id:1032,user_name:"Katiuska B",content:"ya me meti por tu culpa jajaja"},
-    {id:1033,user_name:"Maria F",content:"ya somos 4 del grupo aqui 😂"},
-  ]},
-  {id:104,city:"madrid",type:"post",name:"Maria Fernanda",av:"MF",content:"3 años en madrid y todavia cuando huelo caraotas me da un ataque de nostalgia terrible. alguien mas o solo yo?? 😭",likes:67,comments:4,time:"1h",_comments:[
-    {id:1041,user_name:"Andreina C",content:"yo con el olor a cafe con leche me pasa lo mismo 😭"},
-    {id:1042,user_name:"Carlos Useche",content:"las hallacas en diciembre me destruyen emocionalmente jajaja"},
-    {id:1043,user_name:"Katiuska B",content:"yo llore en el supermercado cuando encontre harina pan la primera vez aqui"},
-    {id:1044,user_name:"Luis G",content:"normal!! eso nunca se va"},
-  ]},
-  {id:105,city:"madrid",type:"post",name:"Katiuska B",av:"KB",content:"oe alguien puede explicarme como funciona lo de los paises? puedo ver lo que publican en miami tambien o solo veo españa?",likes:3,comments:3,time:"2h",_comments:[
-    {id:1051,user_name:"Luis G",content:"si!! toca la banderita de miami arriba y ves ese feed"},
-    {id:1052,user_name:"Carlos Useche",content:"exacto cada pais tiene su propio feed"},
-    {id:1053,user_name:"Katiuska B",content:"aaaah que buenoo gracias!!"},
-  ]},
-
-  {id:201,city:"miami",type:"post",name:"Valentina R",av:"VR",content:"5 años aqui y sigo llorando con el himno nacional. no se si eso es bueno o malo pero no lo puedo evitar 😅🇻🇪",likes:89,comments:4,time:"8min",_comments:[
-    {id:2011,user_name:"Andres M",content:"eso nunca se va y no deberia irse. eso nos mantiene conectados"},
-    {id:2012,user_name:"Gaby F",content:"yo igual!! 7 años y sigo igual 😭"},
-    {id:2013,user_name:"Jorge L",content:"el himno de venezuela es el mas bonito del mundo punto"},
-    {id:2014,user_name:"Paty G",content:"llorando leyendo esto jajaja"},
-  ]},
-  {id:202,city:"miami",type:"post",name:"Andres M",av:"AM",content:"doral es literalmente venezuela norte. hoy desayune arepas, almorcé pabellon y cené tequeños. sin salir del condado 😂",likes:134,comments:4,time:"22min",_comments:[
-    {id:2021,user_name:"Jorge L",content:"jajajaja verdad!! hasta el acento cambia en doral"},
-    {id:2022,user_name:"Valentina R",content:"yo vivo en doral y es exactamente asi 😂"},
-    {id:2023,user_name:"Gaby F",content:"doral = maracaibo norte jajaja"},
-    {id:2024,user_name:"Paty G",content:"tengo que ir a doral ya!!"},
-  ]},
-  {id:203,city:"miami",type:"post",name:"Paty G",av:"PG",content:"hola!! soy nueva aqui. alguien me puede recomendar grupos o gente interesante pa seguir? llegue hace 4 meses a miami y todavia estoy ubicandome",likes:8,comments:3,time:"1h",_comments:[
-    {id:2031,user_name:"Jorge L",content:"bienvenida!! sigueme y te presento gente"},
-    {id:2032,user_name:"Andres M",content:"hay grupos en facebook de venezolanos en miami tambien"},
-    {id:2033,user_name:"Valentina R",content:"cualquier pregunta me preguntas! yo llevo 5 años aqui"},
-  ]},
-  {id:204,city:"miami",type:"post",name:"Jorge L",av:"JL",content:"oye esto esta buenisimo. ya lo mande al grupo de venezolanos del building y en 10 minutos ya habian 6 registrados jajaja somos asi",likes:45,comments:3,time:"3h",_comments:[
-    {id:2041,user_name:"Andres M",content:"jajaja la velocidad venezolana para el chisme y las apps nuevas 😂"},
-    {id:2042,user_name:"Gaby F",content:"nosotros somos muy rapidos para esto jajaja"},
-    {id:2043,user_name:"Valentina R",content:"ya le mande a mi grupo tambien jajaja"},
-  ]},
-  {id:205,city:"miami",type:"post",name:"Gaby F",av:"GF",content:"extraño venezuela todos los dias. pero tambien ya no me imagino viviendo sin la seguridad de aqui. es una contradiccion con la que uno aprende a vivir",likes:178,comments:4,time:"5h",_comments:[
-    {id:2051,user_name:"Valentina R",content:"esto lo resume todo. exactamente como me siento"},
-    {id:2052,user_name:"Andres M",content:"la contradiccion eterna del venezolano en el exterior 😔"},
-    {id:2053,user_name:"Paty G",content:"4 meses aqui y ya lo entiendo perfectamente"},
-    {id:2054,user_name:"Jorge L",content:"el dia que eso se resuelva en venezuela volvemos todos"},
-  ]},
-
-  {id:301,city:"bogota",type:"post",name:"Nelson B",av:"NB",content:"4 años en bogota y puedo decir con propiedad: los colombianos son lo maximo. nos han recibido increible. gracias colombia 🇨🇴❤️",likes:56,comments:3,time:"15min",_comments:[
-    {id:3011,user_name:"Diana M",content:"100% de acuerdo. colombia nos abrio las puertas"},
-    {id:3012,user_name:"Rafa T",content:"verdad!! aunque algunos bogotanos son frios al principio luego son un amor"},
-    {id:3013,user_name:"Luisa Ma",content:"gracias por esto. me da esperanza para cuando llegue"},
-  ]},
-  {id:302,city:"bogota",type:"post",name:"Diana M",av:"DM",content:"me acabo de enterar que hay mas de 500mil venezolanos en colombia. QUINIENTOS MIL. eso es una ciudad entera. y no nos conocemos entre nosotros??",likes:234,comments:3,time:"40min",_comments:[
-    {id:3021,user_name:"Nelson B",content:"por eso existe esto!! para que nos encontremos"},
-    {id:3022,user_name:"Rafa T",content:"una ciudad entera dispersa por todo un pais. impresionante"},
-    {id:3023,user_name:"Luisa Ma",content:"ahora si nos vamos a conocer 🙌"},
-  ]},
-  {id:303,city:"bogota",type:"post",name:"Luisa Ma",av:"LM",content:"pregunta pa los que llevan tiempo: como hicieron pa conseguir el primer trabajo aqui? estoy llegando la semana que viene y estoy un poco perdida",likes:19,comments:3,time:"2h",_comments:[
-    {id:3031,user_name:"Nelson B",content:"linkedIn y grupos de facebook. el voz a voz funciona mucho aqui"},
-    {id:3032,user_name:"Diana M",content:"mandame mensaje cuando llegues te oriento con gusto"},
-    {id:3033,user_name:"Rafa T",content:"y no te desanimes si el primero no es lo que buscas. todos empezamos desde abajo"},
-  ]},
-  {id:304,city:"bogota",type:"post",name:"Rafa T",av:"RT",content:"que chimbo el frio de bogota al principio jajaja vine de maracaibo con ropa de playa y casi me muero. ya me adapte pero uff",likes:78,comments:2,time:"4h",_comments:[
-    {id:3041,user_name:"Diana M",content:"jajajaja yo igual!! vine con chancletas 😭"},
-    {id:3042,user_name:"Nelson B",content:"el primer invierno bogotano es un trauma jajaja"},
-  ]},
-
-  {id:401,city:"santiago",type:"post",name:"Raul J",av:"RJ",content:"me dieron la residencia definitiva. llore. de verdad. despues de 3 años de tramites y papeles y idas y venidas. ya soy residente definitivo en chile 🥹",likes:312,comments:4,time:"20min",_comments:[
-    {id:4011,user_name:"Nathaly G",content:"felicidades!! te lo mereces tanto 🥹❤️"},
-    {id:4012,user_name:"Pedro A",content:"que alegria!! cuantos años tardaste en total?"},
-    {id:4013,user_name:"Raul J",content:"3 años y medio desde que llegue hasta hoy"},
-    {id:4014,user_name:"Nathaly G",content:"y valio cada segundo. feliz por ti 🎉"},
-  ]},
-  {id:402,city:"santiago",type:"post",name:"Nathaly G",av:"NG",content:"alguien mas piensa que el acento chileno es el mas dificil de entender al principio?? yo dure meses sin entender nada jajajaja",likes:145,comments:3,time:"1h",_comments:[
-    {id:4021,user_name:"Raul J",content:"jajajaja yo pedia que repitieran todo el primer año"},
-    {id:4022,user_name:"Pedro A",content:"el 'po' al final de todo me volvio loco jajaja"},
-    {id:4023,user_name:"Nathaly G",content:"ya ahora yo tambien digo 'po' y no me doy cuenta 😂"},
-  ]},
-  {id:403,city:"santiago",type:"post",name:"Pedro A",av:"PA",content:"oye pregunta para los de miami: como esta la cosa por alla? estoy evaluando opciones y tengo familia alla. cualquier info sirve",likes:11,comments:2,time:"3h",_comments:[
-    {id:4031,user_name:"Raul J",content:"yo estuve en miami antes de venir a chile. caro pero muchas oportunidades"},
-    {id:4032,user_name:"Nathaly G",content:"depende de lo que busques. miami es diferente a chile en todo"},
-  ]},
-
-  {id:501,city:"lima",type:"post",name:"Rafael M",av:"RM",content:"3 años en lima. la ciudad mas caótica que he vivido y al mismo tiempo la que mas me ha enseñado. rara la vida 🇵🇪",likes:34,comments:3,time:"30min",_comments:[
-    {id:5011,user_name:"Simon P",content:"caótica es poco jajaja pero uno le agarra cariño"},
-    {id:5012,user_name:"Caro V",content:"que bueno escuchar esto. estoy llegando la semana que viene"},
-    {id:5013,user_name:"Rafael M",content:"bienvenida!! cualquier pregunta aqui estamos"},
-  ]},
-  {id:502,city:"lima",type:"post",name:"Simon P",av:"SP",content:"esta app la necesitaba. eso es todo. nos vemos por aca 👋",likes:67,comments:2,time:"2h",_comments:[
-    {id:5021,user_name:"Rafael M",content:"jajaja bienvenido!!"},
-    {id:5022,user_name:"Caro V",content:"jajaja el post mas corto y mas verdadero 😂"},
-  ]},
-  {id:503,city:"lima",type:"post",name:"Caro V",av:"CV",content:"llegue hace 2 semanas. alguien que lleve tiempo en lima me puede decir cuales son las zonas mas tranquilas pa vivir? gracias de antemano",likes:7,comments:3,time:"4h",_comments:[
-    {id:5031,user_name:"Rafael M",content:"miraflores y san isidro son las mas seguras pero caras. surco tambien esta bien"},
-    {id:5032,user_name:"Simon P",content:"yo vivo en surco y esta genial"},
-    {id:5033,user_name:"Caro V",content:"gracias!! voy a ver surco entonces"},
-  ]},
-
-  {id:601,city:"buenos",type:"post",name:"Gabi C",av:"GC",content:"vivir en un pais con inflacion siendo venezolano es una experiencia... unica. ya sabes como funciona esto. te adaptas rapido jajaja 😂🇦🇷",likes:189,comments:3,time:"1h",_comments:[
-    {id:6011,user_name:"Eduardo V",content:"jajajaja somos expertos en crisis economicas 😂"},
-    {id:6012,user_name:"Gabi C",content:"exacto!! nos prepararon bien sin querer"},
-    {id:6013,user_name:"Eduardo V",content:"el venezolano sobrevive en cualquier economia del mundo jajaja"},
-  ]},
-  {id:602,city:"buenos",type:"post",name:"Eduardo V",av:"EV",content:"el mate me costo horrores acostumbrarme. amargo, caliente, sin azucar. pero ya no puedo vivir sin el. la integracion tiene sus ventajas 🧉",likes:98,comments:2,time:"3h",_comments:[
-    {id:6021,user_name:"Gabi C",content:"yo todavia no lo logro jajaja como lo hiciste??"},
-    {id:6022,user_name:"Eduardo V",content:"la presion social jajaja todos toman mate en la oficina y uno se adapta"},
-  ]},
-
-  {id:701,city:"quito",type:"post",name:"Luisa F",av:"LF",content:"quito a 2800 metros sobre el nivel del mar. llegue y no podia ni caminar rapido sin que me faltara el aire. a los 3 meses ya subia cerros. el cuerpo todo lo puede 💪",likes:45,comments:2,time:"2h",_comments:[
-    {id:7011,user_name:"Jose H",content:"jajaja yo igual!! el mal de altura al principio es real"},
-    {id:7012,user_name:"Luisa F",content:"lo peor es que no te avisa. te quedas sin aire de la nada"},
-  ]},
-  {id:702,city:"quito",type:"post",name:"Jose H",av:"JH",content:"somos poquitos los venezolanos en ecuador comparado con colombia pero aqui estamos. saludos a todos desde quito 🇪🇨🇻🇪",likes:23,comments:4,time:"5h",_comments:[
-    {id:7021,user_name:"Luisa F",content:"aqui!! saludos pana 🙌"},
-    {id:7022,user_name:"Jose H",content:"que bueno!! de donde eres?"},
-    {id:7023,user_name:"Luisa F",content:"de valencia. y tu?"},
-    {id:7024,user_name:"Jose H",content:"de caracas!! un placer 🤝"},
-  ]},
-
-  {id:801,city:"panama",type:"post",name:"Roberto D",av:"RD",content:"panama es chiquito pero tiene de todo. y la comunidad venezolana aqui es muy unida. si llegas aqui busca tu gente que te ayudan",likes:34,comments:2,time:"1h",_comments:[
-    {id:8011,user_name:"Carmen B",content:"que bueno escuchar esto!! estoy considerando panama"},
-    {id:8012,user_name:"Roberto D",content:"cualquier pregunta me preguntas con gusto"},
-  ]},
-  {id:802,city:"panama",type:"post",name:"Carmen B",av:"CB",content:"nueva en la app!! alguien me puede explicar como funciona esto de publicar por tipo? para que sirve cada categoria?",likes:6,comments:2,time:"4h",_comments:[
-    {id:8021,user_name:"Roberto D",content:"trabajo es pa ofertas de empleo, vivienda pa alquileres, ayuda pa cuando necesitas orientacion"},
-    {id:8022,user_name:"Carmen B",content:"aaaah perfecto!! gracias pana 🙌"},
-  ]},
-
-  {id:901,city:"caracas",type:"post",name:"Maria A",av:"MA",content:"buenos dias desde caracas. el avila amanecio precioso hoy. para los que estan lejos: la ciudad sigue siendo bella. los queremos mucho desde aqui 🏔️",likes:445,comments:3,time:"2h",_comments:[
-    {id:9011,user_name:"Daniela S",content:"me hiciste llorar 😭❤️ gracias por esto"},
-    {id:9012,user_name:"Luis M",content:"el avila es lo mas hermoso. gracias por recordarnos"},
-    {id:9013,user_name:"Maria A",content:"siempre!! venezuela en el corazon de todos"},
-  ]},
-  {id:902,city:"caracas",type:"post",name:"Daniela S",av:"DS",content:"que chimbo y que bonito a la vez ver a venezolanos en todo el mundo. orgullosa de nuestra gente aunque las circunstancias sean las que son 🥺❤️",likes:567,comments:2,time:"5h",_comments:[
-    {id:9021,user_name:"Maria A",content:"somos duros pana. resistimos todo"},
-    {id:9022,user_name:"Luis M",content:"orgullo venezolano siempre 🇻🇪"},
-  ]},
-  {id:903,city:"caracas",type:"post",name:"Luis M",av:"LM",content:"pregunta pa los de afuera: extrañan mas la comida, la familia o el clima? yo digo que extrañan las tres pero cual mas?",likes:678,comments:3,time:"8h",_comments:[
-    {id:9031,user_name:"Maria A",content:"la familia sin duda. la comida la puedo hacer aqui. el clima me adapto. pero la familia no tiene reemplazo 😭"},
-    {id:9032,user_name:"Daniela S",content:"la familia 100%. lo demas se consigue o se adapta"},
-    {id:9033,user_name:"Luis M",content:"todos dicen lo mismo. la familia primero siempre"},
-  ]},
-
-  {id:1001,city:"portugal",type:"post",name:"Carlos V",av:"CV",content:"lisboa es increible. los portugueses tienen algo especial. y el idioma se aprende rapido si eres venezolano. somos muy parecidos 🇵🇹",likes:34,comments:2,time:"3h",_comments:[
-    {id:10011,user_name:"Isabel R",content:"verdad!! yo aprendi en 3 meses basicamente"},
-    {id:10012,user_name:"Carlos V",content:"el español y el portugues son primos hermanos jajaja"},
-  ]},
-  {id:1002,city:"portugal",type:"post",name:"Isabel R",av:"IR",content:"6 meses en portugal y todavia me pierdo en el metro de lisboa jajaja alguien mas o solo yo?? 😅",likes:19,comments:2,time:"7h",_comments:[
-    {id:10021,user_name:"Carlos V",content:"jajajaja yo dure un año perdiendome!! es normal"},
-    {id:10022,user_name:"Isabel R",content:"menos mal!! pensé que era solo yo 😅"},
-  ]},
-
-  {id:1101,city:"italia",type:"post",name:"Sofia M",av:"SM",content:"llegue a roma sin saber una palabra de italiano. hoy me defiendo. el cerebro venezolano se adapta a todo jajaja 🇮🇹🇻🇪",likes:45,comments:3,time:"4h",_comments:[
-    {id:11011,user_name:"Marco V",content:"cuanto tiempo tardaste en aprenderlo?"},
-    {id:11012,user_name:"Sofia M",content:"como 8 meses para defenderme. 2 años para sentirme comoda"},
-    {id:11013,user_name:"Marco V",content:"gracias!! me da esperanza jajaja"},
-  ]},
-  {id:1102,city:"italia",type:"post",name:"Marco V",av:"MV",content:"venezolanos en italia donde estan?? yo en milan hace 2 años y somos poquitos pero aqui estamos. saludense 👋",likes:12,comments:3,time:"9h",_comments:[
-    {id:11021,user_name:"Sofia M",content:"roma aqui!! 🙋"},
-    {id:11022,user_name:"Marco V",content:"oye!! cuanto tiempo llevas?"},
-    {id:11023,user_name:"Sofia M",content:"3 años ya. el tiempo vuela"},
-  ]},
-
-  {id:1201,city:"canada",type:"post",name:"Pedro M",av:"PM",content:"menos 20 grados ayer en toronto. MENOS VEINTE. yo que soy de maracaibo. todavia no entiendo como sobrevivo esto cada invierno 😂❄️🇨🇦",likes:56,comments:3,time:"3h",_comments:[
-    {id:12011,user_name:"Ana R",content:"jajajaja yo de barquisimeto y en vancouver igual!! el primer invierno es un shock"},
-    {id:12012,user_name:"Pedro M",content:"el primer año compre 3 abrigos creyendo que uno era suficiente jajaja"},
-    {id:12013,user_name:"Ana R",content:"jajaja nadie te prepara para esto!!"},
-  ]},
-  {id:1202,city:"canada",type:"post",name:"Ana R",av:"AR",content:"recien llegada a vancouver. buscando venezolanos por la costa oeste de canada. hay alguien por aqui??",likes:8,comments:2,time:"7h",_comments:[
-    {id:12021,user_name:"Pedro M",content:"yo estoy en toronto pero hay venezolanos en vancouver! busca en facebook grupos venezolanos bc"},
-    {id:12022,user_name:"Ana R",content:"gracias!! ya voy a buscar 🙏"},
-  ]},
-];
+// Antes había posts de ejemplo inventados aquí. Se quitaron: el feed muestra solo posts reales
+// (de usuarios y de Pana IA, que publica varias veces al día en cada país).
+const SEED=[];
 const waShare=function(post,cityId){ var txt=post.name+" en Epale "+cityId+": "+post.content.slice(0,100)+"... Unete: https://epaleapp.online/"+cityId; return "https://wa.me/?text="+encodeURIComponent(txt); };
 const waInvite=function(cityId){ var txt="Epale pana! Estoy en Epale, la red de venezolanos en "+cityId+". Unete: https://epaleapp.online/"+cityId; return "https://wa.me/?text="+encodeURIComponent(txt); };
 var formatTime=function(ts){ if(!ts) return ""; if(typeof ts==="string"&&!ts.includes("T")&&!ts.includes("-")) return ts; var tsFixed=(typeof ts==="string"&&ts.includes("T")&&!ts.includes("Z")&&!ts.includes("+"))?ts+"Z":ts; var d=new Date(tsFixed); if(isNaN(d.getTime())) return ts; var now=new Date(); var diff=Math.floor((now-d)/1000); if(diff<0) diff=0; if(diff<60) return "ahora"; if(diff<3600) return Math.floor(diff/60)+"min"; if(diff<86400) return Math.floor(diff/3600)+"h"; if(diff<604800) return Math.floor(diff/86400)+"d"; return d.getDate()+"/"+(d.getMonth()+1)+"/"+d.getFullYear(); };
@@ -445,16 +264,7 @@ var sinRepetidos=function(list){ var seen={}; return list.filter(function(p){ va
 var isPanaBot=function(name){ return (name||"").trim().toLowerCase()==="pana ia"; };
 var isVerified=function(name){ return VERIFIED_NAMES.map(function(n){return n.toLowerCase();}).includes((name||"").toLowerCase()); };
 var isFounder=function(name){ return FOUNDER_NAMES.map(function(n){return n.toLowerCase();}).includes((name||"").toLowerCase()); };
-var SAMPLE_USERS=[
-  {name:"Carlos Useche",av:"CU",city:"madrid",bio:"Venezolano en Madrid"},
-  {name:"Valentina Rodríguez",av:"VR",city:"miami",bio:"Caraqueña en Miami"},
-  {name:"Nelson Bermúdez",av:"NB",city:"bogota",bio:"Del Zulia para el mundo"},
-  {name:"Raúl Jiménez",av:"RJ",city:"santiago",bio:"Venezolano en Chile"},
-  {name:"Rafael Mora",av:"RM",city:"lima",bio:"3 años en Lima"},
-  {name:"María Alejandra",av:"MA",city:"caracas",bio:"Siempre Venezuela"},
-  {name:"Carlos Vidal",av:"CV",city:"portugal",bio:"Venezolano en Lisboa"},
-  {name:"Pedro Montoya",av:"PM",city:"canada",bio:"Toronto, Canadá"}
-];
+var SAMPLE_USERS=[]; // antes: usuarios de ejemplo inventados
 
 var TENOR_KEY = "AIzaSyC0OjRVsmYE0O2IqzJq4I7syFXD5mzHhGo"; // Tenor API v2 key
 
@@ -1273,7 +1083,7 @@ function Feed(props) {
     {showComposer?<Composer cityObj={cityObj} onPost={addPost} onClose={function(){setShowComposer(false);}} userPhoto={userPhoto} userName={userName} isFounder={isFounder(userName)}/>:null}{header}<div style={{paddingBottom:"calc(80px + env(safe-area-inset-bottom))"}}><div style={{margin:"10px 14px 0"}}>{dollarWidget}<FlechaoBanner/></div><div style={{marginTop:4}}>{postsList}</div><div style={{margin:"10px 14px 20px"}}>{inviteBanner}</div></div></div>); }
   return (<div style={{minHeight:"100vh",background:C.bg}}>
     {openCity?<CountryFeed cityId={openCity} onClose={function(){setOpenCity(null);}} savedPosts={savedPosts} onSave={toggleSave} likedPosts={likedPosts} onLike={toggleLike} following={following} onFollow={toggleFollow} userName={userName} userId={userId} lang={lang} onOpenProfile={props.onOpenProfile} userPhoto={userPhoto}/>:null}
-    {showComposer?<Composer cityObj={cityObj} onPost={addPost} onClose={function(){setShowComposer(false);}} userPhoto={userPhoto} userName={userName} isFounder={isFounder(userName)}/>:null}{header}<div style={{maxWidth:1200,margin:"0 auto",padding:"20px",display:"flex",gap:24,alignItems:"flex-start"}}><div style={{width:240,flexShrink:0,position:"sticky",top:170}}><div style={{background:C.card,borderRadius:16,border:"1px solid "+C.border,overflow:"hidden",marginBottom:16}}><div style={{background:"linear-gradient(135deg,#ffcc00,#0066ff)",height:60}}/><div style={{padding:"0 16px 16px",marginTop:-28}}><Av t={userName} i={0} s={52} photo={userPhoto}/><div style={{marginTop:8,fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:16,color:C.text}}>{userName}</div><div style={{fontSize:12,color:C.muted,fontFamily:"'Inter',sans-serif",marginBottom:4}}>{"@"+userName.toLowerCase().replace(/\s+/g,"")}</div>{userBio?<div style={{fontSize:11,color:C.muted,fontFamily:"'Inter',sans-serif",marginBottom:12,lineHeight:1.4}}>{userBio}</div>:<div style={{marginBottom:12}}/>}<button onClick={onProfile} style={{width:"100%",padding:"8px",background:C.yellow,border:"none",borderRadius:10,cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:12,fontWeight:700,color:C.text}}>Ver perfil</button></div></div><button onClick={function(){setShowComposer(true);}} style={{width:"100%",padding:"12px",background:C.yellow,border:"none",borderRadius:12,cursor:"pointer",fontFamily:"'Syne',sans-serif",fontSize:14,fontWeight:700,color:C.text,marginBottom:8}}>+ Publicar</button><button onClick={function(){setShowPanaLocal(true);}} style={{width:"100%",padding:"11px",background:C.card,color:C.text,border:"1.5px solid "+C.border,borderRadius:12,cursor:"pointer",fontFamily:"'Syne',sans-serif",fontSize:13,fontWeight:600,marginBottom:16,display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>{"🤖 Preguntar a Pana"}</button><div style={{background:C.card,borderRadius:16,border:"1px solid "+C.border,padding:"14px 16px"}}><div style={{fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:13,color:C.text,marginBottom:12}}>Proximos eventos</div>{SEED.filter(function(p){ return p.type==="evento"&&p.city===activeCity; }).slice(0,3).map(function(ev,i){ return (<div key={ev.id} onClick={function(){setFilter("evento");}} style={{display:"flex",gap:10,marginBottom:12,cursor:"pointer",padding:"8px 10px",borderRadius:10,background:C.bg}}><div style={{width:36,height:36,borderRadius:10,background:"#7b2d8b",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,flexShrink:0}}>{ICONS.bell}</div><div style={{flex:1,minWidth:0}}><div style={{fontSize:12,fontWeight:700,color:C.text,fontFamily:"'Inter',sans-serif",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{ev.name}</div><div style={{fontSize:11,color:C.muted,fontFamily:"'Inter',sans-serif",marginTop:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{ev.content.slice(0,45)}...</div></div></div>); })}{SEED.filter(function(p){ return p.type==="evento"&&p.city===activeCity; }).length===0?(<div style={{textAlign:"center",padding:"10px 0"}}><div style={{fontSize:11,color:C.muted,fontFamily:"'Inter',sans-serif"}}>No hay eventos en este pais aun</div><button onClick={function(){setShowComposer(true);}} style={{marginTop:8,padding:"6px 14px",background:C.yellow,border:"none",borderRadius:100,cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:11,fontWeight:700,color:C.text}}>Crear evento</button></div>):null}</div></div><div style={{flex:1,minWidth:0}}>{dollarWidget}<FlechaoBanner/>{postsList}</div><div style={{width:280,flexShrink:0,position:"sticky",top:170}}>{inviteBanner}<div style={{background:C.card,borderRadius:16,border:"1px solid "+C.border,padding:"14px 16px",marginBottom:16}}><div style={{fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:13,color:C.text,marginBottom:12}}>Venezolanos en {cityObj.name}</div>{SEED.filter(function(p){return p.city===activeCity;}).slice(0,4).map(function(p,i){ return (<div key={p.id} style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}><Av t={p.av} i={i} s={36}/><div style={{flex:1}}><div style={{fontSize:13,fontWeight:600,color:C.text,fontFamily:"'Inter',sans-serif"}}>{p.name}</div><div style={{fontSize:11,color:C.muted,fontFamily:"'Inter',sans-serif"}}>{p.type}</div></div></div>); })}</div><div style={{background:C.card,borderRadius:16,border:"1px solid "+C.border,padding:"14px 16px"}}><div style={{fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:13,color:C.text,marginBottom:10}}>Epale</div><div style={{fontSize:11,color:C.muted,fontFamily:"'Inter',sans-serif",lineHeight:1.6}}>La red social de los venezolanos en el mundo. Conecta, comparte y crece con tu gente.</div><div style={{marginTop:10,display:"flex",gap:8,flexWrap:"wrap"}}>{["Terminos","Privacidad","Contacto"].map(function(t){ return <span key={t} style={{fontSize:10,color:C.muted,fontFamily:"'Inter',sans-serif",cursor:"pointer",textDecoration:"underline"}}>{t}</span>; })}</div></div></div></div></div>);
+    {showComposer?<Composer cityObj={cityObj} onPost={addPost} onClose={function(){setShowComposer(false);}} userPhoto={userPhoto} userName={userName} isFounder={isFounder(userName)}/>:null}{header}<div style={{maxWidth:1200,margin:"0 auto",padding:"20px",display:"flex",gap:24,alignItems:"flex-start"}}><div style={{width:240,flexShrink:0,position:"sticky",top:170}}><div style={{background:C.card,borderRadius:16,border:"1px solid "+C.border,overflow:"hidden",marginBottom:16}}><div style={{background:"linear-gradient(135deg,#ffcc00,#0066ff)",height:60}}/><div style={{padding:"0 16px 16px",marginTop:-28}}><Av t={userName} i={0} s={52} photo={userPhoto}/><div style={{marginTop:8,fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:16,color:C.text}}>{userName}</div><div style={{fontSize:12,color:C.muted,fontFamily:"'Inter',sans-serif",marginBottom:4}}>{"@"+userName.toLowerCase().replace(/\s+/g,"")}</div>{userBio?<div style={{fontSize:11,color:C.muted,fontFamily:"'Inter',sans-serif",marginBottom:12,lineHeight:1.4}}>{userBio}</div>:<div style={{marginBottom:12}}/>}<button onClick={onProfile} style={{width:"100%",padding:"8px",background:C.yellow,border:"none",borderRadius:10,cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:12,fontWeight:700,color:C.text}}>Ver perfil</button></div></div><button onClick={function(){setShowComposer(true);}} style={{width:"100%",padding:"12px",background:C.yellow,border:"none",borderRadius:12,cursor:"pointer",fontFamily:"'Syne',sans-serif",fontSize:14,fontWeight:700,color:C.text,marginBottom:8}}>+ Publicar</button><button onClick={function(){setShowPanaLocal(true);}} style={{width:"100%",padding:"11px",background:C.card,color:C.text,border:"1.5px solid "+C.border,borderRadius:12,cursor:"pointer",fontFamily:"'Syne',sans-serif",fontSize:13,fontWeight:600,marginBottom:16,display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>{"🤖 Preguntar a Pana"}</button><div style={{background:C.card,borderRadius:16,border:"1px solid "+C.border,padding:"14px 16px"}}><div style={{fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:13,color:C.text,marginBottom:12}}>Proximos eventos</div>{posts.filter(function(p){ return p.type==="evento"&&p.city===activeCity; }).slice(0,3).map(function(ev,i){ return (<div key={ev.id} onClick={function(){setFilter("evento");}} style={{display:"flex",gap:10,marginBottom:12,cursor:"pointer",padding:"8px 10px",borderRadius:10,background:C.bg}}><div style={{width:36,height:36,borderRadius:10,background:"#7b2d8b",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,flexShrink:0}}>{ICONS.bell}</div><div style={{flex:1,minWidth:0}}><div style={{fontSize:12,fontWeight:700,color:C.text,fontFamily:"'Inter',sans-serif",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{ev.name}</div><div style={{fontSize:11,color:C.muted,fontFamily:"'Inter',sans-serif",marginTop:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{ev.content.slice(0,45)}...</div></div></div>); })}{posts.filter(function(p){ return p.type==="evento"&&p.city===activeCity; }).length===0?(<div style={{textAlign:"center",padding:"10px 0"}}><div style={{fontSize:11,color:C.muted,fontFamily:"'Inter',sans-serif"}}>No hay eventos en este pais aun</div><button onClick={function(){setShowComposer(true);}} style={{marginTop:8,padding:"6px 14px",background:C.yellow,border:"none",borderRadius:100,cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:11,fontWeight:700,color:C.text}}>Crear evento</button></div>):null}</div></div><div style={{flex:1,minWidth:0}}>{dollarWidget}<FlechaoBanner/>{postsList}</div><div style={{width:280,flexShrink:0,position:"sticky",top:170}}>{inviteBanner}<div style={{background:C.card,borderRadius:16,border:"1px solid "+C.border,padding:"14px 16px",marginBottom:16}}><div style={{fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:13,color:C.text,marginBottom:12}}>Venezolanos en {cityObj.name}</div>{sinRepetidos(posts.filter(function(p){return p.city===activeCity&&!isPanaBot(p.name);})).filter(function(p,i,arr){ return arr.findIndex(function(x){return x.name===p.name;})===i; }).slice(0,4).map(function(p,i){ return (<div key={p.id} style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}><Av t={p.av} i={i} s={36}/><div style={{flex:1}}><div style={{fontSize:13,fontWeight:600,color:C.text,fontFamily:"'Inter',sans-serif"}}>{p.name}</div><div style={{fontSize:11,color:C.muted,fontFamily:"'Inter',sans-serif"}}>{p.type}</div></div></div>); })}{posts.filter(function(p){return p.city===activeCity&&!isPanaBot(p.name);}).length===0?<div style={{fontSize:12,color:C.muted,fontFamily:"'Inter',sans-serif",lineHeight:1.5}}>Todavía nadie ha publicado aquí. ¡Sé el primero en presentarte! 👋</div>:null}</div><div style={{background:C.card,borderRadius:16,border:"1px solid "+C.border,padding:"14px 16px"}}><div style={{fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:13,color:C.text,marginBottom:10}}>Epale</div><div style={{fontSize:11,color:C.muted,fontFamily:"'Inter',sans-serif",lineHeight:1.6}}>La red social de los venezolanos en el mundo. Conecta, comparte y crece con tu gente.</div><div style={{marginTop:10,display:"flex",gap:8,flexWrap:"wrap"}}>{["Terminos","Privacidad","Contacto"].map(function(t){ return <span key={t} style={{fontSize:10,color:C.muted,fontFamily:"'Inter',sans-serif",cursor:"pointer",textDecoration:"underline"}}>{t}</span>; })}</div></div></div></div></div>);
 }
 
 function Composer(props) {
@@ -1471,6 +1281,18 @@ function Profile(props) {
   var userCity=props.userCity,onLogout=props.onLogout,onClose=props.onClose,onSetDark=props.onSetDark,onSetLang=props.onSetLang,isDark=props.isDark,currentLang=props.currentLang,following=props.following||[],onFollow=props.onFollow,userPhoto=props.userPhoto||null,userName=props.userName||"Tu",onPhotoChange=props.onPhotoChange||function(){},savedPosts=props.savedPosts||[],userBio=props.userBio||"",onBioChange=props.onBioChange||function(){};
   var TR=T[currentLang]||T.es; var [subScreen,setSubScreen]=useState(null); var cityObj=getCity(userCity||"miami");
   var [postCount,setPostCount]=useState(0);
+  // Seguidores reales: quienes siguen mi nombre (follows.following_name)
+  var [seguidores,setSeguidores]=useState([]);
+  useEffect(function(){
+    if(!userName||userName==="Tu") return;
+    supabase.from("follows").select("follower_id").eq("following_name",userName).limit(500).then(function(r){
+      var ids=(r.data||[]).map(function(x){return x.follower_id;}).filter(Boolean);
+      if(!ids.length){ setSeguidores([]); return; }
+      supabase.from("profiles").select("name, city, bio").in("id",ids).then(function(r2){
+        setSeguidores((r2.data||[]).filter(function(u){return u.name;}).map(function(u){ return {name:u.name,av:u.name,city:u.city||"",bio:u.bio||""}; }));
+      });
+    });
+  },[userName]);
   useEffect(function(){
     if(props.userId){
       api.getUserPosts(props.userId).then(function(data){ if(Array.isArray(data)) setPostCount(data.length); }).catch(function(){});
@@ -1478,7 +1300,7 @@ function Profile(props) {
   },[props.userId]);
   if(subScreen==="posts") return <MisPublicaciones userId={props.userId} userName={userName} onClose={function(){setSubScreen(null);}}/>;
   if(subScreen==="saved") return <Guardados saved={savedPosts} onClose={function(){setSubScreen(null);}}/>;
-  if(subScreen==="seguidores") return <FollowersList title="Seguidores" users={SAMPLE_USERS} following={following} onFollow={onFollow||function(){}} onClose={function(){setSubScreen(null);}}/>;
+  if(subScreen==="seguidores") return <FollowersList title="Seguidores" users={seguidores} following={following} onFollow={onFollow||function(){}} onClose={function(){setSubScreen(null);}}/>;
   if(subScreen==="siguiendo") return <FollowersList title="Siguiendo" users={following.map(function(n){ return {name:n,av:n,city:userCity,bio:""}; })} following={following} onFollow={onFollow||function(){}} onClose={function(){setSubScreen(null);}}/>;
   if(subScreen==="notifs") return <Notificaciones onClose={function(){setSubScreen(null); if(props.onClearNotifs) props.onClearNotifs();}} userId={props.userId}/>;
   if(subScreen==="config") return <Configuracion userCity={userCity} onClose={function(){setSubScreen(null);}} onLogout={onLogout} onSetDark={onSetDark} onSetLang={onSetLang} isDark={isDark} currentLang={currentLang} userName={userName} userPhoto={userPhoto} userBio={userBio} onCityChange={props.onCityChange}/>;
@@ -1500,7 +1322,7 @@ function Profile(props) {
             <button onClick={function(){setSubScreen("edit");}} style={{padding:"7px 16px",background:C.blue,border:"none",borderRadius:100,color:"#fff",cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:11,fontWeight:700}}>Editar perfil</button>
           </div>
           <div style={{display:"flex",marginTop:16,borderTop:"1px solid "+C.border,paddingTop:14}}>
-            {[{val:postCount,label:"Posts",color:C.blue,action:function(){setSubScreen("posts");}},{val:SAMPLE_USERS.length,label:"Seguidores",color:C.yellow,action:function(){setSubScreen("seguidores");}},{val:following.length,label:TR.siguiendo,color:C.red,action:function(){setSubScreen("siguiendo");}}].map(function(s,i){
+            {[{val:postCount,label:"Posts",color:C.blue,action:function(){setSubScreen("posts");}},{val:seguidores.length,label:"Seguidores",color:C.yellow,action:function(){setSubScreen("seguidores");}},{val:following.length,label:TR.siguiendo,color:C.red,action:function(){setSubScreen("siguiendo");}}].map(function(s,i){
               return (<div key={s.label} onClick={s.action} style={{flex:1,textAlign:"center",borderRight:i<2?"1px solid "+C.border:"none",cursor:s.action?"pointer":"default",padding:"4px 0"}}><div style={{fontSize:22,fontWeight:800,fontFamily:"'Syne',sans-serif",color:s.color}}>{s.val}</div><div style={{fontSize:10,color:C.muted,fontFamily:"'Inter',sans-serif",marginTop:2}}>{s.label}</div></div>);
             })}
           </div>
