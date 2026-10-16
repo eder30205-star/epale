@@ -28,6 +28,8 @@ export function compartirPostWhatsApp(post) {
 }
 
 // ---------- parámetros de la URL ----------
+// ?chat=<id> llega al tocar una notificación de mensaje
+export const CHAT_INICIAL = { id: null };
 // Se llama una vez al cargar: guarda ?ref= y devuelve ?post= (si hay)
 export function leerParametros() {
   let post = null;
@@ -37,8 +39,10 @@ export function leerParametros() {
     if (ref && /^[0-9a-zA-Z_.-]{1,40}$/.test(ref)) localStorage.setItem(REF_KEY, ref);
     const p = q.get("post");
     if (p && /^[0-9a-zA-Z-]{1,64}$/.test(p)) post = p;
-    if (ref || p) {
-      q.delete("ref"); q.delete("post");
+    const chat = q.get("chat");
+    if (chat && /^[0-9a-f-]{36}$/i.test(chat)) CHAT_INICIAL.id = chat;
+    if (ref || p || chat) {
+      q.delete("ref"); q.delete("post"); q.delete("chat");
       const rest = q.toString();
       window.history.replaceState(null, "", window.location.pathname + (rest ? "?" + rest : "") + window.location.hash);
     }

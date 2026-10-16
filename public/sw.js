@@ -24,10 +24,13 @@ self.addEventListener("notificationclick", function(e) {
   e.notification.close();
   e.waitUntil(
     clients.matchAll({ type: "window", includeUncontrolled: true }).then(function(list) {
+      var url = (e.notification.data && e.notification.data.url) || "/";
       for (var i = 0; i < list.length; i++) {
-        if ("focus" in list[i]) return list[i].focus();
+        var c = list[i];
+        if ("navigate" in c && url !== "/") return c.navigate(url).then(function (w) { return w && w.focus ? w.focus() : null; });
+        if ("focus" in c) return c.focus();
       }
-      return clients.openWindow(e.notification.data.url || "/");
+      return clients.openWindow(url);
     })
   );
 });

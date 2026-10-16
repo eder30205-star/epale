@@ -12,7 +12,7 @@ import React from "react";
 import { createClient } from "@supabase/supabase-js";
 import PanaChat from "./PanaChat.jsx";
 import { Bandeja, Chat, useMensajesSinLeer } from "./Mensajes.jsx";
-import { leerParametros, registrarInvitacionPendiente, cargarEmbajadores, esEmbajador, compartirPostWhatsApp, PostPublico, InvitaCard, CompletarPerfil, FlechaoBanner } from "./Crecimiento.jsx";
+import { leerParametros, registrarInvitacionPendiente, cargarEmbajadores, esEmbajador, compartirPostWhatsApp, PostPublico, InvitaCard, CompletarPerfil, FlechaoBanner, CHAT_INICIAL } from "./Crecimiento.jsx";
 // Links que llegan de afuera: ?post=123 (post compartido) y ?ref=usuario (invitación)
 const POST_INICIAL = leerParametros();
 
@@ -1836,7 +1836,7 @@ function App() {
   var [postAbierto,setPostAbierto]=useState(POST_INICIAL);
   var [necesitaPerfil,setNecesitaPerfil]=useState(null);
   var [userUsername,setUserUsername]=useState("");
-  var [chat,setChat]=useState(null); // null | "bandeja" | {id,name,username,photo_url}
+  var [chat,setChat]=useState(function(){ return CHAT_INICIAL.id?{id:CHAT_INICIAL.id}:null; }); // null | "bandeja" | {id,name,username,photo_url}
   var chatsSinLeerState=useMensajesSinLeer(supabase,userId); var chatsSinLeer=chatsSinLeerState[0], refrescarChats=chatsSinLeerState[1];
   useEffect(function(){ cargarEmbajadores(supabase); },[]);
   useEffect(function(){
@@ -1981,23 +1981,22 @@ function App() {
   useEffect(function(){
     if(!userId || screen!=="feed") return;
     if(!("serviceWorker" in navigator) || !("PushManager" in window) || !("Notification" in window)) return;
-    if(localStorage.getItem("epale_push_saved")==="1") return;
+    if(localStorage.getItem("epale_push_v2")==="1") return;
     var t=setTimeout(function(){
       Notification.requestPermission().then(function(perm){
         if(perm!=="granted") return;
         navigator.serviceWorker.ready.then(function(reg){
-          var VAPID="BPPYGdBcZdp_VuLh6CymL9EoNcX132TetcGx9RZk3bNawurdckNp9LGVh4Ob1AQosSabO7YfpMgotpH_XOty-l0";
+          var VAPID="BIzt3L_AgXae0N2DOkw5nXuTGQtbvCVC5gm2wnPXAIrir7sYl1B6naJxSvFUAmqNlRoBGJdAFDC9YkdoZWnSFLo";
           var pad="=".repeat((4 - VAPID.length % 4) % 4);
           var b64=(VAPID+pad).replace(/-/g,"+").replace(/_/g,"/");
           var raw=window.atob(b64);
           var arr=new Uint8Array(raw.length);
           for(var i=0;i<raw.length;i++){ arr[i]=raw.charCodeAt(i); }
-          return reg.pushManager.subscribe({ userVisibleOnly:true, applicationServerKey:arr }).then(function(sub){
-            return fetch(SUPA_URL+"/rest/v1/push_subscriptions",{
-              method:"POST",
-              headers:{ "apikey":SUPA_KEY, "Authorization":"Bearer "+SUPA_KEY, "Content-Type":"application/json" },
-              body:JSON.stringify({ user_id:userId, subscription:sub.toJSON() })
-            }).then(function(r){ if(r.ok) localStorage.setItem("epale_push_saved","1"); });
+          // Si había una suscripción con la clave vieja, se reemplaza por una con la clave nueva
+          return reg.pushManager.getSubscription().then(function(vieja){ return vieja?vieja.unsubscribe():null; }).then(function(){
+            return reg.pushManager.subscribe({ userVisibleOnly:true, applicationServerKey:arr });
+          }).then(function(sub){
+            return supabase.rpc("guardar_push",{ p_sub: sub.toJSON() }).then(function(r){ if(!r.error) localStorage.setItem("epale_push_v2","1"); });
           });
         }).catch(function(){});
       });
