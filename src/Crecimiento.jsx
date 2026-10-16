@@ -243,3 +243,52 @@ export function CompletarPerfil({ supabase, userId, nombreSugerido, C, onListo }
     </div>
   );
 }
+
+// ---------- anuncio fijo de Flechao en el feed ----------
+const FLECHAO_URL = "https://flechao.epaleapp.online/?utm_source=epale&utm_medium=banner";
+const HEART = "M16 25.5C9.3 21 6 17.2 6 13.2 6 10.3 8.2 8 11 8c2 0 3.7 1.1 5 3 1.3-1.9 3-3 5-3 2.8 0 5 2.3 5 5.2 0 4-3.3 7.8-10 12.3Z";
+
+function CorazonFlechado({ size = 44 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 32 32" aria-hidden>
+      <path d="M4 28 L16.5 15.5" stroke="#FFB21E" strokeWidth="2.6" strokeLinecap="round" fill="none" />
+      <path d={HEART} fill="#F0466E" />
+      <g stroke="#FFB21E" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" fill="none">
+        <path d="M22.5 9.5 L28.5 3.5" /><path d="M22 3.5 H28.5 V10" />
+        <path d="M7.5 24.5 H3.5 M7.5 24.5 V28.5" /><path d="M5 27 H1.8 M5 27 V30.2" />
+      </g>
+    </svg>
+  );
+}
+
+export function FlechaoBanner() {
+  return (
+    <a href={FLECHAO_URL} target="_blank" rel="noopener" aria-label="Flechao: la app de citas de Épale"
+      style={{ display: "block", textDecoration: "none", marginBottom: 16, borderRadius: 16, overflow: "hidden",
+               background: "linear-gradient(135deg,#2B1838 0%,#4a1f45 60%,#F0466E 140%)", color: "#fff",
+               boxShadow: "0 6px 18px rgba(43,24,56,.25)", fontFamily: "'Inter',sans-serif" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px" }}>
+        <div style={{ flexShrink: 0, width: 56, height: 56, borderRadius: 14, background: "rgba(255,255,255,.08)", display: "grid", placeItems: "center" }}>
+          <CorazonFlechado size={42} />
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 0.6, textTransform: "uppercase", color: "#FFB21E", marginBottom: 2 }}>
+            Nuevo · De los creadores de Épale
+          </div>
+          <div style={{ fontFamily: "Georgia,'Times New Roman',serif", fontStyle: "italic", fontWeight: 800, fontSize: 22, lineHeight: 1.1, color: "#fff" }}>
+            Flechao
+          </div>
+          <div style={{ fontSize: 13, lineHeight: 1.35, color: "rgba(255,255,255,.85)", marginTop: 2 }}>
+            La app de citas para venezolanos. 3 flechas al día, cada una con un mensaje 🏹
+          </div>
+        </div>
+      </div>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, padding: "10px 16px", background: "rgba(0,0,0,.22)" }}>
+        <span style={{ fontSize: 12, color: "rgba(255,255,255,.75)" }}>Entra con tu misma cuenta · Gratis · +18</span>
+        <span style={{ flexShrink: 0, background: "#F0466E", color: "#fff", fontWeight: 800, fontSize: 13, padding: "8px 14px", borderRadius: 999 }}>
+          Probar Flechao →
+        </span>
+      </div>
+    </a>
+  );
+}
