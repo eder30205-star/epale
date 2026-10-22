@@ -75,7 +75,13 @@ supabase.auth.getSession().then(function(res) {
 });
 
 var api = {
-  signUp: function(email, password, name, city, username) { return supabase.auth.signUp({email:email,password:password,options:{data:{name:name,city:city,username:username}}}).then(function(res){ return res.data||res; }); },
+  signUp: function(email, password, name, city, username) { return supabase.auth.signUp({email:email,password:password,options:{data:{name:name,city:city,username:username}}}).then(function(res){
+    // supabase-js v2 returns { data, error }. Keep the error: before, "res.data||res" dropped it,
+    // so a failed confirmation email still showed "Revisa tu correo".
+    var out = Object.assign({}, res.data || {});
+    if (res.error) { out.error = res.error.message || "Error al crear cuenta"; out.error_code = res.error.code || res.error.status || ""; console.error("[signup]", res.error); }
+    return out; }); },
+  resendSignup: function(email) { return supabase.auth.resend({ type: "signup", email: email }).then(function(res){ return res.error ? { error: res.error.message } : {}; }); },
   signIn: function(email, password) { return supabase.auth.signInWithPassword({email:email,password:password}).then(function(res){ return res.data||res; }); },
   signOut: function() { return supabase.auth.signOut(); },
   upsertProfile: function(id, name, city, username) { return fetchAuth(SUPA_URL+"/rest/v1/profiles",{method:"POST",headers:{"Content-Type":"application/json","apikey":SUPA_KEY,"Authorization":"Bearer "+getToken(),"Prefer":"resolution=merge-duplicates"},body:JSON.stringify({id:id,name:name,city:city,username:username})}).then(function(r){return r.json();}).catch(function(){}); },
@@ -1535,13 +1541,13 @@ function AuthStep4(props) {
   var onDone=props.onDone,onBack=props.onBack,email=props.email,chosenCity=props.chosenCity,userName=props.userName||"",userPhoto=props.userPhoto,setUserPhoto=props.setUserPhoto||function(){},password=props.password||"";
   var [loading,setLoading]=useState(false); var [error,setError]=useState(""); var [sent,setSent]=useState(false);
   var handlePhoto=function(e){ var file=e.target.files&&e.target.files[0]; if(!file) return; var reader=new FileReader(); reader.onload=function(ev){ setUserPhoto(ev.target.result); }; reader.readAsDataURL(file); };
-  var finish=function(){ setLoading(true); setError(""); api.signUp(email,password,userName,chosenCity,userName.toLowerCase().replace(/\s/g,"")).then(function(res){ if(res.error&&res.error!=="User already registered"){ setError(res.error_description||res.msg||res.error||"Error al crear cuenta"); setLoading(false); return; } var token=(res.session&&res.session.access_token)||res.access_token||""; var uid=(res.user&&res.user.id)||(res.session&&res.session.user&&res.session.user.id)||""; var refresh=(res.session&&res.session.refresh_token)||res.refresh_token||""; if(token){ window._supaToken=token; if(uid){
+  var finish=function(){ setLoading(true); setError(""); api.signUp(email,password,userName,chosenCity,userName.toLowerCase().replace(/\s/g,"")).then(function(res){ if(res.error){ setError(mensajeErrorRegistro(res.error)); setLoading(false); return; } var token=(res.session&&res.session.access_token)||res.access_token||""; var uid=(res.user&&res.user.id)||(res.session&&res.session.user&&res.session.user.id)||""; var refresh=(res.session&&res.session.refresh_token)||res.refresh_token||""; if(token){ window._supaToken=token; if(uid){
                 api.upsertProfile(uid,userName,chosenCity,userName.toLowerCase().replace(/\s/g,""));
                 // Send welcome notification
                 api.addNotification(uid,"Epale","welcome",0).catch(function(){});
               }
               setLoading(false); try { localStorage.setItem("epale_session",JSON.stringify({city:chosenCity,name:userName,photo:userPhoto,token:token,uid:uid,refresh:refresh})); } catch(e){} onDone(chosenCity,userName,userPhoto,token,uid); } else { setLoading(false); setSent(true); } }).catch(function(){ setError("Error de conexion"); setLoading(false); }); };
-  if(sent) return (<div style={{flex:1,padding:"40px 20px",textAlign:"center"}}><div style={{fontSize:64,marginBottom:16}}>{ICONS.email}</div><div style={{fontSize:22,fontFamily:"'Syne',sans-serif",color:C.text,marginBottom:10,fontWeight:700}}>Revisa tu correo</div><div style={{fontSize:14,color:C.muted,fontFamily:"'Inter',sans-serif",marginBottom:8,lineHeight:1.6}}>Enviamos un enlace de confirmacion a</div><div style={{fontSize:15,color:"#0066ff",fontFamily:"'Inter',sans-serif",fontWeight:700,marginBottom:24}}>{email}</div><button onClick={function(){onBack();}} style={{background:"none",border:"none",cursor:"pointer",color:"#0066ff",fontFamily:"'Inter',sans-serif",fontSize:13}}>Volver al inicio</button></div>);
+  if(sent) return (<div style={{flex:1,padding:"40px 20px",textAlign:"center"}}><div style={{fontSize:64,marginBottom:16}}>{ICONS.email}</div><div style={{fontSize:22,fontFamily:"'Syne',sans-serif",color:C.text,marginBottom:10,fontWeight:700}}>Revisa tu correo</div><div style={{fontSize:14,color:C.muted,fontFamily:"'Inter',sans-serif",marginBottom:8,lineHeight:1.6}}>Enviamos un enlace de confirmacion a</div><div style={{fontSize:15,color:"#0066ff",fontFamily:"'Inter',sans-serif",fontWeight:700,marginBottom:12}}>{email}</div><div style={{fontSize:13,color:C.muted,fontFamily:"'Inter',sans-serif",marginBottom:18,lineHeight:1.5}}>Si no lo ves en unos minutos, revisa la carpeta de spam o promociones.</div><ReenviarConfirmacion email={email}/><button onClick={function(){onBack();}} style={{background:"none",border:"none",cursor:"pointer",color:"#0066ff",fontFamily:"'Inter',sans-serif",fontSize:13}}>Volver al inicio</button></div>);
   return (<div style={{flex:1,padding:"22px 20px 32px",background:C.bg,textAlign:"center"}}><div style={{fontSize:52,marginBottom:10}}>{ICONS.email}</div><div style={{fontSize:20,fontFamily:"'Syne',sans-serif",color:C.text,marginBottom:6,fontWeight:700}}>Casi listo!</div><div style={{fontSize:13,color:C.muted,fontFamily:"'Inter',sans-serif",marginBottom:20}}>Agrega tu foto y crea tu cuenta</div><div style={{display:"flex",flexDirection:"column",alignItems:"center",marginBottom:24}}><div style={{position:"relative",marginBottom:8}}><div style={{width:90,height:90,borderRadius:9999,overflow:"hidden",background:"linear-gradient(135deg,#ffcc00,#0066ff)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:32,color:"#fff",fontFamily:"'Syne',sans-serif",fontWeight:800}}>{userPhoto?<img src={userPhoto} alt="foto" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:(userName?userName[0].toUpperCase():"?")}</div><label style={{position:"absolute",bottom:0,right:0,width:28,height:28,borderRadius:9999,background:"#ffcc00",border:"2px solid #fff",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",fontSize:16,fontWeight:700}}>+<input type="file" accept="image/*" onChange={handlePhoto} style={{display:"none"}}/></label></div><div style={{fontSize:12,color:C.muted,fontFamily:"'Inter',sans-serif"}}>Opcional - puedes agregar foto despues</div></div><div style={{background:C.card,borderRadius:12,padding:"10px 14px",marginBottom:18,textAlign:"left"}}><div style={{fontSize:12,color:C.muted,fontFamily:"'Inter',sans-serif"}}>Se enviara un correo de confirmacion a:</div><div style={{fontSize:13,color:"#0066ff",fontFamily:"'Inter',sans-serif",fontWeight:700,marginTop:2}}>{email}</div></div>{error?<div style={{background:"#3a1a1a",border:"1px solid #ff6b6b",borderRadius:10,padding:"9px 13px",marginBottom:13,fontSize:13,color:"#ff2d2d",fontFamily:"'Inter',sans-serif"}}>{error}</div>:null}<button onClick={finish} style={{width:"100%",padding:"14px",background:"#ffcc00",color:C.text,border:"none",borderRadius:100,cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:14,fontWeight:700,marginBottom:12}}>{loading?"Creando cuenta...":"Crear cuenta y verificar correo"}</button><button onClick={onBack} style={{background:"none",border:"none",cursor:"pointer",color:"#0066ff",fontFamily:"'Inter',sans-serif",fontSize:11}}>Volver</button></div>);
 }
 
@@ -2251,4 +2257,35 @@ export default function AppRoot() {
       <App/>
     </ErrorBoundary>
   );
+}
+
+// ---------- registro: mensajes de error claros y reenvío del correo de confirmación ----------
+function mensajeErrorRegistro(msg) {
+  var m = String(msg || "").toLowerCase();
+  if (m.indexOf("rate limit") >= 0 || m.indexOf("too many") >= 0) return "Se enviaron demasiados correos en poco tiempo. Espera unos minutos e intenta de nuevo.";
+  if (m.indexOf("sending") >= 0 && m.indexOf("email") >= 0) return "No pudimos enviar el correo de confirmación. Intenta de nuevo en unos minutos o escríbenos a hola@epaleapp.online.";
+  if (m.indexOf("already") >= 0) return "Ese correo ya tiene cuenta. Inicia sesión o recupera tu contraseña.";
+  if (m.indexOf("password") >= 0) return "La contraseña debe tener al menos 6 caracteres.";
+  if (m.indexOf("invalid") >= 0 && m.indexOf("email") >= 0) return "Ese correo no es válido. Revísalo e intenta de nuevo.";
+  return "No se pudo crear la cuenta: " + msg;
+}
+
+function ReenviarConfirmacion(props) {
+  var [estado, setEstado] = useState("");   // "", "enviando", "ok", or an error message
+  var [espera, setEspera] = useState(0);
+  useEffect(function(){ if (espera <= 0) return; var t = setTimeout(function(){ setEspera(espera - 1); }, 1000); return function(){ clearTimeout(t); }; }, [espera]);
+  var reenviar = function(){
+    setEstado("enviando");
+    api.resendSignup(props.email).then(function(r){
+      if (r.error) setEstado(mensajeErrorRegistro(r.error)); else { setEstado("ok"); setEspera(60); }
+    }).catch(function(){ setEstado("Error de conexión. Intenta de nuevo."); });
+  };
+  var ocupado = estado === "enviando" || espera > 0;
+  return (<div style={{marginBottom:20}}>
+    <button onClick={reenviar} disabled={ocupado} style={{background:ocupado?"#c7d2fe":"#0066ff",color:"#fff",border:"none",borderRadius:12,padding:"12px 18px",fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:14,cursor:ocupado?"default":"pointer"}}>
+      {estado === "enviando" ? "Enviando…" : espera > 0 ? ("Reenviar en " + espera + " s") : "Reenviar correo"}
+    </button>
+    {estado === "ok" ? <div style={{fontSize:13,color:"#1f9d55",fontFamily:"'Inter',sans-serif",marginTop:10}}>Listo, te lo enviamos de nuevo.</div> : null}
+    {estado && estado !== "ok" && estado !== "enviando" ? <div style={{fontSize:13,color:"#d93025",fontFamily:"'Inter',sans-serif",marginTop:10}}>{estado}</div> : null}
+  </div>);
 }
