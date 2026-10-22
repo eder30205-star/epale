@@ -265,7 +265,11 @@ function CorazonFlechado({ size = 44 }) {
   );
 }
 
+// Banner apagado por ahora. Para volver a mostrarlo en el feed, cambia a true.
+const MOSTRAR_BANNER_FLECHAO = false;
+
 export function FlechaoBanner() {
+  if (!MOSTRAR_BANNER_FLECHAO) return null;
   return (
     <a href={FLECHAO_URL} target="_blank" rel="noopener" aria-label="Flechao: la app de citas de Épale"
       style={{ display: "block", textDecoration: "none", marginBottom: 16, borderRadius: 16, overflow: "hidden",
