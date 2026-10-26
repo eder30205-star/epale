@@ -11,6 +11,22 @@ export const PAISES = {
   buenos: "Argentina", quito: "Ecuador", panama: "Panamá", caracas: "Venezuela",
   portugal: "Portugal", italia: "Italia", canada: "Canadá",
 };
+// Páginas públicas por país: epaleapp.online/<slug>
+export const PAGINAS = {
+  chile:     { city: "santiago", pais: "Chile",          en: "en Chile",          ciudades: "Santiago, Valparaíso, Concepción, Antofagasta" },
+  peru:      { city: "lima",     pais: "Perú",           en: "en Perú",           ciudades: "Lima, Arequipa, Trujillo, Cusco" },
+  colombia:  { city: "bogota",   pais: "Colombia",       en: "en Colombia",       ciudades: "Bogotá, Medellín, Cúcuta, Barranquilla, Cali" },
+  espana:    { city: "madrid",   pais: "España",         en: "en España",         ciudades: "Madrid, Barcelona, Valencia, Tenerife, Málaga" },
+  usa:       { city: "miami",    pais: "Estados Unidos", en: "en Estados Unidos", ciudades: "Miami, Orlando, Houston, Nueva York" },
+  argentina: { city: "buenos",   pais: "Argentina",      en: "en Argentina",      ciudades: "Buenos Aires, Córdoba, Mendoza, Rosario" },
+  ecuador:   { city: "quito",    pais: "Ecuador",        en: "en Ecuador",        ciudades: "Quito, Guayaquil, Cuenca" },
+  panama:    { city: "panama",   pais: "Panamá",         en: "en Panamá",         ciudades: "Ciudad de Panamá, Colón, David" },
+  venezuela: { city: "caracas",  pais: "Venezuela",      en: "en Venezuela",      ciudades: "Caracas, Maracaibo, Valencia, Barquisimeto" },
+  portugal:  { city: "portugal", pais: "Portugal",       en: "en Portugal",       ciudades: "Lisboa, Oporto, Madeira" },
+  italia:    { city: "italia",   pais: "Italia",         en: "en Italia",         ciudades: "Roma, Milán, Turín" },
+  canada:    { city: "canada",   pais: "Canadá",         en: "en Canadá",         ciudades: "Toronto, Montreal, Calgary, Vancouver" },
+};
+
 export const TIPOS = {
   job: "Trabajo", housing: "Vivienda", service: "Servicio", help: "Ayuda", evento: "Evento",
 };

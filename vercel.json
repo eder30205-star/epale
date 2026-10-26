@@ -13,8 +13,54 @@
       "destination": "/api/i?code=:code"
     },
     {
+      "source": "/:pais(chile|peru|colombia|espana|usa|argentina|ecuador|panama|venezuela|portugal|italia|canada)",
+      "destination": "/api/pais?pais=:pais"
+    },
+    {
       "source": "/((?!api/|assets/)[^.]*)",
       "destination": "/index.html"
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/santiago",
+      "destination": "/chile",
+      "permanent": true
+    },
+    {
+      "source": "/lima",
+      "destination": "/peru",
+      "permanent": true
+    },
+    {
+      "source": "/bogota",
+      "destination": "/colombia",
+      "permanent": true
+    },
+    {
+      "source": "/madrid",
+      "destination": "/espana",
+      "permanent": true
+    },
+    {
+      "source": "/miami",
+      "destination": "/usa",
+      "permanent": true
+    },
+    {
+      "source": "/buenos",
+      "destination": "/argentina",
+      "permanent": true
+    },
+    {
+      "source": "/quito",
+      "destination": "/ecuador",
+      "permanent": true
+    },
+    {
+      "source": "/caracas",
+      "destination": "/venezuela",
+      "permanent": true
     }
   ]
 }
